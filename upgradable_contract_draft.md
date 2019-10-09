@@ -96,10 +96,11 @@ contract only.
   be able to call `SC2`.
 
   `SC2` will have the following "interesting" entry points:
-    1. Universal entry point for contract `SC1` which accepts lambda of type
-    `S1 -> ([operation], S1)`. This entry point needs to transform state `S2` to `S1`;
-    invoke provided lambda and transform back updated `S1` to `S2`
-    2. Universal entry point for contract `SC2` which accepts lambda of type
+
+  1. Universal entry point for contract `SC1` which accepts lambda of type
+  `S1 -> ([operation], S1)`. This entry point needs to transform state `S2` to `S1`;
+  invoke provided lambda and transform back updated `S1` to `S2`
+  2. Universal entry point for contract `SC2` which accepts lambda of type
     `S2 -> ([operation], S2)`
 
   All existing **dispatchers** should be redirected to call **store** `SC2`.
