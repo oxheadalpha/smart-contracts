@@ -45,18 +45,23 @@ contract only.
   
   1. Multiple entry points which define interface of the whole upgradable contract.
   2. Address of the **store** contract.
-  3. **Implementation table** (a record) where each field corresponds to a dispatcher's
+  3. **implementation table** (a record) where each field corresponds to a dispatcher's
   entry point and holds lambda with actual implementation. Each lambda has the following
   type: `A -> (S -> ([operation], S))` where `A` is an input parameter type of the
   corresponding entry point. `S` storage type of the **store** contract.
-  4. **Dispatcher** implementation code for each entry point follows the same pattern:
-    1. Locate corresponding lambda in **implementation table**
-    2. Invoke lambda with the entry point parameter `A` and get another lambda
-    `S -> ([operation], S)`.
-    3. Invoke **store** contract with a new lambda.
-
-  5. **Dispatcher** contract also has administration entry points to change address
-  of the **store** contract and to change **implementation table**.
+  4. **Redirect address**. **Dispatcher** can operate in two modes to support
+  upgradability:
+      1. Direct mode: use **implementation table** to invoke **store** contract.
+      2. Redirect mode (**Redirect address** is set): forward all entry point calls
+      to other **dispatcher**.
+  5. **Dispatcher** implementation code for each entry point follows the same pattern:
+      1. Check if **Redirect address** is set. If yes, forward call to other **dispatcher** corresponding entry point. Other **dispatcher** is a newer version of this one and has to support backward compatibility between entry points.
+      2. Otherwise locate corresponding lambda in **implementation table**.
+      3. Invoke lambda with the entry point parameter `A` and get another lambda
+      `S -> ([operation], S)`.
+      4. Invoke **store** contract with a new lambda.
+  6. **Dispatcher** contract also has administration entry points to change address
+  of the **store** contract, **implementation table** or set **redirect address**.
 
 ## Update scenarios
 
@@ -89,21 +94,17 @@ contract only.
 
   To change storage type we need to create new **store** contract `SC2` with
   storage type `S2`. Internal implementation of `SC2` may have a reference to
-  an old store `SC1` and use *lazy upgrade* pattern to migrate the data.
+  an old store `SC1` and use *lazy upgrade* pattern to migrate the data gradually.
+  `SC2` will have universal entry point which accepts lambda of type
+  `S2 -> ([operation], S2)`.
 
-  `SC2` need to implement all the entry points implemented by `SC1` and they need
-  to be backward compatible. Old **dispatchers** which where calling `SC1` should
-  be able to call `SC2`.
+  We also need to create a new **dispatcher** `DC2` which **implementation table**
+  holds lambdas of type `A -> (S2 -> ([operation], S2))` and points to **store** `SC2`.
+  `DC2` entry points need to be backward compatible with entry points of the previous
+  **dispatcher implementation** `DC1`.
 
-  `SC2` will have the following "interesting" entry points:
-
-  1. Universal entry point for contract `SC1` which accepts lambda of type
-  `S1 -> ([operation], S1)`. This entry point needs to transform state `S2` to `S1`;
-  invoke provided lambda and transform back updated `S1` to `S2`
-  2. Universal entry point for contract `SC2` which accepts lambda of type
-    `S2 -> ([operation], S2)`
-
-  All existing **dispatchers** should be redirected to call **store** `SC2`.
+  All previous versions of contract **dispatchers** (including `DC1`) should be
+  redirected to **dispatcher** `DC2` instead of using their own **implementation table**.
   **Store** `SC1` can be called only by `SC2` which implements lazy upgrade pattern.
 
 ### Conclusion
