@@ -112,6 +112,10 @@ contract only.
   Scenarios 1-3 represent minimal basis required to implement upgrade operations.
   Real life upgrades may require combination of those scenarios.
 
+## Implementation of *lazy store upgrade* pattern on Tezos
+
+  TBD
+
 ## Possible optimization
 
   Proposed solution provides minimal basis to implement upgradable contracts.
