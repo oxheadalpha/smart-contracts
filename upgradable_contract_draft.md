@@ -114,7 +114,43 @@ contract only.
 
 ## Implementation of *lazy store upgrade* pattern on Tezos
 
-  TBD
+  The general idea is that any business operation executed on a new storage tries to get
+  needed resource from this new storage and if resource is not available, it falls back
+  and retrieves it from the old storage. Since call to a Tezos contract cannot return a value,
+  we need to use continuation style (pass a callback lambda).
+
+  We start with the original *store* contract `SC1` which has storage type `S1`. Let's `R` be a type
+  of the resource which needs to support *lazy upgrade* and `K` be a type of key to access such
+  a resource (Usually, lazy upgradable resource will be stored in `lazy_map(K, R)` inside storage
+  `S1`). To support future upgradability, store `SC1` has an additional entry point:
+  `getR: (K, (K, R) -> operation)`. The second parameter is a callback lambda which takes retrieved
+  resource `R` and provided key `K` and returns an operation which calls back the original contract.
+
+  Implementation of upgraded version of the contract will have upgraded *store* `SC2` with storage
+  type `S2`. Upgraded store also supports resource `R` accessible by key `K`, but the actual data is
+  migrated from `SC1` lazily, only when business operation tries to access a resource for the first time. Signature of the business operation lambda for the new *store* is `S1 -> ([operation], S)`.
+  But internal implementation is broken into two parts: `computeR: S1 -> (S1, K, R option)` and
+  `continue: (S1, K, R) -> ([operation], S1). The glue pseudo-code looks as following:
+
+  ```ocaml
+    let (s2_1, k, r) = computeR(s2_0)
+    match r with
+      Some(x) -> continue(s2_1, k, x)
+      None    ->
+        let callback = (k1, r1) -> call(SC2, dynamic_entry, s2 -> continue(s2, k1, r1))
+        (s1_1, [call(SC1, getR, (k, callback)])
+
+  ```
+
+  `computeR` tries to retrieve required resource from the storage of the contract `SC2`.
+  If the value is available, it simply passes it to the `continue` lambda. If a resource is not
+  available in `SC2`, the business operation calls `getR` entry point of the store contract `SC1`
+  and passes a callback with will invoke `SC2` dynamic entry point with a lambda which embeds `continue` function.
+
+  Such continuation style can be cumbersome when coded manually using low level programming
+  languages like Michelson. But it would be relatively easy to implement and use such a pattern
+  in high level languages that support monadic continuation syntax like `async/await` or
+  Haskell-style  `do` notation.
 
 ## Possible optimization
 
