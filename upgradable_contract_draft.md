@@ -116,7 +116,7 @@ contract only.
 
   The general idea is that any business operation executed on a new storage tries to get
   needed resource from this new storage and if resource is not available, it falls back
-  and retrieves it from the old storage. Since call to a Tezos contract cannot return a value,
+  and retrieves it from the old storage. Since calls to a Tezos contract cannot return a value,
   we need to use continuation style (pass a callback lambda).
 
   We start with the original *store* contract `SC1` which has storage type `S1`. Let's `R` be a type
@@ -128,9 +128,9 @@ contract only.
 
   Implementation of upgraded version of the contract will have upgraded *store* `SC2` with storage
   type `S2`. Upgraded store also supports resource `R` accessible by key `K`, but the actual data is
-  migrated from `SC1` lazily, only when business operation tries to access a resource for the first time. Signature of the business operation lambda for the new *store* is `S1 -> ([operation], S)`.
+  migrated from `SC1` lazily, only when business operation tries to access a resource for the first time. Signature of the business operation lambda for the new *store* is `S2 -> ([operation], S2)`.
   But internal implementation is broken into two parts: `computeR: S1 -> (S1, K, R option)` and
-  `continue: (S1, K, R) -> ([operation], S1). The glue pseudo-code looks as following:
+  `continue: (S1, K, R) -> ([operation], S1)`. The glue pseudo-code looks as following:
 
   ```ocaml
     let (s2_1, k, r) = computeR(s2_0)
