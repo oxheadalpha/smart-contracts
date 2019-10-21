@@ -65,12 +65,12 @@ type tx = {
 
 type safe_transfer_from_param = {
   tx: tx;
-  data: byte list;
+  data: bytes;
 }
 
 type safe_batch_transfer_from_param = {
   txs: tx list;
-  data: byte list;
+  data: bytes;
 }
 type balance_request = {
   owner: address;
@@ -112,13 +112,13 @@ type erc1155 =
 type on_erc1155_received_param = {
   operator: address;
   tx: tx;
-  data: byte list;
+  data: bytes;
 }
 
 type on_erc1155_batch_received_param = {
   operator: address;
   txs: tx list;
-  data: byte list;
+  data: bytes;
 }
 
 (* ERC1155Receiver entry points *)
