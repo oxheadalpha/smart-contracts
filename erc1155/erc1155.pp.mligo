@@ -53,25 +53,27 @@
 
 
 type token_id = nat
-(*
-  Token transfer 
-*)
-type tx = {
-  from: address;  (* source address *)
-  to_:   address;  (* target address *)
-  token_id: token_id;   (* ID of the token type *)
-  amount: nat;    (* transfer amount *)
-}
 
 type safe_transfer_from_param = {
-  tx: tx;
-  data: bytes;
+  from: address;      (* Source address *)
+  to_:   address;     (* Target address. Target smart contract must implement entry points from `erc1155_receiver` interface *)
+  token_id: token_id; (* ID of the token type *)
+  amount: nat;        (* Transfer amount *)
+  data: bytes;        (* Additional data with no specified format, MUST be sent unaltered in call to `OnERC1155Received` on `to_` *)
+}
+
+type tx = {
+  token_id: token_id; (* ID of the token type *)
+  amount: nat;        (* Transfer amount *)
 }
 
 type safe_batch_transfer_from_param = {
-  txs: tx list;
-  data: bytes;
+  from: address;      (* Source address *)
+  to_:   address;     (* Target address. Target smart contract must implement entry points from `erc1155_receiver` interface *)
+  batch: tx list;     (* Batch of tokens and their amounts to be transfered *)
+  data: bytes;        (* Additional data with no specified format, MUST be sent unaltered in call to `OnERC1155BatchReceived` on `to_` *)
 }
+
 type balance_request = {
   owner: address;
   token_id: token_id;
@@ -110,18 +112,21 @@ type erc1155 =
 
 
 type on_erc1155_received_param = {
-  operator: address;
-  tx: tx;
-  data: bytes;
+  operator: address;  (* The address which initiated the transfer (i. e. sender) *)
+  from: address;      (* Source address *)
+  token_id: token_id; (* ID of the token type *)
+  amount: nat;        (* Transfer amount *)
+  data: bytes;        (* Additional data with no specified format *)
 }
 
 type on_erc1155_batch_received_param = {
-  operator: address;
-  txs: tx list;
-  data: bytes;
+  operator: address;  (* The address which initiated the transfer (i. e. sender) *)
+  from: address;      (* Source address *)
+  batch: tx list;     (* Batch of tokens and their amounts which are transfered *)
+  data: bytes;        (* Additional data with no specified format *)
 }
 
-(* ERC1155Receiver entry points *)
+(* ERC1155TokenReceiver entry points *)
 type erc1155_token_receiver =
   | OnERC1155Received of on_erc1155_received_param
   | OnERC1155BatchReceived of on_erc1155_batch_received_param
