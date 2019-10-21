@@ -60,18 +60,18 @@ type erc1155 =
 
 
 type on_erc1155_received_param = {
-  operator: address;  (* The address which initiated the transfer (i. e. sender) *)
-  from: address;      (* Source address *)
-  token_id: token_id; (* ID of the token type *)
-  amount: nat;        (* Transfer amount *)
-  data: bytes;        (* Additional data with no specified format *)
+  operator: address;    (* The address which initiated the transfer (i. e. sender) *)
+  from: address option; (* Source address. None for minting operation *)
+  token_id: token_id;   (* ID of the token type *)
+  amount: nat;          (* Transfer amount *)
+  data: bytes;          (* Additional data with no specified format *)
 }
 
 type on_erc1155_batch_received_param = {
-  operator: address;  (* The address which initiated the transfer (i. e. sender) *)
-  from: address;      (* Source address *)
-  batch: tx list;     (* Batch of tokens and their amounts which are transfered *)
-  data: bytes;        (* Additional data with no specified format *)
+  operator: address;    (* The address which initiated the transfer (i. e. sender) *)
+  from: address option; (* Source address. None for minting operation *)
+  batch: tx list;       (* Batch of tokens and their amounts which are transfered *)
+  data: bytes;          (* Additional data with no specified format *)
 }
 
 (* ERC1155TokenReceiver entry points *)
