@@ -2,24 +2,25 @@
 
 type token_id = nat
 (*
-  Token transfer 
+  Token transfer
 *)
 type tx = {
-  from: address;  (* source address *)
-  to_:   address;  (* target address *)
-  token_id: token_id;   (* ID of the token type *)
-  amount: nat;    (* transfer amount *)
+  from: address;      (* source address *)
+  to_:   address;     (* target address. Target smart contract must implement entry points from `erc1155_receiver` interface *)
+  token_id: token_id; (* ID of the token type *)
+  amount: nat;        (* transfer amount *)
 }
 
 type safe_transfer_from_param = {
-  tx: tx;
-  data: bytes;
+  tx: tx;       (* transfer definition *)
+  data: bytes;  (* Additional data with no specified format, MUST be sent unaltered in call to `OnERC1155Received` on `to_` *)
 }
 
 type safe_batch_transfer_from_param = {
-  txs: tx list;
-  data: bytes;
+  txs: tx list; (* batch of transaction definitions *)
+  data: bytes;  (* Additional data with no specified format, MUST be sent unaltered in call to `OnERC1155BatchReceived` on `to_` *)
 }
+
 type balance_request = {
   owner: address;
   token_id: token_id;
