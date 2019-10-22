@@ -73,7 +73,7 @@ type on_erc1155_received_param = {
 type on_erc1155_batch_received_param = {
   operator: address;    (* The address which initiated the transfer (i. e. sender) *)
   from: address option; (* Source address. None for minting operation *)
-  batch: tx list;       (* Batch of tokens and their amounts which are transfered *)
+  batch: tx list;       (* Batch of tokens and their amounts which are transferred *)
   data: bytes;          (* Additional data with no specified format *)
 }
 
