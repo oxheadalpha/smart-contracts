@@ -13,7 +13,8 @@ let set_approval_for_all (approvals: approvals) (param: set_approval_for_all_par
     then Set.add param.operator operators
     else Set.remove param.operator operators
   in
-  Map.update sender (Some new_operators) approvals
+    (* TODO: remove map entry if new_operatores set is empty. Need `Set.size` to be implemented *)
+    Map.update sender (Some new_operators) approvals
 
 
 let base_test(p: unit) = 42
