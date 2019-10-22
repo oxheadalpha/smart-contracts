@@ -1,5 +1,3 @@
-
-
 type token_id = nat
 
 type safe_transfer_from_param = {
