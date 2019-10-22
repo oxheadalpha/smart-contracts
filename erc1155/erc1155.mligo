@@ -23,8 +23,8 @@ type safe_batch_transfer_from_param = {
 }
 
 type balance_request = {
-  owner: address;
-  token_id: token_id;
+  owner: address;     (* The address of the token holder *)
+  token_id: token_id; (* ID of the  token *)
 }
 
 type balance_of_param = {
@@ -42,10 +42,13 @@ type set_approval_for_all_param = {
   approved: bool;
 }
 
-type is_approved_for_all = {
+type is_approved_for_all_request = {
   owner: address;
   operator: address;
-  approved_view: address*address*bool -> operation
+}
+type is_approved_for_all = {
+  is_approved_for_all_request: is_approved_for_all_request;
+  approved_view: is_approved_for_all_request * bool -> operation
 }
 
 (* ERC1155 entry points *)
@@ -56,7 +59,7 @@ type erc1155 =
   | BalanceOfBatch of balance_of_batch_param
   | SetApprovalForAll of set_approval_for_all_param
   | IsApprovedForAll of is_approved_for_all
-  | Default of unit
+  | ERC1155Ext of unit
 
 
 type on_erc1155_received_param = {
@@ -78,7 +81,7 @@ type on_erc1155_batch_received_param = {
 type erc1155_token_receiver =
   | OnERC1155Received of on_erc1155_received_param
   | OnERC1155BatchReceived of on_erc1155_batch_received_param
-  | Default of unit
+  | ERC1155TokenReceiverExt of unit
 
 
 let test(u: unit) = 77
