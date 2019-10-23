@@ -56,9 +56,9 @@ type erc1155 =
     Caller must be approved to manage the tokens being transferred out of the `from` account (see "Approval" section of the standard).
     MUST revert if balance of holder for token `token_id` is lower than the `amount` sent.
     MUST revert of `to_` contract does not implement entry point for `ERC1155TokenReceiver`.
-    MUST call `OnERC1155Received` on `to_` and act appropriately (see "Safe Transfer Rules" section of the standard).
+    MUST call `On_erc1155_received` on `to_` and act appropriately (see "Safe Transfer Rules" section of the standard).
   *)
-  | SafeTransferFrom of safe_transfer_from_param
+  | Safe_transfer_from of safe_transfer_from_param
   (*
     Transfers specified `amount`(s) of `token_id`(s) from the `from` address to the `to_` address specified (with safety call).
     Caller must be approved to manage the tokens being transferred out of the `from` account (see "Approval" section of the standard).
@@ -66,16 +66,15 @@ type erc1155 =
     MUST revert of `to_` contract does not implement entry point for `ERC1155TokenReceiver`.
     MUST call the relevant `ERC1155TokenReceiver` hook(s) on `to_` and act appropriately (see "Safe Transfer Rules" section of the standard).    
   *)
-  | SafeBatchTransferFrom of safe_batch_transfer_from_param
+  | Safe_batch_transfer_from of safe_batch_transfer_from_param
   (* Get the balance of an account's tokens. *)
-  | BalanceOf of balance_of_param
+  | Balance_of of balance_of_param
   (* Get the balance of multiple account/token pairs *)
-  | BalanceOfBatch of balance_of_batch_param
+  | Balance_of_batch of balance_of_batch_param
   (* Enable or disable approval for a third party ("operator") to manage all of the caller's tokens. *)
-  | SetApprovalForAll of set_approval_for_all_param
+  | Set_approval_for_all of set_approval_for_all_param
   (* Queries the approval status of an operator for a given owner. *)
-  | IsApprovedForAll of is_approved_for_all_param
-  | ERC1155Ext of unit
+  | Is_approved_for_all of is_approved_for_all_param
 
 
 type on_erc1155_received_param = {
@@ -98,18 +97,17 @@ type erc1155_token_receiver =
   (*
     Handle the receipt of a single ERC1155 token type.
     An ERC1155-compliant smart contract MUST call this function on the token recipient
-    contract from a `SafeTransferFrom`.
+    contract from a `Safe_transfer_from`.
     MUST revert if it rejects the transfer.
   *)
-  | OnERC1155Received of on_erc1155_received_param
+  | On_erc1155_received of on_erc1155_received_param
   (*
     Handle the receipt of multiple ERC1155 token types.
     An ERC1155-compliant smart contract MUST call this function on the token recipient 
-    contract from a `SafeBatchTransferFrom`.
+    contract from a `Safe_batch_transfer_from`.
     MUST revert if it rejects the transfer(s).
   *)
-  | OnERC1155BatchReceived of on_erc1155_batch_received_param
-  | ERC1155TokenReceiverExt of unit
+  | On_erc1155_batch_received of on_erc1155_batch_received_param
 
 
 let test(u: unit) = 77
