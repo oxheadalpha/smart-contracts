@@ -60,7 +60,7 @@ type erc1155 =
   *)
   | SafeTransferFrom of safe_transfer_from_param
   (*
-    Transfers specified `amount`(s) of an `token_id`(s) from the `from` address to the `to_` address specified (with safety call).
+    Transfers specified `amount`(s) of `token_id`(s) from the `from` address to the `to_` address specified (with safety call).
     Caller must be approved to manage the tokens being transferred out of the `from` account (see "Approval" section of the standard).
     MUST revert if any of the balance(s) of the holder(s) for token(s) is lower than the respective amount(s) in `_values` sent to the recipient.
     MUST revert of `to_` contract does not implement entry point for `ERC1155TokenReceiver`.
