@@ -5,7 +5,7 @@ type safe_transfer_from_param = {
   to_:   address;     (* Target address. Target smart contract must implement entry points from `erc1155_receiver` interface *)
   token_id: token_id; (* ID of the token type *)
   amount: nat;        (* Transfer amount *)
-  data: bytes;        (* Additional data with no specified format, MUST be sent unaltered in call to `OnERC1155Received` on `to_` *)
+  data: bytes;        (* Additional data with no specified format, MUST be sent unaltered in call to `On_erc1155_received` on `to_` *)
 }
 
 type tx = {
@@ -17,7 +17,7 @@ type safe_batch_transfer_from_param = {
   from: address;      (* Source address *)
   to_:   address;     (* Target address. Target smart contract must implement entry points from `erc1155_receiver` interface *)
   batch: tx list;     (* Batch of tokens and their amounts to be transfered *)
-  data: bytes;        (* Additional data with no specified format, MUST be sent unaltered in call to `OnERC1155BatchReceived` on `to_` *)
+  data: bytes;        (* Additional data with no specified format, MUST be sent unaltered in call to `On_erc1155_batch_received` on `to_` *)
 }
 
 type balance_request = {
@@ -55,7 +55,7 @@ type erc1155 =
     Transfers specified `amount` of an `token_id` from the `from` address to the `to_` address specified (with safety call).
     Caller must be approved to manage the tokens being transferred out of the `from` account (see "Approval" section of the standard).
     MUST revert if balance of holder for token `token_id` is lower than the `amount` sent.
-    MUST revert of `to_` contract does not implement entry point for `ERC1155TokenReceiver`.
+    MUST revert of `to_` contract does not implement entry point for `erc1155_token_receiver`.
     MUST call `On_erc1155_received` on `to_` and act appropriately (see "Safe Transfer Rules" section of the standard).
   *)
   | Safe_transfer_from of safe_transfer_from_param
@@ -63,8 +63,8 @@ type erc1155 =
     Transfers specified `amount`(s) of `token_id`(s) from the `from` address to the `to_` address specified (with safety call).
     Caller must be approved to manage the tokens being transferred out of the `from` account (see "Approval" section of the standard).
     MUST revert if any of the balance(s) of the holder(s) for token(s) is lower than the respective amount(s) in `_values` sent to the recipient.
-    MUST revert of `to_` contract does not implement entry point for `ERC1155TokenReceiver`.
-    MUST call the relevant `ERC1155TokenReceiver` hook(s) on `to_` and act appropriately (see "Safe Transfer Rules" section of the standard).    
+    MUST revert of `to_` contract does not implement entry point for `erc1155_token_receiver`.
+    MUST call the relevant `erc1155_token_receiver` hook(s) on `to_` and act appropriately (see "Safe Transfer Rules" section of the standard).    
   *)
   | Safe_batch_transfer_from of safe_batch_transfer_from_param
   (* Get the balance of an account's tokens. *)
