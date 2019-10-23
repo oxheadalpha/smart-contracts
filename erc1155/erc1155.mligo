@@ -74,13 +74,7 @@ type erc1155 =
   (* Enable or disable approval for a third party ("operator") to manage all of the caller's tokens. *)
   | Set_approval_for_all of set_approval_for_all_param
   (* Queries the approval status of an operator for a given owner. *)
-<<<<<<< HEAD
-  | IsApprovedForAll of is_approved_for_all_param
-  | ERC1155Ext of unit
-=======
   | Is_approved_for_all of is_approved_for_all_param
->>>>>>> erc1155-doc
-
 
 type on_erc1155_received_param = {
   operator: address;    (* The address which initiated the transfer (i. e. sender) *)
@@ -105,13 +99,8 @@ type erc1155_token_receiver =
     contract from a `Safe_transfer_from`.
     MUST revert if it rejects the transfer.
   *)
-<<<<<<< HEAD
-  | OnERC1155Received of on_erc1155_received_param
-  (**
-=======
   | On_erc1155_received of on_erc1155_received_param
   (*
->>>>>>> erc1155-doc
     Handle the receipt of multiple ERC1155 token types.
     An ERC1155-compliant smart contract MUST call this function on the token recipient 
     contract from a `Safe_batch_transfer_from`.
