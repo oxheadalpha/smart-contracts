@@ -44,7 +44,7 @@ type is_approved_for_all_request = {
   owner: address;     (* The owner of the tokens *)
   operator: address;  (* Address of authorized operator *)
 }
-type is_approved_for_all = {
+type is_approved_for_all_param = {
   is_approved_for_all_request: is_approved_for_all_request;
   approved_view: is_approved_for_all_request * bool -> operation
 }
@@ -74,7 +74,7 @@ type erc1155 =
   (* Enable or disable approval for a third party ("operator") to manage all of the caller's tokens. *)
   | SetApprovalForAll of set_approval_for_all_param
   (* Queries the approval status of an operator for a given owner. *)
-  | IsApprovedForAll of is_approved_for_all
+  | IsApprovedForAll of is_approved_for_all_param
   | ERC1155Ext of unit
 
 
