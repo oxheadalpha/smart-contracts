@@ -53,8 +53,29 @@ let pack_balance_key (s: balance_storage) (key: balance_key) : nat option =
         let packed = pack_balance_key_impl id key.token_id in 
         Some(packed)
  
+(* return updated storage and owner id *)
+let add_owner (s: balance_storage) (owner: address) : (balance_storage * nat) =
+  let owner_id  = s.owner_count + 1p in
+  let ol = Map.add owner owner_id s.owner_lookup in
+  let new_s = 
+    { 
+      owner_count = owner_id;
+      owner_lookup = ol;
+      balances = s.balances;
+    } in
+  (new_s, owner_id)
+
+(* if key.owner does not exists in s.owner_lookup, then adds one *)
 let pack_balance_key_force (s: balance_storage) (key: balance_key) : balance_storage * nat =
-  (s, 1p)
+  let owner_id = Map.find_opt key.owner s.owner_lookup in
+  match owner_id with
+    | None    -> 
+        let store_id = add_owner s key.owner in
+        let packed = pack_balance_key_impl store_id.(1) key.token_id in 
+        (store_id.(0), packed)
+    | Some id -> 
+        let packed = pack_balance_key_impl id key.token_id in 
+        (s, packed)
 
 
 let base_test(p: unit) = 42
