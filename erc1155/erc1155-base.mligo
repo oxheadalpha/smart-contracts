@@ -17,11 +17,7 @@ let set_approval_for_all (approvals: approvals) (param: set_approval_for_all_par
     then  Map.remove sender approvals
     else Map.update sender (Some new_operators) approvals
   
- 
-(* (param: is_approved_for_all_param) *)
 
-(*
-let is_approved_for_all (approvals : approvals) (p: int) : operation option = (None: operation option)
-*)
+let is_approved_for_all (approvals: approvals) (param: is_approved_for_all_param) : approvals = approvals
 
 let base_test(p: unit) = 42
