@@ -18,6 +18,13 @@ let set_approval_for_all (approvals: approvals) (param: set_approval_for_all_par
     else Map.update sender (Some new_operators) approvals
   
 
-let is_approved_for_all (approvals: approvals) (param: is_approved_for_all_param) : approvals = approvals
+let is_approved_for_all (approvals: approvals) (param: is_approved_for_all_param) : operation = 
+  let req = param.is_approved_for_all_request in
+  let operators = Map.find_opt req.owner approvals in
+  let result = match operators with
+    | None      -> false
+    | Some ops  -> Set.mem req.operator ops
+  in
+  param.approved_view (req, result)
 
 let base_test(p: unit) = 42

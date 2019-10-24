@@ -27,12 +27,12 @@ type balance_request = {
 
 type balance_of_param = {
   balance_request: balance_request;
-  balance_view: balance_request * nat -> operation;
+  balance_view: (balance_request * nat) -> operation;
 }
 
 type balance_of_batch_param = {
   balance_request: balance_request list;
-  balance_view: balance_request * nat list -> operation;
+  balance_view: (balance_request * nat list) -> operation;
 }
 
 type set_approval_for_all_param = {
@@ -46,7 +46,7 @@ type is_approved_for_all_request = {
 }
 type is_approved_for_all_param = {
   is_approved_for_all_request: is_approved_for_all_request;
-  approved_view: is_approved_for_all_request * bool -> operation
+  approved_view: (is_approved_for_all_request * bool) -> operation
 }
 
 (* ERC1155 entry points *)
