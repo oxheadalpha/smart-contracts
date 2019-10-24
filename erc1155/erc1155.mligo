@@ -1,15 +1,13 @@
-type token_id = nat
-
 type safe_transfer_from_param = {
   from: address;      (* Source address *)
   to_:   address;     (* Target address. Target smart contract must implement entry points from `erc1155_receiver` interface *)
-  token_id: token_id; (* ID of the token type *)
+  token_id: nat; (* ID of the token type *)
   amount: nat;        (* Transfer amount *)
   data: bytes;        (* Additional data with no specified format, MUST be sent unaltered in call to `On_erc1155_received` on `to_` *)
 }
 
 type tx = {
-  token_id: token_id; (* ID of the token type *)
+  token_id: nat; (* ID of the token type *)
   amount: nat;        (* Transfer amount *)
 }
 
@@ -22,7 +20,7 @@ type safe_batch_transfer_from_param = {
 
 type balance_request = {
   owner: address;     (* The address of the token holder *)
-  token_id: token_id; (* ID of the  token *)
+  token_id: nat; (* ID of the  token *)
 }
 
 type balance_of_param = {
@@ -79,7 +77,7 @@ type erc1155 =
 type on_erc1155_received_param = {
   operator: address;    (* The address which initiated the transfer (i. e. sender) *)
   from: address option; (* Source address. None for minting operation *)
-  token_id: token_id;   (* ID of the token type *)
+  token_id: nat;   (* ID of the token type *)
   amount: nat;          (* Transfer amount *)
   data: bytes;          (* Additional data with no specified format *)
 }

@@ -27,4 +27,34 @@ let is_approved_for_all (approvals: approvals) (param: is_approved_for_all_param
   in
   param.approved_view (req, result)
 
+type balance_key = {
+  owner: address;
+  token_id: nat;
+}
+let max_tokens = 4294967295p  (* 2^32-1 *)
+let owner_offset = 4294967296p  (* 2^32 *)
+
+type balance_storage = {
+  owner_count: nat;
+  owner_lookup: (address, nat) big_map;
+  balances: (nat, nat) big_map;
+}
+
+let pack_balance_key_impl (owner_id: nat) (token_id: nat) : nat =
+  if token_id > max_tokens
+  then (failwith("provided token ID is out of allowed range") : nat)
+  else token_id + (owner_id * owner_offset)
+
+let pack_balance_key (s: balance_storage) (key: balance_key) : nat option =
+  let owner_id = Map.find_opt key.owner s.owner_lookup in
+  match owner_id with
+    | None    -> (None: nat option)
+    | Some id -> 
+        let packed = pack_balance_key_impl id key.token_id in 
+        Some(packed)
+ 
+let pack_balance_key_force (s: balance_storage) (key: balance_key) : balance_storage * nat =
+  (s, 1p)
+
+
 let base_test(p: unit) = 42
