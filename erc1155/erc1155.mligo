@@ -30,7 +30,7 @@ type balance_of_param = {
 
 type balance_of_batch_param = {
   balance_request: balance_request list;
-  balance_view: (balance_request * nat list) -> operation;
+  balance_view: ((balance_request * nat) list) -> operation;
 }
 
 type set_approval_for_all_param = {
