@@ -27,10 +27,7 @@ let is_approved_for_all (approvals: approvals) (param: is_approved_for_all_param
   in
   param.approved_view (req, result)
 
-type balance_key = {
-  owner: address;
-  token_id: nat;
-}
+
 let max_tokens = 4294967295p  (* 2^32-1 *)
 let owner_offset = 4294967296p  (* 2^32 *)
 
@@ -64,7 +61,7 @@ let pack_balance_key_impl (owner_id: nat) (token_id: nat) : nat =
   then (failwith("provided token ID is out of allowed range") : nat)
   else token_id + (owner_id * owner_offset)
 
-let pack_balance_key (s: balance_storage) (key: balance_key) : nat option =
+let pack_balance_key (s: balance_storage) (key: balance_request) : nat option =
   let owner_id = Map.find_opt key.owner s.owner_lookup in
   match owner_id with
     | None    -> (None: nat option)
@@ -74,10 +71,22 @@ let pack_balance_key (s: balance_storage) (key: balance_key) : nat option =
  
 
 (* if key.owner does not exists in s.owner_lookup, then adds one *)
-let pack_balance_key_force (s: balance_storage) (key: balance_key) : balance_storage * nat =
+let pack_balance_key_force (s: balance_storage) (key: balance_request) : balance_storage * nat =
   let storage_owner = ensure_owner_id s key.owner in
   let packed = pack_balance_key_impl storage_owner.(1) key.token_id in 
   (storage_owner.(0), packed)
+
+let balance_of (s: balance_storage) (param: balance_of_param) : operation =
+  let balance_key = pack_balance_key s param.balance_request in
+  match balance_key with
+    | None      -> (failwith("No such owner") : operation)
+    | Some key  -> 
+        let bal = match Map.find_opt key s.balances with
+          | None    -> 0p
+          | Some b  -> b
+        in
+        param.balance_view (param.balance_request, bal)
+        
 
 
 let base_test(p: unit) = 42
