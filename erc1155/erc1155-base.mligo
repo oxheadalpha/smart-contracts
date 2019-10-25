@@ -40,6 +40,25 @@ type balance_storage = {
   balances: (nat, nat) big_map;
 }
 
+(* return updated storage and newly added owner id *)
+let add_owner (s: balance_storage) (owner: address) : (balance_storage * nat) =
+  let owner_id  = s.owner_count + 1p in
+  let ol = Map.add owner owner_id s.owner_lookup in
+  let new_s = 
+    { (* TODO: use functional record update once supported by LIGO *)
+      owner_count = owner_id;
+      owner_lookup = ol;
+      balances = s.balances;
+    } in
+  (new_s, owner_id)
+
+(* gets existing owner id. If owner does not have one, creates a new id and adds it to an owner_lookup *)
+let ensure_owner_id (s: balance_storage) (owner: address) : (balance_storage * nat) =
+  let owner_id = Map.find_opt owner s.owner_lookup in
+  match owner_id with
+    | Some id -> (s, id)
+    | None    -> add_owner s owner
+
 let pack_balance_key_impl (owner_id: nat) (token_id: nat) : nat =
   if token_id > max_tokens
   then (failwith("provided token ID is out of allowed range") : nat)
@@ -53,29 +72,12 @@ let pack_balance_key (s: balance_storage) (key: balance_key) : nat option =
         let packed = pack_balance_key_impl id key.token_id in 
         Some(packed)
  
-(* return updated storage and owner id *)
-let add_owner (s: balance_storage) (owner: address) : (balance_storage * nat) =
-  let owner_id  = s.owner_count + 1p in
-  let ol = Map.add owner owner_id s.owner_lookup in
-  let new_s = 
-    { 
-      owner_count = owner_id;
-      owner_lookup = ol;
-      balances = s.balances;
-    } in
-  (new_s, owner_id)
 
 (* if key.owner does not exists in s.owner_lookup, then adds one *)
 let pack_balance_key_force (s: balance_storage) (key: balance_key) : balance_storage * nat =
-  let owner_id = Map.find_opt key.owner s.owner_lookup in
-  match owner_id with
-    | None    -> 
-        let store_id = add_owner s key.owner in
-        let packed = pack_balance_key_impl store_id.(1) key.token_id in 
-        (store_id.(0), packed)
-    | Some id -> 
-        let packed = pack_balance_key_impl id key.token_id in 
-        (s, packed)
+  let storage_owner = ensure_owner_id s key.owner in
+  let packed = pack_balance_key_impl storage_owner.(1) key.token_id in 
+  (storage_owner.(0), packed)
 
 
 let base_test(p: unit) = 42
