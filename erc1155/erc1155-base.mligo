@@ -76,17 +76,23 @@ let pack_balance_key_force (s: balance_storage) (key: balance_request) : balance
   let packed = pack_balance_key_impl storage_owner.(1) key.token_id in 
   (storage_owner.(0), packed)
 
-let balance_of (s: balance_storage) (param: balance_of_param) : operation =
-  let balance_key = pack_balance_key s param.balance_request in
+let get_balance (s: balance_storage) (r: balance_request) : nat =
+  let balance_key = pack_balance_key s r in
   match balance_key with
-    | None      -> (failwith("No such owner") : operation)
+    | None      -> (failwith("No such owner") : nat)
     | Some key  -> 
-        let bal = match Map.find_opt key s.balances with
+        let bal : nat option = Map.find_opt key s.balances in
+        (match Map.find_opt key s.balances with
           | None    -> 0p
-          | Some b  -> b
-        in
-        param.balance_view (param.balance_request, bal)
-        
+          | Some b  -> b)
 
+let balance_of (s: balance_storage) (param: balance_of_param) : operation =
+  let bal = get_balance param.balance_request in
+  param.balance_view (param.balance_request, bal)
+        
+let balance_of_batch (s: balance_storage) (param: balance_of_batch_param) : operation =
+  let to_balance = fun (r: balance_request) -> (r, get_balance s r) in
+  let requests_2_bals = List.map to_balance param.balance_request in
+  param.balance_view requests_2_bals
 
 let base_test(p: unit) = 42
