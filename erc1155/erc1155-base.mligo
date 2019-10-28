@@ -56,43 +56,50 @@ let ensure_owner_id (s: balance_storage) (owner: address) : (balance_storage * n
     | Some id -> (s, id)
     | None    -> add_owner s owner
 
-let pack_balance_key_impl (owner_id: nat) (token_id: nat) : nat =
-  if token_id > max_tokens
-  then (failwith("provided token ID is out of allowed range") : nat)
-  else token_id + (owner_id * owner_offset)
-
-let pack_balance_key (s: balance_storage) (key: balance_request) : nat option =
+let pack_balance_key  = fun (s: balance_storage) (key: balance_request) ->
   let owner_id = Map.find_opt key.owner s.owner_lookup in
   match owner_id with
-    | None    -> (None: nat option)
+    | None    -> (failwith("No such owner") : nat)
     | Some id -> 
-        let packed = pack_balance_key_impl id key.token_id in 
-        Some(packed)
+        if key.token_id > max_tokens
+        then (failwith("provided token ID is out of allowed range") : nat)
+        else key.token_id + (id * owner_offset)
  
+let get_balance (s: balance_storage) (key: nat) : nat =
+  let bal : nat option = Map.find_opt key s.balances in
+  (match Map.find_opt key s.balances with
+    | None    -> 0p
+    | Some b  -> b)
 
-(* if key.owner does not exists in s.owner_lookup, then adds one *)
-let pack_balance_key_force (s: balance_storage) (key: balance_request) : balance_storage * nat =
-  let storage_owner = ensure_owner_id s key.owner in
-  let packed = pack_balance_key_impl storage_owner.(1) key.token_id in 
-  (storage_owner.(0), packed)
-
-let get_balance (s: balance_storage) (r: balance_request) : nat =
+let get_balance_req (s: balance_storage) (r: balance_request) : nat =
   let balance_key = pack_balance_key s r in
-  match balance_key with
-    | None      -> (failwith("No such owner") : nat)
-    | Some key  -> 
-        let bal : nat option = Map.find_opt key s.balances in
-        (match Map.find_opt key s.balances with
-          | None    -> 0p
-          | Some b  -> b)
+  get_balance s balance_key
+
+
 
 let balance_of (s: balance_storage) (param: balance_of_param) : operation =
-  let bal = get_balance param.balance_request in
+  let bal = get_balance_req s param.balance_request in
   param.balance_view (param.balance_request, bal)
-        
-let balance_of_batch (s: balance_storage) (param: balance_of_batch_param) : operation =
-  let to_balance = fun (r: balance_request) -> (r, get_balance s r) in
-  let requests_2_bals = List.map to_balance param.balance_request in
+
+
+
+let balance_of_batch (s: balance_storage) (param: balance_of_batch_param)  : operation =
+  let get_bal = fun (r: balance_request) -> get_balance_req s r in
+  let to_balance = fun (r: balance_request) ->
+    let bal = 0p in
+    // let bal = get_balance_req s r in
+    (r, bal) 
+  in
+  let requests_2_bals = List.map param.balance_request to_balance in
   param.balance_view requests_2_bals
+  
+// let safe_transfer_from (s: balance_store) (param: safe_transfer_from_param) : (operation  list) * safe_transfer_from_param =
+//   let from_key = 
+//     owner = param.from;
+//     token_id = param.token_id;
+//   } in
+//   let from_balance = get_balance from_request in
+//   if from_balance
+
 
 let base_test(p: unit) = 42
