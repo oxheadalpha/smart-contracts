@@ -33,8 +33,8 @@ let owner_offset = 4294967296p  (* 2^32 *)
 
 type balance_storage = {
   owner_count: nat;
-  owner_lookup: (address, nat) big_map;
-  balances: (nat, nat) big_map;
+  owner_lookup: (address, nat) map; //TODO: change to big_map
+  balances: (nat, nat) map;  //TODO: change to big_map
 }
 
 (* return updated storage and newly added owner id *)
@@ -85,8 +85,7 @@ let balance_of (s: balance_storage) (param: balance_of_param) : operation =
 
 let balance_of_batch (s: balance_storage) (param: balance_of_batch_param)  : operation =
   let to_balance = fun (r: balance_request) ->
-    let bal = 0p in
-    // let bal = get_balance_req s r in
+    let bal = get_balance_req s r in
     (r, bal) 
   in
   let requests_2_bals = List.map param.balance_request to_balance in
