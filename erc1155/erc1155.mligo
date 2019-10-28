@@ -1,5 +1,5 @@
 type safe_transfer_from_param = {
-  from: address;      (* Source address *)
+  from_: address;      (* Source address *)
   to_:   address;     (* Target address. Target smart contract must implement entry points from `erc1155_receiver` interface *)
   token_id: nat; (* ID of the token type *)
   amount: nat;        (* Transfer amount *)
@@ -12,7 +12,7 @@ type tx = {
 }
 
 type safe_batch_transfer_from_param = {
-  from: address;      (* Source address *)
+  from_: address;      (* Source address *)
   to_:   address;     (* Target address. Target smart contract must implement entry points from `erc1155_receiver` interface *)
   batch: tx list;     (* Batch of tokens and their amounts to be transfered *)
   data: bytes;        (* Additional data with no specified format, MUST be sent unaltered in call to `On_erc1155_batch_received` on `to_` *)
