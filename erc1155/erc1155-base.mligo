@@ -67,9 +67,9 @@ let pack_balance_key  = fun (s: balance_storage) (key: balance_request) ->
  
 let get_balance (s: balance_storage) (key: nat) : nat =
   let bal : nat option = Map.find_opt key s.balances in
-  (match Map.find_opt key s.balances with
+  match bal with
     | None    -> 0p
-    | Some b  -> b)
+    | Some b  -> b
 
 let get_balance_req (s: balance_storage) (r: balance_request) : nat =
   let balance_key = pack_balance_key s r in
@@ -84,7 +84,6 @@ let balance_of (s: balance_storage) (param: balance_of_param) : operation =
 
 
 let balance_of_batch (s: balance_storage) (param: balance_of_batch_param)  : operation =
-  let get_bal = fun (r: balance_request) -> get_balance_req s r in
   let to_balance = fun (r: balance_request) ->
     let bal = 0p in
     // let bal = get_balance_req s r in
