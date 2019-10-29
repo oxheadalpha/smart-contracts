@@ -119,6 +119,20 @@ let safe_transfer_from (s : balance_storage) (param : safe_transfer_from_param) 
       owners = s.owners;
       balances = new_balances;
     } in
+  // let receiver : erc1155_token_receiver contract =  Operation.get_contract param.to_ in
+  // let ops = match receiver with
+  //   None    -> ([] : operation list)
+  //   Some c  -> 
+      // let p : on_erc1155_received_param = {
+      //   operator = sender;
+      //   from_ = Some param.from_;
+      //   token_id = param.token_id;
+      //   amount = param.amount;
+      //   data = param.data;
+      // } in
+      // let op = Operartion.transaction p 0mutez c in
+      //[op] in
+  // (ops, new)
   (([] : operation list), new_store)
 
 
