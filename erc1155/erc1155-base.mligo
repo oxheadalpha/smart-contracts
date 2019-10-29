@@ -119,23 +119,46 @@ let safe_transfer_from (param : safe_transfer_from_param) (s : balance_storage) 
       owners = s.owners;
       balances = new_balances;
     } in
-  // let receiver : erc1155_token_receiver contract =  Operation.get_contract param.to_ in
+
+  let receiver : erc1155_token_receiver contract =  Operation.get_contract param.to_ in
   // let ops = match receiver with
   //   None    -> ([] : operation list)
   //   Some c  -> 
-      // let p : on_erc1155_received_param = {
-      //   operator = sender;
-      //   from_ = Some param.from_;
-      //   token_id = param.token_id;
-      //   amount = param.amount;
-      //   data = param.data;
-      // } in
-      // let op = Operartion.transaction p 0mutez c in
+      let p : on_erc1155_received_param = {
+        operator = sender;
+        from_ = Some param.from_;
+        token_id = param.token_id;
+        amount = param.amount;
+        data = param.data;
+      } in
+      let op = Operation.transaction (On_erc1155_received p) 0mutez receiver in
+
+      ([op], new_store)
       //[op] in
   // (ops, new)
-  (([] : operation list), new_store)
 
-  // let safe_transfer_from (s: )
+  let safe_batch_transfer_from (param : safe_batch_transfer_from_param) (s : balance_storage) : (operation  list) * balance_store = 
+    let make_transfer = fun (bals: balances) (t: tx) ->
+      let from_key  = pack_balance_key { owner = param.from_; token_id = t.token_id; } s.owners in
+      let to_key    = pack_balance_key { owner = param.to_;   token_id = t.token_id; } s.owners in
+      transfer_balance from_key to_key t.amount bals in 
+
+    let new_balances = List.fold param.batch s.balances make_transfer in
+    let new_store: balance_storage = {
+      owners = s.owners;
+      balances = new_balances;
+    } in
+
+    let receiver : erc1155_token_receiver contract =  Operation.get_contract param.to_ in
+    let p : on_erc1155_batch_received_param = {
+        operator = sender;
+        from_ = Some param.from_;
+        batch = param.batch;
+        data = param.data;
+      } in
+    let op = Operation.transaction (On_erc1155_batch_received p) 0mutez receiver in
+
+    ([op], new_store)
 
 
 let base_test (p : unit) = unit
