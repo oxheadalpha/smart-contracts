@@ -43,7 +43,7 @@ type balance_storage = {
 }
 
 (* return updated storage and newly added owner id *)
-let add_owner (s : owner_lookup) (owner : address) : (owner_lookup * nat) =
+let add_owner (owner : address) (s : owner_lookup) : (nat * owner_lookup) =
   let owner_id  = s.owner_count + 1p in
   let os = Map.add owner owner_id s.owners in
   let new_s = 
@@ -51,16 +51,16 @@ let add_owner (s : owner_lookup) (owner : address) : (owner_lookup * nat) =
       owner_count = owner_id;
       owners = os;
     } in
-  (new_s, owner_id)
+  (owner_id, new_s)
 
 (* gets existing owner id. If owner does not have one, creates a new id and adds it to an owner_lookup *)
-let ensure_owner_id (s : owner_lookup) (owner : address) : (owner_lookup * nat) =
+let ensure_owner_id (owner : address) (s : owner_lookup): (nat * owner_lookup) =
   let owner_id = Map.find_opt owner s.owners in
   match owner_id with
-    | Some id -> (s, id)
-    | None    -> add_owner s owner
+    | Some id -> (id, s)
+    | None    -> add_owner owner s
 
-let pack_balance_key (s : owner_lookup) (key : balance_request) : nat =
+let pack_balance_key (key : balance_request) (s : owner_lookup) : nat =
   let owner_id = Map.find_opt key.owner s.owners in
   match owner_id with
     | None    -> (failwith("No such owner") : nat)
@@ -69,34 +69,34 @@ let pack_balance_key (s : owner_lookup) (key : balance_request) : nat =
         then (failwith("provided token ID is out of allowed range") : nat)
         else key.token_id + (id * owner_offset)
  
-let get_balance (b : balances) (key : nat) : nat =
+let get_balance (key : nat) (b : balances) : nat =
   let bal : nat option = Map.find_opt key b in
   match bal with
     | None    -> 0p
     | Some b  -> b
 
-let get_balance_req (s : balance_storage) (r : balance_request) : nat =
-  let balance_key = pack_balance_key s.owners r in
-  get_balance s.balances balance_key
+let get_balance_req (r : balance_request) (s : balance_storage) : nat =
+  let balance_key = pack_balance_key r s.owners in
+  get_balance balance_key s.balances
 
 
 
 let balance_of (param : balance_of_param) (s : balance_storage) : operation =
-  let bal = get_balance_req s param.balance_request in
+  let bal = get_balance_req param.balance_request s in
   param.balance_view (param.balance_request, bal)
 
 
 
 let balance_of_batch (param : balance_of_batch_param) (s : balance_storage)   : operation =
   let to_balance = fun (r: balance_request) ->
-    let bal = get_balance_req s r in
+    let bal = get_balance_req r s in
     (r, bal) 
   in
   let requests_2_bals = List.map param.balance_request to_balance in
   param.balance_view requests_2_bals
 
-let transfer_balance (s : balances) (from_key : nat) (to_key : nat) (amt : nat) : balances = 
-  let from_bal = get_balance s from_key in
+let transfer_balance (from_key : nat) (to_key : nat) (amt : nat) (s : balances) : balances = 
+  let from_bal = get_balance from_key s in
   if from_bal < amt
   then (failwith ("Insufficient balance") : balances)
   else
@@ -106,15 +106,15 @@ let transfer_balance (s : balances) (from_key : nat) (to_key : nat) (amt : nat) 
       then Map.remove from_key s
       else Map.update from_key (Some fbal) s 
     in
-    let to_bal = get_balance s1 to_key in
+    let to_bal = get_balance to_key s1 in
     let tbal = to_bal + amt in
     let s2 = Map.update to_key (Some tbal) s1 in
     s2
 
 let safe_transfer_from (param : safe_transfer_from_param) (s : balance_storage) : (operation  list) * balance_store = 
-  let from_key  = pack_balance_key s.owners { owner = param.from_; token_id = param.token_id; } in
-  let to_key    = pack_balance_key s.owners { owner = param.to_;   token_id = param.token_id; } in
-  let new_balances = transfer_balance s.balances from_key to_key param.amount in
+  let from_key  = pack_balance_key { owner = param.from_; token_id = param.token_id; } s.owners in
+  let to_key    = pack_balance_key { owner = param.to_;   token_id = param.token_id; } s.owners in
+  let new_balances = transfer_balance from_key to_key param.amount s.balances in
   let new_store: balance_storage = {
       owners = s.owners;
       balances = new_balances;
