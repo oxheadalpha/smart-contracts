@@ -95,29 +95,31 @@ let balance_of_batch (s: balance_storage) (param: balance_of_batch_param)  : ope
   let requests_2_bals = List.map param.balance_request to_balance in
   param.balance_view requests_2_bals
 
-// let transfer_balance (s: balances) (from_key: nat) (to_key: nat) (amt: nat) : balances =
-//   let from_bal = get_balance s from_key in
-//   if from_bal < param.amount
-//   then (failwith ("Insufficient balance") : unit)
-//   else   
+let transfer_balance (s: balances) (from_key: nat) (to_key: nat) (amt: nat) : balances = 
+  let from_bal = get_balance s from_key in
+  if from_bal < amt
+  then (failwith ("Insufficient balance") : balances)
+  else
+    let fbal = abs (from_bal - amt) in
+    let s1 = 
+      if fbal = 0p 
+      then Map.remove from_key s
+      else Map.update from_key (Some fbal) s 
+    in
+    let to_bal = get_balance s1 to_key in
+    let tbal = to_bal + amt in
+    let s2 = Map.update to_key (Some tbal) s1 in
+    s2
 
-// let safe_transfer_from (s: balance_storage) (param: safe_transfer_from_param) = //: (operation  list) * balance_store = 
-//   let from_key = pack_balance_key s { owner = param.from_; token_id = param.token_id; } in
-//   let to_key = pack_balance_key s { owner = param.to_; token_id = param.token_id; } in
-//   let new_balances = transfer_balance s.balances from_key to_key param.amount in
-  
-    
-//     let to_bal = get_balance s from_key in
-//     let fbal = abs (from_bal - param.amount) in
-//     let new_from_bal = Map.update from_key (Some fbal) s.balances in
-//     let tbal = to_bal + param.amount in
-//     let new_to_bal = Map.update to_key (Some tbal)  new_from_bal in
-//     let new_store: balance_storage = {
-//       owner_count = s.owner_count;
-//       owner_lookup = s.owner_lookup;
-//       balances = new_to_bal;
-//     } in
-//   unit
+let safe_transfer_from (s: balance_storage) (param: safe_transfer_from_param) : (operation  list) * balance_store = 
+  let from_key  = pack_balance_key s.owners { owner = param.from_; token_id = param.token_id; } in
+  let to_key    = pack_balance_key s.owners { owner = param.to_;   token_id = param.token_id; } in
+  let new_balances = transfer_balance s.balances from_key to_key param.amount in
+  let new_store: balance_storage = {
+      owners = s.owners;
+      balances = new_balances;
+    } in
+  (([] : operation list), new_store)
 
 
 let base_test (p: unit) = unit
