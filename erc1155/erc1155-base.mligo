@@ -137,28 +137,74 @@ let safe_transfer_from (param : safe_transfer_from_param) (s : balance_storage) 
       //[op] in
   // (ops, new)
 
-  let safe_batch_transfer_from (param : safe_batch_transfer_from_param) (s : balance_storage) : (operation  list) * balance_store = 
-    let make_transfer = fun (bals: balances) (t: tx) ->
-      let from_key  = pack_balance_key { owner = param.from_; token_id = t.token_id; } s.owners in
-      let to_key    = pack_balance_key { owner = param.to_;   token_id = t.token_id; } s.owners in
-      transfer_balance from_key to_key t.amount bals in 
+let safe_batch_transfer_from (param : safe_batch_transfer_from_param) (s : balance_storage) : (operation  list) * balance_store = 
+  let make_transfer = fun (bals: balances) (t: tx) ->
+    let from_key  = pack_balance_key { owner = param.from_; token_id = t.token_id; } s.owners in
+    let to_key    = pack_balance_key { owner = param.to_;   token_id = t.token_id; } s.owners in
+    transfer_balance from_key to_key t.amount bals in 
 
-    let new_balances = List.fold param.batch s.balances make_transfer in
-    let new_store: balance_storage = {
-      owners = s.owners;
-      balances = new_balances;
+  let new_balances = List.fold param.batch s.balances make_transfer in
+  let new_store: balance_storage = {
+    owners = s.owners;
+    balances = new_balances;
+  } in
+
+  let receiver : erc1155_token_receiver contract =  Operation.get_contract param.to_ in
+  let p : on_erc1155_batch_received_param = {
+      operator = sender;
+      from_ = Some param.from_;
+      batch = param.batch;
+      data = param.data;
     } in
+  let op = Operation.transaction (On_erc1155_batch_received p) 0mutez receiver in
 
-    let receiver : erc1155_token_receiver contract =  Operation.get_contract param.to_ in
-    let p : on_erc1155_batch_received_param = {
-        operator = sender;
-        from_ = Some param.from_;
-        batch = param.batch;
-        data = param.data;
-      } in
-    let op = Operation.transaction (On_erc1155_batch_received p) 0mutez receiver in
+  ([op], new_store)
 
-    ([op], new_store)
+
+type erc1155_storage = {
+  approvals : approvals;
+  balance_storage: balance_storage;
+}
+
+
+let irc1155_main (param : erc1155) (s : erc1155_storage) : (operation  list) * irc1155_storage =
+  match param with
+    | Safe_transfer_from p        ->
+        let ops_bstore = safe_transfer_from p s.balance_storage in
+        let new_s = {
+          approvals = s.approvals;
+          balance_storage = ops_bstore.(1);
+        } in
+        (ops_bstore.(0), new_s)
+
+    | Safe_batch_transfer_from p  ->
+        let ops_bstore = safe_batch_transfer_from p s.balance_storage in
+        let new_s = {
+          approvals = s.approvals;
+          balance_storage = ops_bstore.(1);
+        } in
+        (ops_bstore.(0), new_s)
+
+    | Balance_of p                ->
+        let op = balance_of p s.balance_storage in
+        ([op], s)
+
+    | Balance_of_batch p          ->
+        let op = balance_of_batch p s.balance_storage in
+        ([op], s)
+
+    | Set_approval_for_all p      ->
+        let new_approvals = set_approval_for_all p s.approvals in
+        let new_s = {
+          approvals = new_approvals;
+          balance_storage = s.balance_storage;
+        } in
+        (([] : operation list), new_s)
+
+    | Is_approved_for_all p       ->
+        let op = is_approved_for_all p s.approvals in
+        ([op], s)
+  // (([] : operation list), s)
 
 
 let base_test (p : unit) = unit
