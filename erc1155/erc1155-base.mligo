@@ -3,7 +3,7 @@
 (*  owner -> operator set *)
 type approvals = (address, address set) big_map
 
-let set_approval_for_all (approvals : approvals) (param : set_approval_for_all_param) : approvals =
+let set_approval_for_all (param : set_approval_for_all_param) (approvals : approvals) : approvals =
   let operators = match Map.find_opt sender approvals with
     | Some(ops) -> ops
     | None      -> (Set.empty : address set)
@@ -18,7 +18,7 @@ let set_approval_for_all (approvals : approvals) (param : set_approval_for_all_p
     else Map.update sender (Some new_operators) approvals
   
 
-let is_approved_for_all (approvals : approvals) (param : is_approved_for_all_param) : operation = 
+let is_approved_for_all (param : is_approved_for_all_param) (approvals : approvals) : operation = 
   let req = param.is_approved_for_all_request in
   let operators = Map.find_opt req.owner approvals in
   let result = match operators with
@@ -81,13 +81,13 @@ let get_balance_req (s : balance_storage) (r : balance_request) : nat =
 
 
 
-let balance_of (s : balance_storage) (param : balance_of_param) : operation =
+let balance_of (param : balance_of_param) (s : balance_storage) : operation =
   let bal = get_balance_req s param.balance_request in
   param.balance_view (param.balance_request, bal)
 
 
 
-let balance_of_batch (s : balance_storage) (param : balance_of_batch_param)  : operation =
+let balance_of_batch (param : balance_of_batch_param) (s : balance_storage)   : operation =
   let to_balance = fun (r: balance_request) ->
     let bal = get_balance_req s r in
     (r, bal) 
@@ -111,7 +111,7 @@ let transfer_balance (s : balances) (from_key : nat) (to_key : nat) (amt : nat) 
     let s2 = Map.update to_key (Some tbal) s1 in
     s2
 
-let safe_transfer_from (s : balance_storage) (param : safe_transfer_from_param) : (operation  list) * balance_store = 
+let safe_transfer_from (param : safe_transfer_from_param) (s : balance_storage) : (operation  list) * balance_store = 
   let from_key  = pack_balance_key s.owners { owner = param.from_; token_id = param.token_id; } in
   let to_key    = pack_balance_key s.owners { owner = param.to_;   token_id = param.token_id; } in
   let new_balances = transfer_balance s.balances from_key to_key param.amount in
@@ -134,6 +134,8 @@ let safe_transfer_from (s : balance_storage) (param : safe_transfer_from_param) 
       //[op] in
   // (ops, new)
   (([] : operation list), new_store)
+
+  // let safe_transfer_from (s: )
 
 
 let base_test (p : unit) = unit
