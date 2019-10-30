@@ -81,9 +81,9 @@ let pack_balance_key_impl (owner_id : nat) (token_id : nat) : nat =
   then (failwith("provided token ID is out of allowed range") : nat)
   else token_id + (owner_id * owner_offset)
 
-let pack_balance_key (r : balance_request) (s : owner_lookup) : nat =
-  let owner_id = get_owner_id r.owner s in
-  pack_balance_key_impl owner_id r.token_id
+let pack_balance_key (owner : address) (token_id : nat) (s : owner_lookup) : nat =
+  let owner_id = get_owner_id owner s in
+  pack_balance_key_impl owner_id token_id
 
 type owner_key_result = {
   key : nat;
@@ -91,9 +91,9 @@ type owner_key_result = {
 }
 
 (* Packs the key to access balance and if owner does not have an id, creates a new id and adds it to an owner_lookup *)
-let pack_balance_key_ensure (r : balance_request) (s : owner_lookup) : owner_key_result = 
-  let o = ensure_owner_id r.owner s in
-  let key = pack_balance_key_impl o.id r.token_id in
+let pack_balance_key_ensure (owner : address) (token_id : nat) (s : owner_lookup) : owner_key_result = 
+  let o = ensure_owner_id owner s in
+  let key = pack_balance_key_impl o.id token_id in
   {
     key =key;
     owners = o.owners;
@@ -106,7 +106,7 @@ let get_balance (key : nat) (b : balances) : nat =
     | Some b  -> b
 
 let get_balance_req (r : balance_request) (s : balance_storage) : nat =
-  let balance_key = pack_balance_key r s.owners in
+  let balance_key = pack_balance_key r.owner r.token_id s.owners in
   get_balance balance_key s.balances
 
 
@@ -155,8 +155,8 @@ let transfer_safe_check (param : safe_transfer_from_param) : operation list =
       [op]
 
 let safe_transfer_from (param : safe_transfer_from_param) (s : balance_storage) : (operation  list) * balance_store = 
-  let from_key  = pack_balance_key { owner = param.from_; token_id = param.token_id; } s.owners in
-  let to_o = pack_balance_key_ensure { owner = param.to_;   token_id = param.token_id; } s.owners in
+  let from_key  = pack_balance_key param.from_  param.token_id s.owners in
+  let to_o = pack_balance_key_ensure param.to_ param.token_id s.owners in
   let new_balances = transfer_balance from_key to_o.key param.amount s.balances in
   let new_store: balance_storage = {
       owners = to_o.owners;
