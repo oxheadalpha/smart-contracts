@@ -56,20 +56,28 @@ let add_owner (owner : address) (s : owner_lookup) : (nat * owner_lookup) =
   (owner_id, new_s)
 
 (* gets existing owner id. If owner does not have one, creates a new id and adds it to an owner_lookup *)
-let ensure_owner_id (owner : address) (s : owner_lookup): (nat * owner_lookup) =
+let ensure_owner_id (owner : address) (s : owner_lookup) : (nat * owner_lookup) =
   let owner_id = Map.find_opt owner s.owners in
   match owner_id with
     | Some id -> (id, s)
     | None    -> add_owner owner s
 
-let pack_balance_key (key : balance_request) (s : owner_lookup) : nat =
-  let owner_id = Map.find_opt key.owner s.owners in
+let pack_balance_key_impl (owner_id : nat) (token_id : nat) : nat =
+  if token_id > max_tokens
+  then (failwith("provided token ID is out of allowed range") : nat)
+  else token_id + (owner_id * owner_offset)
+
+let pack_balance_key (r : balance_request) (s : owner_lookup) : nat =
+  let owner_id = Map.find_opt r.owner s.owners in
   match owner_id with
     | None    -> (failwith("No such owner") : nat)
-    | Some id -> 
-        if key.token_id > max_tokens
-        then (failwith("provided token ID is out of allowed range") : nat)
-        else key.token_id + (id * owner_offset)
+    | Some id -> pack_balance_key_impl id r.token_id
+
+(* Packs the key to access balance and if owner does not have an id, creates a new id and adds it to an owner_lookup *)
+let pack_balance_key_ensure (r : balance_request) (s : owner_lookup) : (nat * owner_lookup) = 
+  let id_lookup = ensure_owner_id r.owner s in
+  let key = pack_balance_key_impl id_lookup.(0) r.token_id in
+  (key, id_lookup.(1))
  
 let get_balance (key : nat) (b : balances) : nat =
   let bal : nat option = Map.find_opt key b in

@@ -63,8 +63,30 @@ let create_token (param : create_token_param) (s: simple_admin_storage) : simple
         tokens = new_tokens;
       }
 
-let mint_tokens (param : mint_tokens_param) (s : simple_admin_context) : (operation list) * simple_admin_context =
-  (([] : operation list) , s)
+let mint_tokens_impl (param : mint_tokens_param) (s : balance_storage) : balance_storage =
+  let key_owners = pack_balance_key_ensure 
+    { 
+      owner = param.owner;
+      token_id = param.token_id;
+    } 
+    s.owners in
+  let to_key = key_owners.(0) in
+  let new_owners = key_owners.(1) in
+
+  let old_bal = get_balance to_key s.balances in
+  let new_bals = Map.update to_key (Some(old_bal + param.amount)) s.balances in
+  {
+    owners = new_owners;
+    balances = new_bals;
+  }
+
+let mint_tokens (param : mint_tokens_param) (a : simple_admin_storage) (b : balance_storage): (operation list) * balance_storage =
+  let d = Map.find_opt param.token_id a.tokens in
+  match d with
+    | None -> (failwith "Token does not exists" : (operation list) * balance_storage)
+    | Some d ->
+        let new_b = mint_tokens_impl param b in
+        (([] : operation list) , new_b)
 
 let burn_tokens (param : mint_tokens_param) (s : simple_admin_context) : (operation list) * simple_admin_context =
   (([] : operation list) , s)
@@ -72,7 +94,7 @@ let burn_tokens (param : mint_tokens_param) (s : simple_admin_context) : (operat
 let simple_admin (param : simple_admin) (ctx : simple_admin_context) : (operation list) * simple_admin_context =
   if sender <> ctx.admin_storage.admin
   then (failwith "operation require admin priveleges" : (operation list) * simple_admin_context)
-  else //(([] : operation list), ctx)
+  else
     match param with
       | Set_admin new_admin ->
           let new_admin_s = set_admin new_admin ctx.admin_storage in
@@ -98,7 +120,13 @@ let simple_admin (param : simple_admin) (ctx : simple_admin_context) : (operatio
           } in
           (([]: operation list), new_ctx)
 
-      | Mint_tokens param -> mint_tokens param ctx
+      | Mint_tokens param -> 
+          let ops_new_bals  = mint_tokens param ctx.admin_storage ctx.balance_storage in
+          let new_ctx : simple_admin_context = {
+            admin_storage = ctx.admin_storage;
+            balance_storage = ops_new_bals.(1);
+          } in
+          (ops_new_bals.(0), new_ctx)
 
       | Burn_tokens param -> burn_tokens param ctx
     
