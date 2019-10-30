@@ -44,8 +44,13 @@ type balance_storage = {
   balances : balances;  
 }
 
+type owner_result = {
+  id : nat;
+  owners : owner_lookup;
+}
+
 (* return updated storage and newly added owner id *)
-let add_owner (owner : address) (s : owner_lookup) : (nat * owner_lookup) =
+let add_owner (owner : address) (s : owner_lookup) : owner_result =
   let owner_id  = s.owner_count + 1p in
   let os = Map.add owner owner_id s.owners in
   let new_s = 
@@ -53,13 +58,16 @@ let add_owner (owner : address) (s : owner_lookup) : (nat * owner_lookup) =
       owner_count = owner_id;
       owners = os;
     } in
-  (owner_id, new_s)
+  {
+    id = owner_id;
+    owners = new_s;
+  }
 
 (* gets existing owner id. If owner does not have one, creates a new id and adds it to an owner_lookup *)
-let ensure_owner_id (owner : address) (s : owner_lookup) : (nat * owner_lookup) =
+let ensure_owner_id (owner : address) (s : owner_lookup) : owner_result =
   let owner_id = Map.find_opt owner s.owners in
   match owner_id with
-    | Some id -> (id, s)
+    | Some id -> { id = id; owners = s; }
     | None    -> add_owner owner s
 
 let get_owner_id (owner: address) (s: owner_lookup) : nat =
@@ -79,9 +87,9 @@ let pack_balance_key (r : balance_request) (s : owner_lookup) : nat =
 
 (* Packs the key to access balance and if owner does not have an id, creates a new id and adds it to an owner_lookup *)
 let pack_balance_key_ensure (r : balance_request) (s : owner_lookup) : (nat * owner_lookup) = 
-  let id_lookup = ensure_owner_id r.owner s in
-  let key = pack_balance_key_impl id_lookup.(0) r.token_id in
-  (key, id_lookup.(1))
+  let o = ensure_owner_id r.owner s in
+  let key = pack_balance_key_impl o.id r.token_id in
+  (key, o.owners)
  
 let get_balance (key : nat) (b : balances) : nat =
   let bal : nat option = Map.find_opt key b in
@@ -165,17 +173,15 @@ let batch_transfer_safe_check (param : safe_batch_transfer_from_param) : operati
 
 let safe_batch_transfer_from (param : safe_batch_transfer_from_param) (s : balance_storage) : (operation  list) * balance_store = 
   let from_id = get_owner_id param.from_ s.owners in
-  let t_o = ensure_owner_id param.to_ s.owners in
-  let to_id = t_o.(0) in
-  let new_owners = t_o.(1) in
+  let to_o = ensure_owner_id param.to_ s.owners in
   let make_transfer = fun (bals: balances) (t: tx) ->
     let from_key  = pack_balance_key_impl from_id t.token_id in
-    let to_key  = pack_balance_key_impl to_id t.token_id in
+    let to_key  = pack_balance_key_impl to_o.id t.token_id in
     transfer_balance from_key to_key t.amount bals in 
 
   let new_balances = List.fold param.batch s.balances make_transfer in
   let new_store: balance_storage = {
-    owners = s.owners;
+    owners = to_o.owners;
     balances = new_balances;
   } in
   let ops = batch_transfer_safe_check param in
