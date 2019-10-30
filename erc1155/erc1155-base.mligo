@@ -62,16 +62,20 @@ let ensure_owner_id (owner : address) (s : owner_lookup) : (nat * owner_lookup) 
     | Some id -> (id, s)
     | None    -> add_owner owner s
 
+let get_owner_id (owner: address) (s: owner_lookup) : nat =
+   let owner_id = Map.find_opt r.owner s.owners in
+  match owner_id with
+    | None    -> (failwith("No such owner") : nat)
+    | Some id -> id
+
 let pack_balance_key_impl (owner_id : nat) (token_id : nat) : nat =
   if token_id > max_tokens
   then (failwith("provided token ID is out of allowed range") : nat)
   else token_id + (owner_id * owner_offset)
 
 let pack_balance_key (r : balance_request) (s : owner_lookup) : nat =
-  let owner_id = Map.find_opt r.owner s.owners in
-  match owner_id with
-    | None    -> (failwith("No such owner") : nat)
-    | Some id -> pack_balance_key_impl id r.token_id
+  let owner_id = get_owner_id r.owner s.owners in
+  pack_balance_key_impl owner_id r.token_id
 
 (* Packs the key to access balance and if owner does not have an id, creates a new id and adds it to an owner_lookup *)
 let pack_balance_key_ensure (r : balance_request) (s : owner_lookup) : (nat * owner_lookup) = 
@@ -138,10 +142,13 @@ let transfer_safe_check (param : safe_transfer_from_param) : operation list =
 
 let safe_transfer_from (param : safe_transfer_from_param) (s : balance_storage) : (operation  list) * balance_store = 
   let from_key  = pack_balance_key { owner = param.from_; token_id = param.token_id; } s.owners in
-  let to_key    = pack_balance_key { owner = param.to_;   token_id = param.token_id; } s.owners in
+  let k_o = pack_balance_key_ensure { owner = param.to_;   token_id = param.token_id; } s.owners in
+  let to_key = k_o.(0) in
+  let new_owners = k_o.(1) in
+
   let new_balances = transfer_balance from_key to_key param.amount s.balances in
   let new_store: balance_storage = {
-      owners = s.owners;
+      owners = new_owners;
       balances = new_balances;
     } in
   let ops = transfer_safe_check param in
@@ -159,9 +166,13 @@ let batch_transfer_safe_check (param : safe_batch_transfer_from_param) : operati
   [op]
 
 let safe_batch_transfer_from (param : safe_batch_transfer_from_param) (s : balance_storage) : (operation  list) * balance_store = 
+  let from_id = get_owner_id param.from_ s.owners in
+  let t_o = ensure_owner_id param.to_ s.owners in
+  let to_id = t_o.(0) in
+  let new_owners = t_o.(1) in
   let make_transfer = fun (bals: balances) (t: tx) ->
-    let from_key  = pack_balance_key { owner = param.from_; token_id = t.token_id; } s.owners in
-    let to_key    = pack_balance_key { owner = param.to_;   token_id = t.token_id; } s.owners in
+    let from_key  = pack_balance_key_impl from_id t.token_id in
+    let to_key  = pack_balance_key_impl to_id t.token_id in
     transfer_balance from_key to_key t.amount bals in 
 
   let new_balances = List.fold param.batch s.balances make_transfer in
