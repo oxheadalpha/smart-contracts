@@ -181,6 +181,19 @@ let safe_batch_transfer_from (param : safe_batch_transfer_from_param) (s : balan
   let ops = batch_transfer_safe_check param in
   (ops, new_store)
 
+let approived_transfer_from (from_ : address) (approvals : approvals) : unit =
+  if sender = from_
+  then unit
+  else 
+    let ops = Map.find_opt sender approvals in
+    let is_op = match ops with
+      | None -> (failwith ("operator not approved to transfer tokens") : bool)
+      | Some o -> Set.mem from_ o 
+    in
+    if is_op
+    then unit
+    else failwith ("operator not approved to transfer tokens")
+    
 
 type erc1155_storage = {
   approvals : approvals;
@@ -191,6 +204,7 @@ type erc1155_storage = {
 let irc1155_main (param : erc1155) (s : erc1155_storage) : (operation  list) * irc1155_storage =
   match param with
     | Safe_transfer_from p ->
+        let u = approived_transfer_from p.from_ s.approvals in
         let ops_bstore = safe_transfer_from p s.balance_storage in
         let new_s = {
           approvals = s.approvals;
@@ -199,6 +213,7 @@ let irc1155_main (param : erc1155) (s : erc1155_storage) : (operation  list) * i
         (ops_bstore.(0), new_s)
 
     | Safe_batch_transfer_from p ->
+        let u = approived_transfer_from p.from_ s.approvals in
         let ops_bstore = safe_batch_transfer_from p s.balance_storage in
         let new_s = {
           approvals = s.approvals;
