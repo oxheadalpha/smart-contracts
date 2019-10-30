@@ -63,7 +63,7 @@ let ensure_owner_id (owner : address) (s : owner_lookup) : (nat * owner_lookup) 
     | None    -> add_owner owner s
 
 let get_owner_id (owner: address) (s: owner_lookup) : nat =
-   let owner_id = Map.find_opt r.owner s.owners in
+   let owner_id = Map.find_opt owner s.owners in
   match owner_id with
     | None    -> (failwith("No such owner") : nat)
     | Some id -> id
@@ -74,7 +74,7 @@ let pack_balance_key_impl (owner_id : nat) (token_id : nat) : nat =
   else token_id + (owner_id * owner_offset)
 
 let pack_balance_key (r : balance_request) (s : owner_lookup) : nat =
-  let owner_id = get_owner_id r.owner s.owners in
+  let owner_id = get_owner_id r.owner s in
   pack_balance_key_impl owner_id r.token_id
 
 (* Packs the key to access balance and if owner does not have an id, creates a new id and adds it to an owner_lookup *)
@@ -98,8 +98,6 @@ let get_balance_req (r : balance_request) (s : balance_storage) : nat =
 let balance_of (param : balance_of_param) (s : balance_storage) : operation =
   let bal = get_balance_req param.balance_request s in
   param.balance_view (param.balance_request, bal)
-
-
 
 let balance_of_batch (param : balance_of_batch_param) (s : balance_storage)   : operation =
   let to_balance = fun (r: balance_request) ->
@@ -227,7 +225,6 @@ let irc1155_main (param : erc1155) (s : erc1155_storage) : (operation  list) * i
     | Is_approved_for_all p  ->
         let op = is_approved_for_all p s.approvals in
         ([op], s)
-  // (([] : operation list), s)
 
 
 let base_test (p : unit) = unit
