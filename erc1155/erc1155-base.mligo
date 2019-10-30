@@ -31,9 +31,11 @@ let is_approved_for_all (param : is_approved_for_all_param) (approvals : approva
 let max_tokens = 4294967295p  (* 2^32-1 *)
 let owner_offset = 4294967296p  (* 2^32 *)
 
+(* owner_token_id -> balance *)
 type balances = (nat, nat) map //TODO: change to big_map
 type owner_lookup = {
   owner_count : nat;
+  (* owner_address -> owner_id *)
   owners: (address, nat) map //TODO: change to big_map
 }
 
