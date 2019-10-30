@@ -9,6 +9,7 @@ type mint_tokens_param = {
   token_id : nat;
   owner : address;
   amount : nat;
+  data : bytes;
 }
 
 type burn_tokens_param = {
@@ -80,15 +81,28 @@ let mint_tokens_impl (param : mint_tokens_param) (s : balance_storage) : balance
     balances = new_bals;
   }
 
+let mint_safe_check (param : mint_tokens_param) : operation list =
+  let receiver : erc1155_token_receiver contract =  Operation.get_contract param.owner in
+  let p : on_erc1155_received_param = {
+    operator = sender;
+    from_ = (None : address option);
+    token_id = param.token_id;
+    amount = param.amount;
+    data = param.data;
+  } in
+  let op = Operation.transaction (On_erc1155_received p) 0mutez receiver in
+  [op]
+
 let mint_tokens (param : mint_tokens_param) (a : simple_admin_storage) (b : balance_storage): (operation list) * balance_storage =
   let d = Map.find_opt param.token_id a.tokens in
   match d with
     | None -> (failwith "Token does not exists" : (operation list) * balance_storage)
     | Some d ->
         let new_b = mint_tokens_impl param b in
-        (([] : operation list) , new_b)
+        let ops = mint_safe_check param in
+        (ops, new_b)
 
-let burn_tokens (param : mint_tokens_param) (s : balance_storage): balance_storage =
+let burn_tokens (param : burn_tokens_param) (s : balance_storage): balance_storage =
   let from_key = pack_balance_key
     { 
       owner = param.owner;

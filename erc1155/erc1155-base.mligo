@@ -121,7 +121,7 @@ let transfer_balance (from_key : nat) (to_key : nat) (amt : nat) (s : balances) 
     let s2 = Map.update to_key (Some tbal) s1 in
     s2
 
-let safe_check (param : safe_transfer_from_param) : operation list =
+let transfer_safe_check (param : safe_transfer_from_param) : operation list =
   let receiver : erc1155_token_receiver contract =  Operation.get_contract param.to_ in
   // let ops = match receiver with
   //   None    -> ([] : operation list)
@@ -144,10 +144,10 @@ let safe_transfer_from (param : safe_transfer_from_param) (s : balance_storage) 
       owners = s.owners;
       balances = new_balances;
     } in
-  let ops = safe_check param in
+  let ops = transfer_safe_check param in
   (ops, new_store)
 
-let safe_batch_check (param : safe_batch_transfer_from_param) : operation list =
+let batch_transfer_safe_check (param : safe_batch_transfer_from_param) : operation list =
   let receiver : erc1155_token_receiver contract =  Operation.get_contract param.to_ in
   let p : on_erc1155_batch_received_param = {
       operator = sender;
@@ -169,7 +169,7 @@ let safe_batch_transfer_from (param : safe_batch_transfer_from_param) (s : balan
     owners = s.owners;
     balances = new_balances;
   } in
-  let ops = safe_batch_check param in
+  let ops = batch_transfer_safe_check param in
   (ops, new_store)
 
 
