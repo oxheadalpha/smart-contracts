@@ -137,6 +137,17 @@ let safe_transfer_from (param : safe_transfer_from_param) (s : balance_storage) 
   let ops = safe_check param in
   (ops, new_store)
 
+let safe_batch_check (param : safe_batch_transfer_from_param) : operation list =
+  let receiver : erc1155_token_receiver contract =  Operation.get_contract param.to_ in
+  let p : on_erc1155_batch_received_param = {
+      operator = sender;
+      from_ = Some param.from_;
+      batch = param.batch;
+      data = param.data;
+    } in
+  let op = Operation.transaction (On_erc1155_batch_received p) 0mutez receiver in
+  [op]
+
 let safe_batch_transfer_from (param : safe_batch_transfer_from_param) (s : balance_storage) : (operation  list) * balance_store = 
   let make_transfer = fun (bals: balances) (t: tx) ->
     let from_key  = pack_balance_key { owner = param.from_; token_id = t.token_id; } s.owners in
@@ -148,17 +159,8 @@ let safe_batch_transfer_from (param : safe_batch_transfer_from_param) (s : balan
     owners = s.owners;
     balances = new_balances;
   } in
-
-  let receiver : erc1155_token_receiver contract =  Operation.get_contract param.to_ in
-  let p : on_erc1155_batch_received_param = {
-      operator = sender;
-      from_ = Some param.from_;
-      batch = param.batch;
-      data = param.data;
-    } in
-  let op = Operation.transaction (On_erc1155_batch_received p) 0mutez receiver in
-
-  ([op], new_store)
+  let ops = safe_batch_check param in
+  (ops, new_store)
 
 
 type erc1155_storage = {
