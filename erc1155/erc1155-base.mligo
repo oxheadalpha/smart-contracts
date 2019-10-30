@@ -111,15 +111,7 @@ let transfer_balance (from_key : nat) (to_key : nat) (amt : nat) (s : balances) 
     let s2 = Map.update to_key (Some tbal) s1 in
     s2
 
-let safe_transfer_from (param : safe_transfer_from_param) (s : balance_storage) : (operation  list) * balance_store = 
-  let from_key  = pack_balance_key { owner = param.from_; token_id = param.token_id; } s.owners in
-  let to_key    = pack_balance_key { owner = param.to_;   token_id = param.token_id; } s.owners in
-  let new_balances = transfer_balance from_key to_key param.amount s.balances in
-  let new_store: balance_storage = {
-      owners = s.owners;
-      balances = new_balances;
-    } in
-
+let safe_check (param : safe_transfer_from_param) : operation list =
   let receiver : erc1155_token_receiver contract =  Operation.get_contract param.to_ in
   // let ops = match receiver with
   //   None    -> ([] : operation list)
@@ -132,10 +124,18 @@ let safe_transfer_from (param : safe_transfer_from_param) (s : balance_storage) 
         data = param.data;
       } in
       let op = Operation.transaction (On_erc1155_received p) 0mutez receiver in
+      [op]
 
-      ([op], new_store)
-      //[op] in
-  // (ops, new)
+let safe_transfer_from (param : safe_transfer_from_param) (s : balance_storage) : (operation  list) * balance_store = 
+  let from_key  = pack_balance_key { owner = param.from_; token_id = param.token_id; } s.owners in
+  let to_key    = pack_balance_key { owner = param.to_;   token_id = param.token_id; } s.owners in
+  let new_balances = transfer_balance from_key to_key param.amount s.balances in
+  let new_store: balance_storage = {
+      owners = s.owners;
+      balances = new_balances;
+    } in
+  let ops = safe_check param in
+  (ops, new_store)
 
 let safe_batch_transfer_from (param : safe_batch_transfer_from_param) (s : balance_storage) : (operation  list) * balance_store = 
   let make_transfer = fun (bals: balances) (t: tx) ->
@@ -169,7 +169,7 @@ type erc1155_storage = {
 
 let irc1155_main (param : erc1155) (s : erc1155_storage) : (operation  list) * irc1155_storage =
   match param with
-    | Safe_transfer_from p        ->
+    | Safe_transfer_from p ->
         let ops_bstore = safe_transfer_from p s.balance_storage in
         let new_s = {
           approvals = s.approvals;
@@ -177,7 +177,7 @@ let irc1155_main (param : erc1155) (s : erc1155_storage) : (operation  list) * i
         } in
         (ops_bstore.(0), new_s)
 
-    | Safe_batch_transfer_from p  ->
+    | Safe_batch_transfer_from p ->
         let ops_bstore = safe_batch_transfer_from p s.balance_storage in
         let new_s = {
           approvals = s.approvals;
@@ -185,15 +185,15 @@ let irc1155_main (param : erc1155) (s : erc1155_storage) : (operation  list) * i
         } in
         (ops_bstore.(0), new_s)
 
-    | Balance_of p                ->
+    | Balance_of p ->
         let op = balance_of p s.balance_storage in
         ([op], s)
 
-    | Balance_of_batch p          ->
+    | Balance_of_batch p ->
         let op = balance_of_batch p s.balance_storage in
         ([op], s)
 
-    | Set_approval_for_all p      ->
+    | Set_approval_for_all p ->
         let new_approvals = set_approval_for_all p s.approvals in
         let new_s = {
           approvals = new_approvals;
@@ -201,7 +201,7 @@ let irc1155_main (param : erc1155) (s : erc1155_storage) : (operation  list) * i
         } in
         (([] : operation list), new_s)
 
-    | Is_approved_for_all p       ->
+    | Is_approved_for_all p  ->
         let op = is_approved_for_all p s.approvals in
         ([op], s)
   // (([] : operation list), s)
