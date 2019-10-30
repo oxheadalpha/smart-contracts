@@ -85,11 +85,19 @@ let pack_balance_key (r : balance_request) (s : owner_lookup) : nat =
   let owner_id = get_owner_id r.owner s in
   pack_balance_key_impl owner_id r.token_id
 
+type owner_key_result = {
+  key : nat;
+  owners: owner_lookup;
+}
+
 (* Packs the key to access balance and if owner does not have an id, creates a new id and adds it to an owner_lookup *)
-let pack_balance_key_ensure (r : balance_request) (s : owner_lookup) : (nat * owner_lookup) = 
+let pack_balance_key_ensure (r : balance_request) (s : owner_lookup) : owner_key_result = 
   let o = ensure_owner_id r.owner s in
   let key = pack_balance_key_impl o.id r.token_id in
-  (key, o.owners)
+  {
+    key =key;
+    owners = o.owners;
+  }
  
 let get_balance (key : nat) (b : balances) : nat =
   let bal : nat option = Map.find_opt key b in
@@ -148,13 +156,10 @@ let transfer_safe_check (param : safe_transfer_from_param) : operation list =
 
 let safe_transfer_from (param : safe_transfer_from_param) (s : balance_storage) : (operation  list) * balance_store = 
   let from_key  = pack_balance_key { owner = param.from_; token_id = param.token_id; } s.owners in
-  let k_o = pack_balance_key_ensure { owner = param.to_;   token_id = param.token_id; } s.owners in
-  let to_key = k_o.(0) in
-  let new_owners = k_o.(1) in
-
-  let new_balances = transfer_balance from_key to_key param.amount s.balances in
+  let to_o = pack_balance_key_ensure { owner = param.to_;   token_id = param.token_id; } s.owners in
+  let new_balances = transfer_balance from_key to_o.key param.amount s.balances in
   let new_store: balance_storage = {
-      owners = new_owners;
+      owners = to_o.owners;
       balances = new_balances;
     } in
   let ops = transfer_safe_check param in
