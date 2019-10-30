@@ -88,8 +88,29 @@ let mint_tokens (param : mint_tokens_param) (a : simple_admin_storage) (b : bala
         let new_b = mint_tokens_impl param b in
         (([] : operation list) , new_b)
 
+let burn_tokens_impl (param : mint_tokens_param) (s : balance_storage): balance_storage =
+  let from_key = pack_balance_key
+    { 
+      owner = param.owner;
+      token_id = param.token_id;
+    } 
+    s.owners in
+  let old_bal = get_balance from_key s.balances in
+  let new_bal = old_bal - param.amount in
+  let new_bals = 
+    if new_bal < 0
+    then (failwith "Insufficiuent balance" : balances)
+    else if new_bal = 0
+    then Map.remove from_key s.balances
+    else Map.update from_key (Some(abs(new_bal))) s.balances in
+  {
+    owners = s.owners;
+    balances = new_bals;
+  }
+
 let burn_tokens (param : mint_tokens_param) (b : balance_storage): (operation list) * balance_storage =
-  (([] : operation list) , b)
+  let new_b = burn_tokens_impl param b in
+  (([] : operation list) , new_b)
 
 let simple_admin (param : simple_admin) (ctx : simple_admin_context) : (operation list) * simple_admin_context =
   if sender <> ctx.admin_storage.admin
