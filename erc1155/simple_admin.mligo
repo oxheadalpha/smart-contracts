@@ -88,7 +88,7 @@ let mint_tokens (param : mint_tokens_param) (a : simple_admin_storage) (b : bala
         let new_b = mint_tokens_impl param b in
         (([] : operation list) , new_b)
 
-let burn_tokens_impl (param : mint_tokens_param) (s : balance_storage): balance_storage =
+let burn_tokens (param : mint_tokens_param) (s : balance_storage): balance_storage =
   let from_key = pack_balance_key
     { 
       owner = param.owner;
@@ -107,10 +107,6 @@ let burn_tokens_impl (param : mint_tokens_param) (s : balance_storage): balance_
     owners = s.owners;
     balances = new_bals;
   }
-
-let burn_tokens (param : mint_tokens_param) (b : balance_storage): (operation list) * balance_storage =
-  let new_b = burn_tokens_impl param b in
-  (([] : operation list) , new_b)
 
 let simple_admin (param : simple_admin) (ctx : simple_admin_context) : (operation list) * simple_admin_context =
   if sender <> ctx.admin_storage.admin
@@ -150,12 +146,12 @@ let simple_admin (param : simple_admin) (ctx : simple_admin_context) : (operatio
           (ops_new_bals.(0), new_ctx)
 
       | Burn_tokens param -> 
-          let ops_new_bals = burn_tokens param ctx.balance_storage in
+          let new_bals = burn_tokens param ctx.balance_storage in
           let new_ctx = {
             admin_storage = ctx.admin_storage;
-            balance_storage = ops_new_bals.(1);
+            balance_storage = new_bals
           } in
-          ( ops_new_bals.(0), new_ctx)
+          (([] : operation list), new_ctx)
     
 
 
