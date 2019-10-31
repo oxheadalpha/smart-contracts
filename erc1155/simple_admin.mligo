@@ -86,16 +86,6 @@ let mint_tokens_impl (param : mint_tokens_param) (s : balance_storage) : balance
     balances = new_bals;
   }
 
-  // let o = ensure_owner_id param.owner s.owners in
-  // let to_key = pack_balance_key_impl o.id param.token_id in
-  // let old_bal = get_balance to_key s.balances in
-  // let new_bals = Map.update to_key (Some(old_bal + param.amount)) s.balances in
-  // {
-  //   owners = o.owners;
-  //   balances = new_bals;
-  // }
-
-
 let mint_safe_check (param : mint_tokens_param) : operation list =
   let receiver : erc1155_token_receiver contract =  Operation.get_contract param.owner in
   let p : on_erc1155_received_param = {
@@ -129,12 +119,21 @@ let mint_tokens_batch_impl (param : mint_tokens_batch_param) (tokens : (nat, str
     balances = new_bals;
   }
 
+let mint_batch_safe_check (param : mint_tokens_batch_param) : operation list =
+  let receiver : erc1155_token_receiver contract =  Operation.get_contract param.owner in
+  let p : on_erc1155_batch_received_param = {
+    operator = sender;
+    from_ = (None : address option);
+    batch = param.batch;
+    data = param.data;
+  } in
+  let op = Operation.transaction (On_erc1155_batch_received p) 0mutez receiver in
+  [op]
 
 let mint_tokens_batch (param : mint_tokens_batch_param) (a : simple_admin_storage) (b : balance_storage) : (operation list) * balance_storage =
   let new_b = mint_tokens_batch_impl param a.tokens b in
-  // let ops = mint_safe_check param in
-  // (ops, new_b)
-  (([] : operation list), new_b)
+  let ops = mint_batch_safe_check param in
+  (ops, new_b)
 
 let burn_tokens (param : burn_tokens_param) (s : balance_storage): balance_storage =
   let from_key = pack_balance_key param.owner param.token_id s.owners in
