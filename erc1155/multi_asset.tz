@@ -35,12 +35,12 @@
                   (nat %token_id))
                (pair %set_approval_for_all (bool %approved) (address %operator))))) ;
   storage
-    (pair (pair %admin (pair (address %admin) (bool %paused)) (map %tokens nat string))
+    (pair (pair %admin (pair (address %admin) (bool %paused)) (big_map %tokens nat string))
           (pair %assets
              (big_map %approvals address (set address))
              (pair %balance_storage
-                (map %balances nat nat)
-                (pair %owners (nat %owner_count) (map %owners address nat))))) ;
+                (big_map %balances nat nat)
+                (pair %owners (nat %owner_count) (big_map %owners address nat))))) ;
   code { LAMBDA
            (pair (pair bool address) (big_map address (set address)))
            (big_map address (set address))
@@ -105,8 +105,8 @@
          PUSH nat 4294967295 ;
          PUSH nat 4294967296 ;
          LAMBDA
-           (pair address (pair nat (map address nat)))
-           (pair nat (pair nat (map address nat)))
+           (pair address (pair nat (big_map address nat)))
+           (pair nat (pair nat (big_map address nat)))
            { DUP ;
              CAR ;
              DIP { DUP } ;
@@ -131,9 +131,11 @@
              DIP { DROP 6 } } ;
          DUP ;
          LAMBDA
-           (pair (lambda (pair address (pair nat (map address nat))) (pair nat (pair nat (map address nat))))
-                 (pair address (pair nat (map address nat))))
-           (pair nat (pair nat (map address nat)))
+           (pair (lambda
+                    (pair address (pair nat (big_map address nat)))
+                    (pair nat (pair nat (big_map address nat))))
+                 (pair address (pair nat (big_map address nat))))
+           (pair nat (pair nat (big_map address nat)))
            { DUP ;
              CAR ;
              SWAP ;
@@ -162,7 +164,7 @@
          DIP { DIP { DIP { DUP } ; DUP ; DIP { PAIR } ; SWAP } ; SWAP } ;
          SWAP ;
          LAMBDA
-           (pair address (pair nat (map address nat)))
+           (pair address (pair nat (big_map address nat)))
            nat
            { DUP ;
              CAR ;
@@ -208,8 +210,9 @@
          DIP { PAIR } ;
          SWAP ;
          LAMBDA
-           (pair (pair (lambda (pair nat nat) nat) (lambda (pair address (pair nat (map address nat))) nat))
-                 (pair (pair address nat) (pair nat (map address nat))))
+           (pair (pair (lambda (pair nat nat) nat)
+                       (lambda (pair address (pair nat (big_map address nat))) nat))
+                 (pair (pair address nat) (pair nat (big_map address nat))))
            nat
            { DUP ;
              CAR ;
@@ -244,9 +247,11 @@
          SWAP ;
          LAMBDA
            (pair (pair (lambda (pair nat nat) nat)
-                       (lambda (pair address (pair nat (map address nat))) (pair nat (pair nat (map address nat)))))
-                 (pair (pair address nat) (pair nat (map address nat))))
-           (pair nat (pair nat (map address nat)))
+                       (lambda
+                          (pair address (pair nat (big_map address nat)))
+                          (pair nat (pair nat (big_map address nat)))))
+                 (pair (pair address nat) (pair nat (big_map address nat))))
+           (pair nat (pair nat (big_map address nat)))
            { DUP ;
              CAR ;
              SWAP ;
@@ -283,7 +288,7 @@
          DIP { DUP } ;
          SWAP ;
          LAMBDA
-           (pair nat (map nat nat))
+           (pair nat (big_map nat nat))
            nat
            { DUP ;
              CAR ;
@@ -301,9 +306,9 @@
          DIP { PAIR } ;
          SWAP ;
          LAMBDA
-           (pair (pair (lambda (pair nat (map nat nat)) nat)
-                       (lambda (pair (pair address nat) (pair nat (map address nat))) nat))
-                 (pair (pair address nat) (pair (map nat nat) (pair nat (map address nat)))))
+           (pair (pair (lambda (pair nat (big_map nat nat)) nat)
+                       (lambda (pair (pair address nat) (pair nat (big_map address nat))) nat))
+                 (pair (pair address nat) (pair (big_map nat nat) (pair nat (big_map address nat)))))
            nat
            { DUP ;
              CAR ;
@@ -334,9 +339,11 @@
          APPLY ;
          DUP ;
          LAMBDA
-           (pair (lambda (pair (pair address nat) (pair (map nat nat) (pair nat (map address nat)))) nat)
+           (pair (lambda
+                    (pair (pair address nat) (pair (big_map nat nat) (pair nat (big_map address nat))))
+                    nat)
                  (pair (pair (pair address nat) (lambda (pair (pair address nat) nat) operation))
-                       (pair (map nat nat) (pair nat (map address nat)))))
+                       (pair (big_map nat nat) (pair nat (big_map address nat)))))
            operation
            { DUP ;
              CAR ;
@@ -367,9 +374,11 @@
          DIP { DUP } ;
          SWAP ;
          LAMBDA
-           (pair (lambda (pair (pair address nat) (pair (map nat nat) (pair nat (map address nat)))) nat)
+           (pair (lambda
+                    (pair (pair address nat) (pair (big_map nat nat) (pair nat (big_map address nat))))
+                    nat)
                  (pair (pair (list (pair address nat)) (lambda (list (pair (pair address nat) nat)) operation))
-                       (pair (map nat nat) (pair nat (map address nat)))))
+                       (pair (big_map nat nat) (pair nat (big_map address nat)))))
            operation
            { DUP ;
              CAR ;
@@ -385,8 +394,10 @@
              DIP { PAIR } ;
              SWAP ;
              LAMBDA
-               (pair (pair (pair (map nat nat) (pair nat (map address nat)))
-                           (lambda (pair (pair address nat) (pair (map nat nat) (pair nat (map address nat)))) nat))
+               (pair (pair (pair (big_map nat nat) (pair nat (big_map address nat)))
+                           (lambda
+                              (pair (pair address nat) (pair (big_map nat nat) (pair nat (big_map address nat))))
+                              nat))
                      (pair address nat))
                (pair (pair address nat) nat)
                { DUP ;
@@ -428,8 +439,9 @@
          DIP { DIP { DIP { DUP } ; SWAP } ; SWAP } ;
          SWAP ;
          LAMBDA
-           (pair (lambda (pair nat (map nat nat)) nat) (pair (pair nat nat) (pair nat (map nat nat))))
-           (map nat nat)
+           (pair (lambda (pair nat (big_map nat nat)) nat)
+                 (pair (pair nat nat) (pair nat (big_map nat nat))))
+           (big_map nat nat)
            { DUP ;
              CAR ;
              SWAP ;
@@ -538,14 +550,14 @@
          SWAP ;
          LAMBDA
            (pair (pair (lambda (pair (pair (pair nat bytes) (pair address address)) nat) (list operation))
-                       (pair (lambda (pair (pair nat nat) (pair nat (map nat nat))) (map nat nat))
+                       (pair (lambda (pair (pair nat nat) (pair nat (big_map nat nat))) (big_map nat nat))
                              (pair (lambda
-                                      (pair (pair address nat) (pair nat (map address nat)))
-                                      (pair nat (pair nat (map address nat))))
-                                   (lambda (pair (pair address nat) (pair nat (map address nat))) nat))))
+                                      (pair (pair address nat) (pair nat (big_map address nat)))
+                                      (pair nat (pair nat (big_map address nat))))
+                                   (lambda (pair (pair address nat) (pair nat (big_map address nat))) nat))))
                  (pair (pair (pair (pair nat bytes) (pair address address)) nat)
-                       (pair (map nat nat) (pair nat (map address nat)))))
-           (pair (list operation) (pair (map nat nat) (pair nat (map address nat))))
+                       (pair (big_map nat nat) (pair nat (big_map address nat)))))
+           (pair (list operation) (pair (big_map nat nat) (pair nat (big_map address nat))))
            { DUP ;
              CAR ;
              SWAP ;
@@ -656,13 +668,15 @@
          SWAP ;
          LAMBDA
            (pair (pair (lambda (pair (pair (list (pair nat nat)) bytes) (pair address address)) (list operation))
-                       (pair (lambda (pair (pair nat nat) (pair nat (map nat nat))) (map nat nat))
+                       (pair (lambda (pair (pair nat nat) (pair nat (big_map nat nat))) (big_map nat nat))
                              (pair (lambda (pair nat nat) nat)
-                                   (pair (lambda (pair address (pair nat (map address nat))) nat)
-                                         (lambda (pair address (pair nat (map address nat))) (pair nat (pair nat (map address nat))))))))
+                                   (pair (lambda (pair address (pair nat (big_map address nat))) nat)
+                                         (lambda
+                                            (pair address (pair nat (big_map address nat)))
+                                            (pair nat (pair nat (big_map address nat))))))))
                  (pair (pair (pair (list (pair nat nat)) bytes) (pair address address))
-                       (pair (map nat nat) (pair nat (map address nat)))))
-           (pair (list operation) (pair (map nat nat) (pair nat (map address nat))))
+                       (pair (big_map nat nat) (pair nat (big_map address nat)))))
+           (pair (list operation) (pair (big_map nat nat) (pair nat (big_map address nat))))
            { DUP ;
              CAR ;
              SWAP ;
@@ -708,12 +722,12 @@
              DIP { PAIR } ;
              SWAP ;
              LAMBDA
-               (pair (pair (pair nat (pair nat (map address nat)))
+               (pair (pair (pair nat (pair nat (big_map address nat)))
                            (pair nat
-                                 (pair (lambda (pair (pair nat nat) (pair nat (map nat nat))) (map nat nat))
+                                 (pair (lambda (pair (pair nat nat) (pair nat (big_map nat nat))) (big_map nat nat))
                                        (lambda (pair nat nat) nat))))
-                     (pair (map nat nat) (pair nat nat)))
-               (map nat nat)
+                     (pair (big_map nat nat) (pair nat nat)))
+               (big_map nat nat)
                { DUP ;
                  CAR ;
                  SWAP ;
@@ -865,19 +879,19 @@
            (pair (pair (lambda (pair address (big_map address (set address))) unit)
                        (pair (lambda
                                 (pair (pair (pair (list (pair nat nat)) bytes) (pair address address))
-                                      (pair (map nat nat) (pair nat (map address nat))))
-                                (pair (list operation) (pair (map nat nat) (pair nat (map address nat)))))
+                                      (pair (big_map nat nat) (pair nat (big_map address nat))))
+                                (pair (list operation) (pair (big_map nat nat) (pair nat (big_map address nat)))))
                              (pair (lambda
                                       (pair (pair (pair (pair nat bytes) (pair address address)) nat)
-                                            (pair (map nat nat) (pair nat (map address nat))))
-                                      (pair (list operation) (pair (map nat nat) (pair nat (map address nat)))))
+                                            (pair (big_map nat nat) (pair nat (big_map address nat))))
+                                      (pair (list operation) (pair (big_map nat nat) (pair nat (big_map address nat)))))
                                    (pair (lambda
                                             (pair (pair (list (pair address nat)) (lambda (list (pair (pair address nat) nat)) operation))
-                                                  (pair (map nat nat) (pair nat (map address nat))))
+                                                  (pair (big_map nat nat) (pair nat (big_map address nat))))
                                             operation)
                                          (pair (lambda
                                                   (pair (pair (pair address nat) (lambda (pair (pair address nat) nat) operation))
-                                                        (pair (map nat nat) (pair nat (map address nat))))
+                                                        (pair (big_map nat nat) (pair nat (big_map address nat))))
                                                   operation)
                                                (pair (lambda
                                                         (pair (pair (lambda (pair (pair address address) bool) operation) (pair address address))
@@ -891,9 +905,11 @@
                                (or (pair (lambda (pair (pair address address) bool) operation) (pair address address))
                                    (pair (pair (list (pair nat nat)) bytes) (pair address address))))
                            (or (pair (pair (pair nat bytes) (pair address address)) nat) (pair bool address)))
-                       (pair (big_map address (set address)) (pair (map nat nat) (pair nat (map address nat))))))
+                       (pair (big_map address (set address))
+                             (pair (big_map nat nat) (pair nat (big_map address nat))))))
            (pair (list operation)
-                 (pair (big_map address (set address)) (pair (map nat nat) (pair nat (map address nat)))))
+                 (pair (big_map address (set address))
+                       (pair (big_map nat nat) (pair nat (big_map address nat)))))
            { DUP ;
              CAR ;
              SWAP ;
@@ -1052,8 +1068,8 @@
                SWAP } ;
          SWAP ;
          LAMBDA
-           (pair address (pair (pair address bool) (map nat string)))
-           (pair (pair address bool) (map nat string))
+           (pair address (pair (pair address bool) (big_map nat string)))
+           (pair (pair address bool) (big_map nat string))
            { DUP ;
              CAR ;
              DIP { DUP } ;
@@ -1068,8 +1084,8 @@
              DIP { DROP 3 } } ;
          SWAP ;
          LAMBDA
-           (pair bool (pair (pair address bool) (map nat string)))
-           (pair (pair address bool) (map nat string))
+           (pair bool (pair (pair address bool) (big_map nat string)))
+           (pair (pair address bool) (big_map nat string))
            { DUP ;
              CAR ;
              DIP { DUP } ;
@@ -1085,8 +1101,8 @@
              DIP { DROP 3 } } ;
          SWAP ;
          LAMBDA
-           (pair (pair string nat) (pair (pair address bool) (map nat string)))
-           (pair (pair address bool) (map nat string))
+           (pair (pair string nat) (pair (pair address bool) (big_map nat string)))
+           (pair (pair address bool) (big_map nat string))
            { DUP ;
              CAR ;
              DIP { DUP } ;
@@ -1121,7 +1137,7 @@
              DIP { DROP 4 } } ;
          SWAP ;
          LAMBDA
-           (pair nat (map nat string))
+           (pair nat (big_map nat string))
            unit
            { DUP ;
              CAR ;
@@ -1137,13 +1153,13 @@
              DIP { DROP 4 } } ;
          SWAP ;
          LAMBDA
-           (pair (pair (lambda (pair nat (map nat nat)) nat)
+           (pair (pair (lambda (pair nat (big_map nat nat)) nat)
                        (lambda
-                          (pair (pair address nat) (pair nat (map address nat)))
-                          (pair nat (pair nat (map address nat)))))
+                          (pair (pair address nat) (pair nat (big_map address nat)))
+                          (pair nat (pair nat (big_map address nat)))))
                  (pair (pair (pair nat bytes) (pair address nat))
-                       (pair (map nat nat) (pair nat (map address nat)))))
-           (pair (map nat nat) (pair nat (map address nat)))
+                       (pair (big_map nat nat) (pair nat (big_map address nat)))))
+           (pair (big_map nat nat) (pair nat (big_map address nat)))
            { DUP ;
              CAR ;
              SWAP ;
@@ -1225,12 +1241,13 @@
            (pair (pair (lambda (pair (pair nat bytes) (pair address nat)) (list operation))
                        (pair (lambda
                                 (pair (pair (pair nat bytes) (pair address nat))
-                                      (pair (map nat nat) (pair nat (map address nat))))
-                                (pair (map nat nat) (pair nat (map address nat))))
-                             (lambda (pair nat (map nat string)) unit)))
-                 (pair (pair (pair (pair nat bytes) (pair address nat)) (pair (pair address bool) (map nat string)))
-                       (pair (map nat nat) (pair nat (map address nat)))))
-           (pair (list operation) (pair (map nat nat) (pair nat (map address nat))))
+                                      (pair (big_map nat nat) (pair nat (big_map address nat))))
+                                (pair (big_map nat nat) (pair nat (big_map address nat))))
+                             (lambda (pair nat (big_map nat string)) unit)))
+                 (pair (pair (pair (pair nat bytes) (pair address nat))
+                             (pair (pair address bool) (big_map nat string)))
+                       (pair (big_map nat nat) (pair nat (big_map address nat)))))
+           (pair (list operation) (pair (big_map nat nat) (pair nat (big_map address nat))))
            { DUP ;
              CAR ;
              SWAP ;
@@ -1296,13 +1313,15 @@
                SWAP } ;
          SWAP ;
          LAMBDA
-           (pair (pair (lambda (pair nat (map nat string)) unit)
-                       (pair (lambda (pair nat (map nat nat)) nat)
+           (pair (pair (lambda (pair nat (big_map nat string)) unit)
+                       (pair (lambda (pair nat (big_map nat nat)) nat)
                              (pair (lambda (pair nat nat) nat)
-                                   (lambda (pair address (pair nat (map address nat))) (pair nat (pair nat (map address nat)))))))
-                 (pair (pair (pair (pair (list (pair nat nat)) bytes) address) (map nat string))
-                       (pair (map nat nat) (pair nat (map address nat)))))
-           (pair (map nat nat) (pair nat (map address nat)))
+                                   (lambda
+                                      (pair address (pair nat (big_map address nat)))
+                                      (pair nat (pair nat (big_map address nat)))))))
+                 (pair (pair (pair (pair (list (pair nat nat)) bytes) address) (big_map nat string))
+                       (pair (big_map nat nat) (pair nat (big_map address nat)))))
+           (pair (big_map nat nat) (pair nat (big_map address nat)))
            { DUP ;
              CAR ;
              SWAP ;
@@ -1343,12 +1362,12 @@
              DIP { PAIR } ;
              SWAP ;
              LAMBDA
-               (pair (pair (pair nat (pair nat (map address nat)))
-                           (pair (map nat string)
-                                 (pair (lambda (pair nat (map nat string)) unit)
-                                       (pair (lambda (pair nat (map nat nat)) nat) (lambda (pair nat nat) nat)))))
-                     (pair (map nat nat) (pair nat nat)))
-               (map nat nat)
+               (pair (pair (pair nat (pair nat (big_map address nat)))
+                           (pair (big_map nat string)
+                                 (pair (lambda (pair nat (big_map nat string)) unit)
+                                       (pair (lambda (pair nat (big_map nat nat)) nat) (lambda (pair nat nat) nat)))))
+                     (pair (big_map nat nat) (pair nat nat)))
+               (big_map nat nat)
                { DUP ;
                  CAR ;
                  SWAP ;
@@ -1474,13 +1493,13 @@
          LAMBDA
            (pair (pair (lambda (pair (pair (list (pair nat nat)) bytes) address) (list operation))
                        (lambda
-                          (pair (pair (pair (pair (list (pair nat nat)) bytes) address) (map nat string))
-                                (pair (map nat nat) (pair nat (map address nat))))
-                          (pair (map nat nat) (pair nat (map address nat)))))
+                          (pair (pair (pair (pair (list (pair nat nat)) bytes) address) (big_map nat string))
+                                (pair (big_map nat nat) (pair nat (big_map address nat))))
+                          (pair (big_map nat nat) (pair nat (big_map address nat)))))
                  (pair (pair (pair (pair (list (pair nat nat)) bytes) address)
-                             (pair (pair address bool) (map nat string)))
-                       (pair (map nat nat) (pair nat (map address nat)))))
-           (pair (list operation) (pair (map nat nat) (pair nat (map address nat))))
+                             (pair (pair address bool) (big_map nat string)))
+                       (pair (big_map nat nat) (pair nat (big_map address nat)))))
+           (pair (list operation) (pair (big_map nat nat) (pair nat (big_map address nat))))
            { DUP ;
              CAR ;
              SWAP ;
@@ -1536,10 +1555,11 @@
                SWAP } ;
          SWAP ;
          LAMBDA
-           (pair (pair (lambda (pair nat (map nat nat)) nat)
-                       (lambda (pair (pair address nat) (pair nat (map address nat))) nat))
-                 (pair (pair (pair nat address) nat) (pair (map nat nat) (pair nat (map address nat)))))
-           (pair (map nat nat) (pair nat (map address nat)))
+           (pair (pair (lambda (pair nat (big_map nat nat)) nat)
+                       (lambda (pair (pair address nat) (pair nat (big_map address nat))) nat))
+                 (pair (pair (pair nat address) nat)
+                       (pair (big_map nat nat) (pair nat (big_map address nat)))))
+           (pair (big_map nat nat) (pair nat (big_map address nat)))
            { DUP ;
              CAR ;
              SWAP ;
@@ -1618,9 +1638,11 @@
                SWAP } ;
          SWAP ;
          LAMBDA
-           (pair (pair (lambda (pair nat nat) nat) (lambda (pair address (pair nat (map address nat))) nat))
-                 (pair (pair (list (pair nat nat)) address) (pair (map nat nat) (pair nat (map address nat)))))
-           (pair (map nat nat) (pair nat (map address nat)))
+           (pair (pair (lambda (pair nat nat) nat)
+                       (lambda (pair address (pair nat (big_map address nat))) nat))
+                 (pair (pair (list (pair nat nat)) address)
+                       (pair (big_map nat nat) (pair nat (big_map address nat)))))
+           (pair (big_map nat nat) (pair nat (big_map address nat)))
            { DUP ;
              CAR ;
              SWAP ;
@@ -1643,8 +1665,8 @@
              DIP { PAIR } ;
              SWAP ;
              LAMBDA
-               (pair (pair nat (lambda (pair nat nat) nat)) (pair (map nat nat) (pair nat nat)))
-               (map nat nat)
+               (pair (pair nat (lambda (pair nat nat) nat)) (pair (big_map nat nat) (pair nat nat)))
+               (big_map nat nat)
                { DUP ;
                  CAR ;
                  SWAP ;
@@ -1747,37 +1769,40 @@
          SWAP ;
          LAMBDA
            (pair (pair (lambda
-                          (pair (pair (list (pair nat nat)) address) (pair (map nat nat) (pair nat (map address nat))))
-                          (pair (map nat nat) (pair nat (map address nat))))
+                          (pair (pair (list (pair nat nat)) address)
+                                (pair (big_map nat nat) (pair nat (big_map address nat))))
+                          (pair (big_map nat nat) (pair nat (big_map address nat))))
                        (pair (lambda
-                                (pair (pair (pair nat address) nat) (pair (map nat nat) (pair nat (map address nat))))
-                                (pair (map nat nat) (pair nat (map address nat))))
+                                (pair (pair (pair nat address) nat)
+                                      (pair (big_map nat nat) (pair nat (big_map address nat))))
+                                (pair (big_map nat nat) (pair nat (big_map address nat))))
                              (pair (lambda
                                       (pair (pair (pair (pair (list (pair nat nat)) bytes) address)
-                                                  (pair (pair address bool) (map nat string)))
-                                            (pair (map nat nat) (pair nat (map address nat))))
-                                      (pair (list operation) (pair (map nat nat) (pair nat (map address nat)))))
+                                                  (pair (pair address bool) (big_map nat string)))
+                                            (pair (big_map nat nat) (pair nat (big_map address nat))))
+                                      (pair (list operation) (pair (big_map nat nat) (pair nat (big_map address nat)))))
                                    (pair (lambda
-                                            (pair (pair (pair (pair nat bytes) (pair address nat)) (pair (pair address bool) (map nat string)))
-                                                  (pair (map nat nat) (pair nat (map address nat))))
-                                            (pair (list operation) (pair (map nat nat) (pair nat (map address nat)))))
+                                            (pair (pair (pair (pair nat bytes) (pair address nat))
+                                                        (pair (pair address bool) (big_map nat string)))
+                                                  (pair (big_map nat nat) (pair nat (big_map address nat))))
+                                            (pair (list operation) (pair (big_map nat nat) (pair nat (big_map address nat)))))
                                          (pair (lambda
-                                                  (pair (pair string nat) (pair (pair address bool) (map nat string)))
-                                                  (pair (pair address bool) (map nat string)))
+                                                  (pair (pair string nat) (pair (pair address bool) (big_map nat string)))
+                                                  (pair (pair address bool) (big_map nat string)))
                                                (pair (lambda
-                                                        (pair bool (pair (pair address bool) (map nat string)))
-                                                        (pair (pair address bool) (map nat string)))
+                                                        (pair bool (pair (pair address bool) (big_map nat string)))
+                                                        (pair (pair address bool) (big_map nat string)))
                                                      (lambda
-                                                        (pair address (pair (pair address bool) (map nat string)))
-                                                        (pair (pair address bool) (map nat string)))))))))
+                                                        (pair address (pair (pair address bool) (big_map nat string)))
+                                                        (pair (pair address bool) (big_map nat string)))))))))
                  (pair (or (or (or (pair (pair nat address) nat) (pair (list (pair nat nat)) address))
                                (or (pair string nat) (pair (pair nat bytes) (pair address nat))))
                            (or (or (pair (pair (list (pair nat nat)) bytes) address) bool) address))
-                       (pair (pair (pair address bool) (map nat string))
-                             (pair (map nat nat) (pair nat (map address nat))))))
+                       (pair (pair (pair address bool) (big_map nat string))
+                             (pair (big_map nat nat) (pair nat (big_map address nat))))))
            (pair (list operation)
-                 (pair (pair (pair address bool) (map nat string))
-                       (pair (map nat nat) (pair nat (map address nat)))))
+                 (pair (pair (pair address bool) (big_map nat string))
+                       (pair (big_map nat nat) (pair nat (big_map address nat)))))
            { DUP ;
              CAR ;
              SWAP ;
