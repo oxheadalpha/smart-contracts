@@ -212,7 +212,7 @@ type erc1155_storage = {
 }
 
 
-let irc1155_main (param : erc1155) (s : erc1155_storage) : (operation  list) * irc1155_storage =
+let erc1155_main (param : erc1155) (s : erc1155_storage) : (operation  list) * irc1155_storage =
   match param with
     | Safe_transfer_from p ->
         let u = approived_transfer_from p.from_ s.approvals in
