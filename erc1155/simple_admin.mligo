@@ -24,6 +24,11 @@ type burn_tokens_param = {
   amount : nat;
 }
 
+type burn_tokens_batch_param = {
+  owner : address;
+  batch : tx list;
+}
+
 type simple_admin =
   | Set_admin of address
   | Pause of bool
@@ -31,6 +36,7 @@ type simple_admin =
   | Mint_tokens of mint_tokens_param
   | Mint_tokens_batch of mint_tokens_batch_param
   | Burn_tokens of burn_tokens_param
+  | Burn_tokens_batch of burn_tokens_batch_param
 
 
 type simple_admin_storage = {
@@ -150,6 +156,27 @@ let burn_tokens (param : burn_tokens_param) (s : balance_storage): balance_stora
     balances = new_bals;
   }
 
+let burn_tokens_batch (param : burn_tokens_batch_param) (s : balance_storage): balance_storage =
+  let owner_id = get_owner_id param.owner s.owners in
+
+  let make_burn = fun (bals : balances) (t : tx) ->
+    let from_key = pack_balance_key_impl owner_id t.token_id in
+    let old_bal =  match Map.find_opt from_key bals with
+      | Some b  -> b
+      | None    -> 0p
+    in
+    if old_bal < t.amount
+    then (failwith("Insufficient funds") : balances)
+    else
+      Map.update from_key (Some(abs(old_bal - t.amount))) bals
+    in
+
+  let new_bals = List.fold param.batch s.balances make_burn in
+  {
+     owners = s.owners;
+    balances = new_bals;
+  } 
+
 let simple_admin (param : simple_admin) (ctx : simple_admin_context) : (operation list) * simple_admin_context =
   if sender <> ctx.admin_storage.admin
   then (failwith "operation require admin privileges" : (operation list) * simple_admin_context)
@@ -198,6 +225,14 @@ let simple_admin (param : simple_admin) (ctx : simple_admin_context) : (operatio
 
       | Burn_tokens param -> 
           let new_bals = burn_tokens param ctx.balance_storage in
+          let new_ctx = {
+            admin_storage = ctx.admin_storage;
+            balance_storage = new_bals
+          } in
+          (([] : operation list), new_ctx)
+
+      | Burn_tokens_batch param ->
+          let new_bals = burn_tokens_batch param ctx.balance_storage in
           let new_ctx = {
             admin_storage = ctx.admin_storage;
             balance_storage = new_bals
