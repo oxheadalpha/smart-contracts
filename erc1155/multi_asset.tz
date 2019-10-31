@@ -41,8 +41,7 @@
              (pair %balance_storage
                 (map %balances nat nat)
                 (pair %owners (nat %owner_count) (map %owners address nat))))) ;
-  code { LAMBDA unit int { DROP ; PUSH int 77 } ;
-         LAMBDA
+  code { LAMBDA
            (pair (pair bool address) (big_map address (set address)))
            (big_map address (set address))
            { DUP ;
@@ -53,7 +52,7 @@
              DUP ;
              SENDER ;
              GET ;
-             IF_NONE { EMPTY_SET address } {} ;
+             IF_NONE { EMPTY_SET address } { DUP ; DIP { DROP } } ;
              DIP 2 { DUP } ;
              DIG 2 ;
              CAR ;
@@ -75,7 +74,7 @@
              EQ ;
              IF { DIP 2 { DUP } ; DIG 2 ; NONE (set address) ; SENDER ; UPDATE }
                 { DUP ; SOME ; DIP { DIP 2 { DUP } ; DIG 2 } ; SENDER ; UPDATE } ;
-             DIP { DROP ; DROP ; DROP ; DROP ; DROP } } ;
+             DIP { DROP 5 } } ;
          LAMBDA
            (pair (pair (lambda (pair (pair address address) bool) operation) (pair address address))
                  (big_map address (set address)))
@@ -95,14 +94,14 @@
              DUP ;
              IF_NONE
                { PUSH bool False }
-               { DIP 2 { DUP } ; DIG 2 ; CAR ; DIP { DUP } ; MEM ; SWAP ; DROP } ;
+               { DIP 2 { DUP } ; DIG 2 ; CAR ; DIP { DUP } ; MEM ; DIP { DROP } } ;
              DIP 2 { DUP } ;
              DIG 2 ;
              DIP { DUP } ;
              PAIR ;
              DIP { DIP 4 { DUP } ; DIG 4 ; CAR } ;
              EXEC ;
-             DIP { DROP ; DROP ; DROP ; DROP ; DROP ; DROP } } ;
+             DIP { DROP 6 } } ;
          PUSH nat 4294967295 ;
          PUSH nat 4294967296 ;
          LAMBDA
@@ -129,7 +128,7 @@
              DIG 2 ;
              DIP { DUP } ;
              PAIR ;
-             DIP { DROP ; DROP ; DROP ; DROP ; DROP ; DROP } } ;
+             DIP { DROP 6 } } ;
          DUP ;
          LAMBDA
            (pair (lambda (pair address (pair nat (map address nat))) (pair nat (pair nat (map address nat))))
@@ -156,8 +155,8 @@
                  PAIR ;
                  DIP { DIP 4 { DUP } ; DIG 4 } ;
                  EXEC }
-               { DUP ; DIP { DIP 2 { DUP } ; DIG 2 } ; PAIR ; SWAP ; DROP } ;
-             DIP { DROP ; DROP ; DROP ; DROP ; DROP } } ;
+               { DUP ; DIP { DIP 2 { DUP } ; DIG 2 } ; PAIR ; DIP { DROP } } ;
+             DIP { DROP 5 } } ;
          SWAP ;
          APPLY ;
          DIP { DIP { DIP { DUP } ; DUP ; DIP { PAIR } ; SWAP } ; SWAP } ;
@@ -175,8 +174,10 @@
              DIP { DUP ; CDR } ;
              GET ;
              DUP ;
-             IF_NONE { PUSH string "No such owner" ; FAILWITH } {} ;
-             DIP { DROP ; DROP ; DROP ; DROP } } ;
+             IF_NONE
+               { PUSH string "No such owner" ; FAILWITH }
+               { DUP ; DIP { DROP } } ;
+             DIP { DROP 4 } } ;
          SWAP ;
          LAMBDA
            (pair (pair nat nat) (pair nat nat))
@@ -199,7 +200,7 @@
                 { DUP ;
                   DIP { DIP { DUP } ; SWAP ; DIP { DIP 3 { DUP } ; DIG 3 } ; MUL } ;
                   ADD } ;
-             DIP { DROP ; DROP ; DROP ; DROP ; DROP } } ;
+             DIP { DROP 5 } } ;
          SWAP ;
          APPLY ;
          DIP { DUP } ;
@@ -236,7 +237,7 @@
              PAIR ;
              DIP { DIP 5 { DUP } ; DIG 5 } ;
              EXEC ;
-             DIP { DROP ; DROP ; DROP ; DROP ; DROP ; DROP ; DROP } } ;
+             DIP { DROP 7 } } ;
          SWAP ;
          APPLY ;
          DIP { DIP { DIP { DUP } ; SWAP } ; DUP ; DIP { PAIR } ; SWAP } ;
@@ -276,7 +277,7 @@
              DUP ;
              DIP { DIP { DUP } ; SWAP ; CDR } ;
              PAIR ;
-             DIP { DROP ; DROP ; DROP ; DROP ; DROP ; DROP ; DROP ; DROP } } ;
+             DIP { DROP 8 } } ;
          SWAP ;
          APPLY ;
          DIP { DUP } ;
@@ -294,8 +295,8 @@
              DIP { DUP } ;
              GET ;
              DUP ;
-             IF_NONE { PUSH nat 0 } {} ;
-             DIP { DROP ; DROP ; DROP ; DROP } } ;
+             IF_NONE { PUSH nat 0 } { DUP ; DIP { DROP } } ;
+             DIP { DROP 4 } } ;
          DUP ;
          DIP { PAIR } ;
          SWAP ;
@@ -328,7 +329,7 @@
              PAIR ;
              DIP { DIP 4 { DUP } ; DIG 4 } ;
              EXEC ;
-             DIP { DROP ; DROP ; DROP ; DROP ; DROP ; DROP } } ;
+             DIP { DROP 6 } } ;
          SWAP ;
          APPLY ;
          DUP ;
@@ -360,7 +361,7 @@
              PAIR ;
              DIP { DIP 2 { DUP } ; DIG 2 ; CDR } ;
              EXEC ;
-             DIP { DROP ; DROP ; DROP ; DROP ; DROP } } ;
+             DIP { DROP 5 } } ;
          SWAP ;
          APPLY ;
          DIP { DUP } ;
@@ -402,14 +403,7 @@
                  SWAP ;
                  DIP { DUP } ;
                  PAIR ;
-                 SWAP ;
-                 DROP ;
-                 SWAP ;
-                 DROP ;
-                 SWAP ;
-                 DROP ;
-                 SWAP ;
-                 DROP } ;
+                 DIP { DROP 4 } } ;
              SWAP ;
              APPLY ;
              DIP 2 { DUP } ;
@@ -424,14 +418,11 @@
                    SWAP ;
                    DIP { DUP } ;
                    PAIR ;
-                   SWAP ;
-                   DROP ;
-                   SWAP ;
-                   DROP } ;
+                   DIP { DROP 2 } } ;
              DUP ;
              DIP { DIP 3 { DUP } ; DIG 3 ; CDR } ;
              EXEC ;
-             DIP { DROP ; DROP ; DROP ; DROP ; DROP ; DROP } } ;
+             DIP { DROP 6 } } ;
          SWAP ;
          APPLY ;
          DIP { DIP { DIP { DUP } ; SWAP } ; SWAP } ;
@@ -500,8 +491,8 @@
                   DIP { DUP ; SOME ; DIP { DIP 2 { DUP } ; DIG 2 } } ;
                   UPDATE ;
                   DUP ;
-                  DIP { DROP ; DROP ; DROP ; DROP ; DROP } } ;
-             DIP { DROP ; DROP ; DROP ; DROP ; DROP ; DROP ; DROP } } ;
+                  DIP { DROP 5 } } ;
+             DIP { DROP 7 } } ;
          SWAP ;
          APPLY ;
          DIP { DIP { DIP { DIP { DIP { DIP { DUP } ; DUP ; DIP { PAIR } ; SWAP } ; SWAP } ;
@@ -541,7 +532,7 @@
              NIL operation ;
              SWAP ;
              CONS ;
-             DIP { DROP ; DROP ; DROP ; DROP } } ;
+             DIP { DROP 4 } } ;
          DUP ;
          DIP { PAIR } ;
          SWAP ;
@@ -615,18 +606,7 @@
              DUP ;
              DIP { DIP { DUP } ; SWAP } ;
              PAIR ;
-             DIP { DROP ;
-                   DROP ;
-                   DROP ;
-                   DROP ;
-                   DROP ;
-                   DROP ;
-                   DROP ;
-                   DROP ;
-                   DROP ;
-                   DROP ;
-                   DROP ;
-                   DROP } } ;
+             DIP { DROP 12 } } ;
          SWAP ;
          APPLY ;
          DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DUP } ; DUP ; DIP { PAIR } ; SWAP } ;
@@ -670,7 +650,7 @@
              NIL operation ;
              SWAP ;
              CONS ;
-             DIP { DROP ; DROP ; DROP ; DROP } } ;
+             DIP { DROP 4 } } ;
          DUP ;
          DIP { PAIR } ;
          SWAP ;
@@ -773,17 +753,7 @@
                  PAIR ;
                  DIP { DIP 7 { DUP } ; DIG 7 } ;
                  EXEC ;
-                 SWAP ;
-                 DROP ;
-                 SWAP ;
-                 DROP ;
-                 SWAP ;
-                 DROP ;
-                 SWAP ;
-                 DROP ;
-                 SWAP ;
-                 DROP ;
-                 DIP { DROP ; DROP ; DROP ; DROP } } ;
+                 DIP { DROP 9 } } ;
              SWAP ;
              APPLY ;
              DIP 4 { DUP } ;
@@ -823,7 +793,7 @@
                     PAIR ;
                     DIP { DIP 12 { DUP } ; DIG 12 } ;
                     EXEC ;
-                    DIP { DROP ; DROP ; DROP ; DROP ; DROP } } ;
+                    DIP { DROP 5 } } ;
              DUP ;
              DIP { DIP 2 { DUP } ; DIG 2 ; CDR } ;
              PAIR ;
@@ -834,20 +804,7 @@
              DUP ;
              DIP { DIP { DUP } ; SWAP } ;
              PAIR ;
-             DIP { DROP ;
-                   DROP ;
-                   DROP ;
-                   DROP ;
-                   DROP ;
-                   DROP ;
-                   DROP ;
-                   DROP ;
-                   DROP ;
-                   DROP ;
-                   DROP ;
-                   DROP ;
-                   DROP ;
-                   DROP } } ;
+             DIP { DROP 14 } } ;
          SWAP ;
          APPLY ;
          DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DUP } ; DUP ; DIP { PAIR } ; SWAP } ; SWAP } ;
@@ -895,20 +852,12 @@
                   DUP ;
                   IF_NONE
                     { PUSH string "operator not approved to transfer tokens" ; FAILWITH }
-                    { DIP 3 { DUP } ; DIG 3 ; DIP { DUP } ; MEM ; SWAP ; DROP } ;
+                    { DIP 3 { DUP } ; DIG 3 ; DIP { DUP } ; MEM ; DIP { DROP } } ;
                   DUP ;
                   IF { UNIT }
                      { PUSH string "operator not approved to transfer tokens" ; FAILWITH } ;
-                  SWAP ;
-                  DROP ;
-                  SWAP ;
-                  DROP } ;
-             SWAP ;
-             DROP ;
-             SWAP ;
-             DROP ;
-             SWAP ;
-             DROP } ;
+                  DIP { DROP 2 } } ;
+             DIP { DROP 3 } } ;
          DUP ;
          DIP { PAIR } ;
          SWAP ;
@@ -990,12 +939,7 @@
                          CONS ;
                          DIP { DIP 5 { DUP } ; DIG 5 } ;
                          PAIR ;
-                         SWAP ;
-                         DROP ;
-                         SWAP ;
-                         DROP ;
-                         SWAP ;
-                         DROP }
+                         DIP { DROP 3 } }
                        { DUP ;
                          DUP ;
                          DIP { DIP 4 { DUP } ; DIG 4 ; CDR } ;
@@ -1008,14 +952,8 @@
                          CONS ;
                          DIP { DIP 5 { DUP } ; DIG 5 } ;
                          PAIR ;
-                         SWAP ;
-                         DROP ;
-                         SWAP ;
-                         DROP ;
-                         SWAP ;
-                         DROP } ;
-                     SWAP ;
-                     DROP }
+                         DIP { DROP 3 } } ;
+                     DIP { DROP } }
                    { DUP ;
                      IF_LEFT
                        { DUP ;
@@ -1030,12 +968,7 @@
                          CONS ;
                          DIP { DIP 5 { DUP } ; DIG 5 } ;
                          PAIR ;
-                         SWAP ;
-                         DROP ;
-                         SWAP ;
-                         DROP ;
-                         SWAP ;
-                         DROP }
+                         DIP { DROP 3 } }
                        { DUP ;
                          DUP ;
                          CDR ;
@@ -1060,11 +993,9 @@
                          CAR ;
                          DIP { DUP } ;
                          PAIR ;
-                         DIP { DROP ; DROP ; DROP ; DROP ; DROP } } ;
-                     SWAP ;
-                     DROP } ;
-                 SWAP ;
-                 DROP }
+                         DIP { DROP 5 } } ;
+                     DIP { DROP } } ;
+                 DIP { DROP } }
                { DUP ;
                  IF_LEFT
                    { DUP ;
@@ -1092,7 +1023,7 @@
                      CAR ;
                      DIP { DUP } ;
                      PAIR ;
-                     DIP { DROP ; DROP ; DROP ; DROP ; DROP } }
+                     DIP { DROP 5 } }
                    { DUP ;
                      DUP ;
                      DIP { DIP 3 { DUP } ; DIG 3 ; CAR } ;
@@ -1105,10 +1036,9 @@
                      DUP ;
                      NIL operation ;
                      PAIR ;
-                     DIP { DROP ; DROP ; DROP ; DROP } } ;
-                 SWAP ;
-                 DROP } ;
-             DIP { DROP ; DROP ; DROP ; DROP ; DROP ; DROP ; DROP ; DROP ; DROP ; DROP } } ;
+                     DIP { DROP 4 } } ;
+                 DIP { DROP } } ;
+             DIP { DROP 10 } } ;
          SWAP ;
          APPLY ;
          DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DUP } ; DUP ; DIP { PAIR } ; SWAP } ; SWAP } ;
@@ -1120,8 +1050,6 @@
                            SWAP } ;
                      SWAP } ;
                SWAP } ;
-         SWAP ;
-         LAMBDA unit unit { DROP ; UNIT } ;
          SWAP ;
          LAMBDA
            (pair address (pair (pair address bool) (map nat string)))
@@ -1137,12 +1065,7 @@
              PAIR ;
              DIP { DUP ; CDR } ;
              PAIR ;
-             SWAP ;
-             DROP ;
-             SWAP ;
-             DROP ;
-             SWAP ;
-             DROP } ;
+             DIP { DROP 3 } } ;
          SWAP ;
          LAMBDA
            (pair bool (pair (pair address bool) (map nat string)))
@@ -1159,12 +1082,7 @@
              PAIR ;
              DIP { DUP ; CDR } ;
              PAIR ;
-             SWAP ;
-             DROP ;
-             SWAP ;
-             DROP ;
-             SWAP ;
-             DROP } ;
+             DIP { DROP 3 } } ;
          SWAP ;
          LAMBDA
            (pair (pair string nat) (pair (pair address bool) (map nat string)))
@@ -1198,10 +1116,9 @@
                  PAIR ;
                  DIP { DUP } ;
                  PAIR ;
-                 SWAP ;
-                 DROP }
+                 DIP { DROP } }
                { PUSH string "token already exists" ; FAILWITH } ;
-             DIP { DROP ; DROP ; DROP ; DROP } } ;
+             DIP { DROP 4 } } ;
          SWAP ;
          LAMBDA
            (pair nat (map nat string))
@@ -1217,7 +1134,7 @@
              GET ;
              DUP ;
              IF_NONE { PUSH string "token does not exists" ; FAILWITH } { DROP ; UNIT } ;
-             DIP { DROP ; DROP ; DROP ; DROP } } ;
+             DIP { DROP 4 } } ;
          SWAP ;
          LAMBDA
            (pair (pair (lambda (pair nat (map nat nat)) nat)
@@ -1265,7 +1182,7 @@
              DUP ;
              DIP { DIP 2 { DUP } ; DIG 2 ; CDR } ;
              PAIR ;
-             DIP { DROP ; DROP ; DROP ; DROP ; DROP ; DROP ; DROP ; DROP } } ;
+             DIP { DROP 8 } } ;
          SWAP ;
          APPLY ;
          DIP { DUP } ;
@@ -1300,7 +1217,7 @@
              NIL operation ;
              SWAP ;
              CONS ;
-             DIP { DROP ; DROP ; DROP ; DROP } } ;
+             DIP { DROP 4 } } ;
          DUP ;
          DIP { PAIR } ;
          SWAP ;
@@ -1350,15 +1267,14 @@
              DUP ;
              DIP { DIP { DUP } ; SWAP } ;
              PAIR ;
-             DIP { DROP ; DROP ; DROP ; DROP ; DROP ; DROP ; DROP ; DROP ; DROP ; DROP } } ;
+             DIP { DROP 10 } } ;
          SWAP ;
          APPLY ;
-         DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DUP } ; SWAP } ; DUP ; DIP { PAIR } ; SWAP } ;
-                                                                                                                                 SWAP } ;
+         DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DUP } ; SWAP } ; DUP ; DIP { PAIR } ; SWAP } ;
                                                                                                                            SWAP } ;
-                                                                                                                     DUP ;
-                                                                                                                     DIP { PAIR } ;
                                                                                                                      SWAP } ;
+                                                                                                               DUP ;
+                                                                                                               DIP { PAIR } ;
                                                                                                                SWAP } ;
                                                                                                          SWAP } ;
                                                                                                    SWAP } ;
@@ -1477,19 +1393,7 @@
                        SOME ;
                        DIP { DIP 4 { DUP } ; DIG 4 } } ;
                  UPDATE ;
-                 SWAP ;
-                 DROP ;
-                 SWAP ;
-                 DROP ;
-                 SWAP ;
-                 DROP ;
-                 SWAP ;
-                 DROP ;
-                 SWAP ;
-                 DROP ;
-                 SWAP ;
-                 DROP ;
-                 DIP { DROP ; DROP ; DROP ; DROP ; DROP } } ;
+                 DIP { DROP 11 } } ;
              SWAP ;
              APPLY ;
              DIP 4 { DUP } ;
@@ -1530,21 +1434,11 @@
                           SOME ;
                           DIP { DIP 4 { DUP } ; DIG 4 } } ;
                     UPDATE ;
-                    DIP { DROP ; DROP ; DROP ; DROP ; DROP ; DROP } } ;
+                    DIP { DROP 6 } } ;
              DUP ;
              DIP { DIP 2 { DUP } ; DIG 2 ; CDR } ;
              PAIR ;
-             DIP { DROP ;
-                   DROP ;
-                   DROP ;
-                   DROP ;
-                   DROP ;
-                   DROP ;
-                   DROP ;
-                   DROP ;
-                   DROP ;
-                   DROP ;
-                   DROP } } ;
+             DIP { DROP 11 } } ;
          SWAP ;
          APPLY ;
          DUP ;
@@ -1573,7 +1467,7 @@
              NIL operation ;
              SWAP ;
              CONS ;
-             DIP { DROP ; DROP ; DROP ; DROP } } ;
+             DIP { DROP 4 } } ;
          DUP ;
          DIP { PAIR } ;
          SWAP ;
@@ -1617,11 +1511,10 @@
              DUP ;
              DIP { DIP { DUP } ; SWAP } ;
              PAIR ;
-             DIP { DROP ; DROP ; DROP ; DROP ; DROP ; DROP ; DROP ; DROP } } ;
+             DIP { DROP 8 } } ;
          SWAP ;
          APPLY ;
-         DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DUP } ; SWAP } ; DUP ; DIP { PAIR } ; SWAP } ;
-                                                                                                                                 SWAP } ;
+         DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DUP } ; SWAP } ; DUP ; DIP { PAIR } ; SWAP } ;
                                                                                                                            SWAP } ;
                                                                                                                      SWAP } ;
                                                                                                                SWAP } ;
@@ -1697,11 +1590,10 @@
              DUP ;
              DIP { DIP 4 { DUP } ; DIG 4 ; CDR } ;
              PAIR ;
-             DIP { DROP ; DROP ; DROP ; DROP ; DROP ; DROP ; DROP ; DROP ; DROP } } ;
+             DIP { DROP 9 } } ;
          SWAP ;
          APPLY ;
-         DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DUP } ; DUP ; DIP { PAIR } ; SWAP } ; SWAP } ;
-                                                                                                                                                   SWAP } ;
+         DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DUP } ; DUP ; DIP { PAIR } ; SWAP } ; SWAP } ;
                                                                                                                                              SWAP } ;
                                                                                                                                        SWAP } ;
                                                                                                                                  SWAP } ;
@@ -1772,7 +1664,7 @@
                  DUP ;
                  DIP { DIP 2 { DUP } ; DIG 2 } ;
                  GET ;
-                 IF_NONE { PUSH nat 0 } {} ;
+                 IF_NONE { PUSH nat 0 } { DUP ; DIP { DROP } } ;
                  DUP ;
                  DIP { DIP 2 { DUP } ; DIG 2 ; CAR } ;
                  COMPARE ;
@@ -1787,20 +1679,7 @@
                             SOME ;
                             DIP { DIP 3 { DUP } ; DIG 3 } } ;
                       UPDATE } ;
-                 SWAP ;
-                 DROP ;
-                 SWAP ;
-                 DROP ;
-                 SWAP ;
-                 DROP ;
-                 SWAP ;
-                 DROP ;
-                 SWAP ;
-                 DROP ;
-                 SWAP ;
-                 DROP ;
-                 SWAP ;
-                 DROP } ;
+                 DIP { DROP 7 } } ;
              SWAP ;
              APPLY ;
              DIP 3 { DUP } ;
@@ -1823,7 +1702,7 @@
                     DUP ;
                     DIP { DIP 2 { DUP } ; DIG 2 } ;
                     GET ;
-                    IF_NONE { PUSH nat 0 } {} ;
+                    IF_NONE { PUSH nat 0 } { DUP ; DIP { DROP } } ;
                     DUP ;
                     DIP { DIP 2 { DUP } ; DIG 2 ; CAR } ;
                     COMPARE ;
@@ -1838,11 +1717,11 @@
                                SOME ;
                                DIP { DIP 3 { DUP } ; DIG 3 } } ;
                          UPDATE } ;
-                    DIP { DROP ; DROP ; DROP ; DROP ; DROP } } ;
+                    DIP { DROP 5 } } ;
              DUP ;
              DIP { DIP 3 { DUP } ; DIG 3 ; CDR } ;
              PAIR ;
-             DIP { DROP ; DROP ; DROP ; DROP ; DROP ; DROP ; DROP ; DROP } } ;
+             DIP { DROP 8 } } ;
          SWAP ;
          APPLY ;
          DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DUP } ; DUP ; DIP { PAIR } ; SWAP } ;
@@ -1954,7 +1833,7 @@
                               DUP ;
                               NIL operation ;
                               PAIR ;
-                              DIP { DROP ; DROP ; DROP ; DROP } }
+                              DIP { DROP 4 } }
                             { DUP ;
                               DUP ;
                               DIP { DIP 4 { DUP } ; DIG 4 ; CDR } ;
@@ -1969,9 +1848,8 @@
                               DUP ;
                               NIL operation ;
                               PAIR ;
-                              DIP { DROP ; DROP ; DROP ; DROP } } ;
-                          SWAP ;
-                          DROP }
+                              DIP { DROP 4 } } ;
+                          DIP { DROP } }
                         { DUP ;
                           IF_LEFT
                             { DUP ;
@@ -1986,7 +1864,7 @@
                               DUP ;
                               NIL operation ;
                               PAIR ;
-                              DIP { DROP ; DROP ; DROP ; DROP } }
+                              DIP { DROP 4 } }
                             { DUP ;
                               DUP ;
                               DIP { DIP 4 { DUP } ; DIG 4 ; CAR } ;
@@ -2005,11 +1883,9 @@
                               CAR ;
                               DIP { DUP } ;
                               PAIR ;
-                              DIP { DROP ; DROP ; DROP ; DROP } } ;
-                          SWAP ;
-                          DROP } ;
-                      SWAP ;
-                      DROP }
+                              DIP { DROP 4 } } ;
+                          DIP { DROP } } ;
+                      DIP { DROP } }
                     { DUP ;
                       IF_LEFT
                         { DUP ;
@@ -2032,7 +1908,7 @@
                               CAR ;
                               DIP { DUP } ;
                               PAIR ;
-                              DIP { DROP ; DROP ; DROP ; DROP } }
+                              DIP { DROP 4 } }
                             { DUP ;
                               DUP ;
                               DIP { DIP 4 { DUP } ; DIG 4 ; CAR } ;
@@ -2045,9 +1921,8 @@
                               DUP ;
                               NIL operation ;
                               PAIR ;
-                              DIP { DROP ; DROP ; DROP ; DROP } } ;
-                          SWAP ;
-                          DROP }
+                              DIP { DROP 4 } } ;
+                          DIP { DROP } }
                         { DUP ;
                           DUP ;
                           DIP { DIP 3 { DUP } ; DIG 3 ; CAR } ;
@@ -2060,18 +1935,16 @@
                           DUP ;
                           NIL operation ;
                           PAIR ;
-                          DIP { DROP ; DROP ; DROP ; DROP } } ;
-                      SWAP ;
-                      DROP } } ;
-             DIP { DROP ; DROP ; DROP ; DROP ; DROP ; DROP ; DROP ; DROP ; DROP ; DROP } } ;
+                          DIP { DROP 4 } } ;
+                      DIP { DROP } } } ;
+             DIP { DROP 10 } } ;
          SWAP ;
          APPLY ;
-         LAMBDA unit unit { DROP ; UNIT } ;
-         DIP 37 { DUP } ;
-         DIG 37 ;
+         DIP 34 { DUP } ;
+         DIG 34 ;
          CAR ;
-         DIP 38 { DUP } ;
-         DIG 38 ;
+         DIP 35 { DUP } ;
+         DIG 35 ;
          CDR ;
          DIP { DUP } ;
          SWAP ;
@@ -2086,7 +1959,7 @@
              SWAP ;
              DIP { DUP } ;
              PAIR ;
-             DIP { DIP 6 { DUP } ; DIG 6 } ;
+             DIP { DIP 5 { DUP } ; DIG 5 } ;
              EXEC ;
              DUP ;
              CDR ;
@@ -2099,7 +1972,7 @@
              CAR ;
              DIP { DIP 6 { DUP } ; DIG 6 } ;
              PAIR ;
-             DIP { DROP ; DROP ; DROP ; DROP ; DROP ; DROP } }
+             DIP { DROP 6 } }
            { DUP ;
              DIP 2 { DUP } ;
              DIG 2 ;
@@ -2110,7 +1983,7 @@
                 { DUP ;
                   DIP { DIP 2 { DUP } ; DIG 2 ; CDR } ;
                   PAIR ;
-                  DIP { DIP 19 { DUP } ; DIG 19 } ;
+                  DIP { DIP 17 { DUP } ; DIG 17 } ;
                   EXEC ;
                   DIP 3 { DUP } ;
                   DIG 3 ;
@@ -2122,52 +1995,6 @@
                   CAR ;
                   DIP { DUP } ;
                   PAIR ;
-                  SWAP ;
-                  DROP ;
-                  SWAP ;
-                  DROP } ;
-             SWAP ;
-             DROP ;
-             SWAP ;
-             DROP } ;
-         DIP { DROP ;
-               DROP ;
-               DROP ;
-               DROP ;
-               DROP ;
-               DROP ;
-               DROP ;
-               DROP ;
-               DROP ;
-               DROP ;
-               DROP ;
-               DROP ;
-               DROP ;
-               DROP ;
-               DROP ;
-               DROP ;
-               DROP ;
-               DROP ;
-               DROP ;
-               DROP ;
-               DROP ;
-               DROP ;
-               DROP ;
-               DROP ;
-               DROP ;
-               DROP ;
-               DROP ;
-               DROP ;
-               DROP ;
-               DROP ;
-               DROP ;
-               DROP ;
-               DROP ;
-               DROP ;
-               DROP ;
-               DROP ;
-               DROP ;
-               DROP ;
-               DROP ;
-               DROP } } }
-
+                  DIP { DROP 2 } } ;
+             DIP { DROP 2 } } ;
+         DIP { DROP 37 } } }

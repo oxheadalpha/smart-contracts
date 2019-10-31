@@ -251,6 +251,4 @@ let erc1155_main (param : erc1155) (s : erc1155_storage) : (operation  list) * i
     | Is_approved_for_all p  ->
         let op = is_approved_for_all p s.approvals in
         ([op], s)
-
-
-let base_test (p : unit) = unit
+        

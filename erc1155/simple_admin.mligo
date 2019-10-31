@@ -43,7 +43,7 @@ type simple_admin_storage = {
   admin : address;
   paused : bool;
   (* token_id -> descriptor *)
-  tokens : (nat, string) map;
+  tokens : (nat, string) big_map;
 }
 
 type simple_admin_context = {
@@ -77,7 +77,7 @@ let create_token (param : create_token_param) (s: simple_admin_storage) : simple
         tokens = new_tokens;
       }
 
-let token_exists (token_id : nat) (tokens : (nat, string) map) : unit =
+let token_exists (token_id : nat) (tokens : (nat, string) big_map) : unit =
   let d = Map.find_opt token_id tokens in
   match d with  
     | None ->   failwith("token does not exists")
@@ -110,7 +110,7 @@ let mint_tokens (param : mint_tokens_param) (a : simple_admin_storage) (b : bala
   let ops = mint_safe_check param in
   (ops, new_b)
 
-let mint_tokens_batch_impl (param : mint_tokens_batch_param) (tokens : (nat, string) map) (s : balance_storage) : balance_storage =
+let mint_tokens_batch_impl (param : mint_tokens_batch_param) (tokens : (nat, string) big_map) (s : balance_storage) : balance_storage =
   let owner = ensure_owner_id param.owner s.owners in
 
   let make_transfer = fun (bals: balances) (t: tx) ->
@@ -238,6 +238,3 @@ let simple_admin (param : simple_admin) (ctx : simple_admin_context) : (operatio
             balance_storage = new_bals
           } in
           (([] : operation list), new_ctx)
-
-
-let admin_test (p : unit) = unit

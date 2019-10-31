@@ -111,6 +111,3 @@ type erc1155_token_receiver =
     MUST revert if it rejects the transfer(s).
   *)
   | On_erc1155_batch_received of on_erc1155_batch_received_param
-
-
-let test(u: unit) = 77
