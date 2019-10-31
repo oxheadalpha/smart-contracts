@@ -12,6 +12,12 @@ type mint_tokens_param = {
   data : bytes;
 }
 
+type mint_tokens_batch_param = {
+  owner : address;
+  batch : tx list;
+  data : bytes;
+}
+
 type burn_tokens_param = {
   token_id : nat;
   owner : address;
@@ -23,6 +29,7 @@ type simple_admin =
   | Pause of bool
   | Create_token of create_token_param
   | Mint_tokens of mint_tokens_param
+  // | Mint_tokens_batch of mint_tokens_batch_param
   | Burn_tokens of burn_tokens_param
 
 
@@ -65,21 +72,16 @@ let create_token (param : create_token_param) (s: simple_admin_storage) : simple
       }
 
 let mint_tokens_impl (param : mint_tokens_param) (s : balance_storage) : balance_storage =
-  let key_owners = pack_balance_key_ensure 
-    { 
-      owner = param.owner;
-      token_id = param.token_id;
-    } 
-    s.owners in
-  let to_key = key_owners.(0) in
-  let new_owners = key_owners.(1) in
-
+  // let to_ko = pack_balance_key param.owner param.token_id s.owners in
+  let o = ensure_owner_id param.owner s.owners in
+  let to_key = pack_balance_key_impl o.id param.token_id in
   let old_bal = get_balance to_key s.balances in
   let new_bals = Map.update to_key (Some(old_bal + param.amount)) s.balances in
   {
-    owners = new_owners;
+    owners = o.owners;
     balances = new_bals;
   }
+
 
 let mint_safe_check (param : mint_tokens_param) : operation list =
   let receiver : erc1155_token_receiver contract =  Operation.get_contract param.owner in
@@ -102,13 +104,36 @@ let mint_tokens (param : mint_tokens_param) (a : simple_admin_storage) (b : bala
         let ops = mint_safe_check param in
         (ops, new_b)
 
+// let mint_tokens_batch_impl (param : mint_tokens_param) (s : balance_storage) : balance_storage =
+//   // let owner_owners = ensure_owner_id param.owner s.owners in
+//   // let new_owners = owner_owners.(1) in
+//   // let owner_id = owner_owners.(0) in 
+
+//   // let make_transfer = fun (bals: balances) (t: tx) ->
+//   //   let to_key  = pack_balance_key { owner = param.owner; token_id = t.token_id; } new_owners in
+//   //   let old_bal = get_balance to_key bals in
+//   //   Map.update to_key (Some(old_bal + t.amount)) bals in
+
+//   // let new_bals = List.fold param.batch s.balances make_transfer in
+//   s
+//   // {
+//    //   owners = new_owners;
+//   //   balances = new_bals;
+//   // }
+
+
+let mint_tokens_batch (param : mint_tokens_batch_param) (a : simple_admin_storage) (b : balance_storage): (operation list) * balance_storage =
+  // let d = Map.find_opt param.token_id a.tokens in
+  // match d with
+  //   | None -> (failwith "Token does not exists" : (operation list) * balance_storage)
+  //   | Some d ->
+        // // let new_b = mint_tokens_impl param b in
+        // // let ops = mint_safe_check param in
+        // (ops, new_b)
+        (([] : operation list), b)
+
 let burn_tokens (param : burn_tokens_param) (s : balance_storage): balance_storage =
-  let from_key = pack_balance_key
-    { 
-      owner = param.owner;
-      token_id = param.token_id;
-    } 
-    s.owners in
+  let from_key = pack_balance_key param.owner param.token_id s.owners in
   let old_bal = get_balance from_key s.balances in
   let new_bal = old_bal - param.amount in
   let new_bals = 
@@ -151,6 +176,7 @@ let simple_admin (param : simple_admin) (ctx : simple_admin_context) : (operatio
           } in
           (([]: operation list), new_ctx)
 
+
       | Mint_tokens param -> 
           let ops_new_bals  = mint_tokens param ctx.admin_storage ctx.balance_storage in
           let new_ctx : simple_admin_context = {
@@ -159,6 +185,14 @@ let simple_admin (param : simple_admin) (ctx : simple_admin_context) : (operatio
           } in
           (ops_new_bals.(0), new_ctx)
 
+      // | Mint_tokens_batch param -> 
+      //     let ops_new_bals  = mint_tokens_batch param ctx.admin_storage ctx.balance_storage in
+      //     let new_ctx : simple_admin_context = {
+      //       admin_storage = ctx.admin_storage;
+      //       balance_storage = ops_new_bals.(1);
+      //     } in
+      //     (ops_new_bals.(0), new_ctx)
+
       | Burn_tokens param -> 
           let new_bals = burn_tokens param ctx.balance_storage in
           let new_ctx = {
@@ -166,7 +200,6 @@ let simple_admin (param : simple_admin) (ctx : simple_admin_context) : (operatio
             balance_storage = new_bals
           } in
           (([] : operation list), new_ctx)
-    
 
 
 let admin_test (p : unit) = unit
