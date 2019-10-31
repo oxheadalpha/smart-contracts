@@ -1,4 +1,4 @@
-#include "erc1155-base.mligo"
+#include "erc1155_base.mligo"
 
 type create_token_param = {
   token_id : nat;
@@ -141,7 +141,7 @@ let burn_tokens (param : burn_tokens_param) (s : balance_storage): balance_stora
   let new_bal = old_bal - param.amount in
   let new_bals = 
     if new_bal < 0
-    then (failwith "Insufficiuent balance" : balances)
+    then (failwith "Insufficient balance" : balances)
     else if new_bal = 0
     then Map.remove from_key s.balances
     else Map.update from_key (Some(abs(new_bal))) s.balances in
@@ -152,7 +152,7 @@ let burn_tokens (param : burn_tokens_param) (s : balance_storage): balance_stora
 
 let simple_admin (param : simple_admin) (ctx : simple_admin_context) : (operation list) * simple_admin_context =
   if sender <> ctx.admin_storage.admin
-  then (failwith "operation require admin priveleges" : (operation list) * simple_admin_context)
+  then (failwith "operation require admin privileges" : (operation list) * simple_admin_context)
   else
     match param with
       | Set_admin new_admin ->
