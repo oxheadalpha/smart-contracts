@@ -71,6 +71,12 @@ let create_token (param : create_token_param) (s: simple_admin_storage) : simple
         tokens = new_tokens;
       }
 
+let token_exists (token_id : nat) (tokens : (nat, string) map) : unit =
+  let d = Map.find_opt token_id tokens in
+  match d with  
+    | None ->   failwith("token does not exists")
+    | Some d -> unit
+
 let mint_tokens_impl (param : mint_tokens_param) (s : balance_storage) : balance_storage =
   let to_ko = pack_balance_key_ensure param.owner param.token_id s.owners in
   let old_bal = get_balance to_ko.key s.balances in
@@ -103,41 +109,32 @@ let mint_safe_check (param : mint_tokens_param) : operation list =
   [op]
 
 let mint_tokens (param : mint_tokens_param) (a : simple_admin_storage) (b : balance_storage): (operation list) * balance_storage =
-  let d = Map.find_opt param.token_id a.tokens in
-  match d with
-    | None -> (failwith "Token does not exists" : (operation list) * balance_storage)
-    | Some d ->
-        let new_b = mint_tokens_impl param b in
-        let ops = mint_safe_check param in
-        (ops, new_b)
+  let u = token_exists param.token_id a.tokens in
+  let new_b = mint_tokens_impl param b in
+  let ops = mint_safe_check param in
+  (ops, new_b)
 
-// let mint_tokens_batch_impl (param : mint_tokens_param) (s : balance_storage) : balance_storage =
-//   // let owner_owners = ensure_owner_id param.owner s.owners in
-//   // let new_owners = owner_owners.(1) in
-//   // let owner_id = owner_owners.(0) in 
+let mint_tokens_batch_impl (param : mint_tokens_batch_param) (tokens : (nat, string) map) (s : balance_storage) : balance_storage =
+  let owner = ensure_owner_id param.owner s.owners in
 
-//   // let make_transfer = fun (bals: balances) (t: tx) ->
-//   //   let to_key  = pack_balance_key { owner = param.owner; token_id = t.token_id; } new_owners in
-//   //   let old_bal = get_balance to_key bals in
-//   //   Map.update to_key (Some(old_bal + t.amount)) bals in
+  let make_transfer = fun (bals: balances) (t: tx) ->
+    let u = token_exists t.token_id tokens in
+    let to_key  = pack_balance_key_impl owner.id t.token_id in
+    let old_bal = get_balance to_key bals in
+    Map.update to_key (Some(old_bal + t.amount)) bals in
 
-//   // let new_bals = List.fold param.batch s.balances make_transfer in
-//   s
-//   // {
-//    //   owners = new_owners;
-//   //   balances = new_bals;
-//   // }
+  let new_bals = List.fold param.batch s.balances make_transfer in
+  {
+     owners = owner.owners;
+    balances = new_bals;
+  }
 
 
 let mint_tokens_batch (param : mint_tokens_batch_param) (a : simple_admin_storage) (b : balance_storage) : (operation list) * balance_storage =
-  // let d = Map.find_opt param.token_id a.tokens in
-  // match d with
-  //   | None -> (failwith "Token does not exists" : (operation list) * balance_storage)
-  //   | Some d ->
-        // // let new_b = mint_tokens_impl param b in
-        // // let ops = mint_safe_check param in
-        // (ops, new_b)
-        (([] : operation list), b)
+  let new_b = mint_tokens_batch_impl param a.tokens b in
+  // let ops = mint_safe_check param in
+  // (ops, new_b)
+  (([] : operation list), new_b)
 
 let burn_tokens (param : burn_tokens_param) (s : balance_storage): balance_storage =
   let from_key = pack_balance_key param.owner param.token_id s.owners in
