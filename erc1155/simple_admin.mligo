@@ -29,7 +29,7 @@ type mint_tokens_param = {
   data : bytes;
 }
 
-type mint_tokens_batch_param = {
+type batch_mint_tokens_param = {
   owner : address;
   batch : tx list;
   data : bytes;
@@ -41,19 +41,20 @@ type burn_tokens_param = {
   amount : nat;
 }
 
-type burn_tokens_batch_param = {
+type batch_burn_tokens_param = {
   owner : address;
   batch : tx list;
 }
 
+(* `simple_admin` entry points *)
 type simple_admin =
   | Set_admin of address
   | Pause of bool
   | Create_token of create_token_param
   | Mint_tokens of mint_tokens_param
-  | Mint_tokens_batch of mint_tokens_batch_param
+  | Batch_mint_tokens of batch_mint_tokens_param
   | Burn_tokens of burn_tokens_param
-  | Burn_tokens_batch of burn_tokens_batch_param
+  | Batch_burn_tokens of batch_burn_tokens_param
 
 
 type simple_admin_storage = {
@@ -127,7 +128,7 @@ let mint_tokens (param : mint_tokens_param) (a : simple_admin_storage) (b : bala
   let ops = mint_safe_check param in
   (ops, new_b)
 
-let mint_tokens_batch_impl (param : mint_tokens_batch_param) (tokens : (nat, string) big_map) (s : balance_storage) : balance_storage =
+let batch_mint_tokens_impl (param : batch_mint_tokens_param) (tokens : (nat, string) big_map) (s : balance_storage) : balance_storage =
   let owner = ensure_owner_id param.owner s.owners in
 
   let make_transfer = fun (bals: balances) (t: tx) ->
@@ -142,7 +143,7 @@ let mint_tokens_batch_impl (param : mint_tokens_batch_param) (tokens : (nat, str
     balances = new_bals;
   }
 
-let mint_batch_safe_check (param : mint_tokens_batch_param) : operation list =
+let batch_mint_safe_check (param : batch_mint_tokens_param) : operation list =
   let receiver : erc1155_token_receiver contract =  Operation.get_contract param.owner in
   let p : on_erc1155_batch_received_param = {
     operator = sender;
@@ -151,11 +152,11 @@ let mint_batch_safe_check (param : mint_tokens_batch_param) : operation list =
     data = param.data;
   } in
   let op = Operation.transaction (On_erc1155_batch_received p) 0mutez receiver in
-  [op]
+  [op] 
 
-let mint_tokens_batch (param : mint_tokens_batch_param) (a : simple_admin_storage) (b : balance_storage) : (operation list) * balance_storage =
-  let new_b = mint_tokens_batch_impl param a.tokens b in
-  let ops = mint_batch_safe_check param in
+let batch_mint_tokens (param : batch_mint_tokens_param) (a : simple_admin_storage) (b : balance_storage) : (operation list) * balance_storage =
+  let new_b = batch_mint_tokens_impl param a.tokens b in
+  let ops = batch_mint_safe_check param in
   (ops, new_b)
 
 let burn_tokens (param : burn_tokens_param) (s : balance_storage): balance_storage =
@@ -173,7 +174,7 @@ let burn_tokens (param : burn_tokens_param) (s : balance_storage): balance_stora
     balances = new_bals;
   }
 
-let burn_tokens_batch (param : burn_tokens_batch_param) (s : balance_storage): balance_storage =
+let batch_burn_tokens (param : batch_burn_tokens_param) (s : balance_storage): balance_storage =
   let owner_id = get_owner_id param.owner s.owners in
 
   let make_burn = fun (bals : balances) (t : tx) ->
@@ -232,8 +233,8 @@ let simple_admin (param : simple_admin) (ctx : simple_admin_context) : (operatio
           } in
           (ops_new_bals.(0), new_ctx)
 
-      | Mint_tokens_batch param -> 
-          let ops_new_bals  = mint_tokens_batch param ctx.admin_storage ctx.balance_storage in
+      | Batch_mint_tokens param -> 
+          let ops_new_bals  = batch_mint_tokens param ctx.admin_storage ctx.balance_storage in
           let new_ctx : simple_admin_context = {
             admin_storage = ctx.admin_storage;
             balance_storage = ops_new_bals.(1);
@@ -248,8 +249,8 @@ let simple_admin (param : simple_admin) (ctx : simple_admin_context) : (operatio
           } in
           (([] : operation list), new_ctx)
 
-      | Burn_tokens_batch param ->
-          let new_bals = burn_tokens_batch param ctx.balance_storage in
+      | Batch_burn_tokens param ->
+          let new_bals = batch_burn_tokens param ctx.balance_storage in
           let new_ctx = {
             admin_storage = ctx.admin_storage;
             balance_storage = new_bals
