@@ -1836,7 +1836,7 @@
              SENDER ;
              COMPARE ;
              NEQ ;
-             IF { PUSH string "operation require admin privileges" ; FAILWITH }
+             IF { PUSH string "operation requires admin privileges" ; FAILWITH }
                 { DIP { DUP } ;
                   SWAP ;
                   IF_LEFT

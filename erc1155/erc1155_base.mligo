@@ -1,3 +1,24 @@
+(*
+  Reference implementation if ERC1155 core API.
+
+  Since Babylon does not support pairs as keys for big_map,
+  This implementation uses composite `balance_key` represented as `nat`.
+  Assumed number of different token types is 2^32 (`max_tokens` constant).
+  Both token ID and owner ID are packed into single `nat` using first 32 bits
+  for token ID and the rest of the bits for owner ID.
+  Contract storage also keeps mapping between owner address and owner ID
+  represented as `nat` (see `owner_lookup`).
+
+  If tokens are transferred to a new owner address which does not exists
+  in `owner_loop` yet, new entry withing lookup is created and the owner
+  is assigned a new `nat` ID. This implementation may change in future,
+  if support for white list is needed.
+
+  Current implementation is optimized for token transfer, but makes it
+  difficult for adding functionality in future which might need retrieve
+  aggregate data (like list all token types held by the owner).
+*)
+
 #include "erc1155.mligo"
 
 (*  owner -> operator set *)

@@ -1,3 +1,20 @@
+(*
+  One of the possible implementations of admin API for erc1155 contract.
+
+  Only current `admin` of the contract can invoke admin API.
+  Admin API allows to 
+  
+    1. Change administrator, 
+    2. Create new toke types,
+    3. Mint and burn tokens to some existing or new owner account,
+    pause the contract.
+
+  Mint/burn operations exist in single token and batch versions.
+  Mint operation performs safety check as specified for erc1155
+  transfer entry points. Burn operation fails if the owner holds
+  less tokens then burn amount.
+*)
+
 #include "erc1155_base.mligo"
 
 type create_token_param = {
@@ -179,7 +196,7 @@ let burn_tokens_batch (param : burn_tokens_batch_param) (s : balance_storage): b
 
 let simple_admin (param : simple_admin) (ctx : simple_admin_context) : (operation list) * simple_admin_context =
   if sender <> ctx.admin_storage.admin
-  then (failwith "operation require admin privileges" : (operation list) * simple_admin_context)
+  then (failwith "operation requires admin privileges" : (operation list) * simple_admin_context)
   else
     match param with
       | Set_admin new_admin ->

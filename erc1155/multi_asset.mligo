@@ -1,3 +1,12 @@
+(*
+  `multi_asset` contract combines erc1155 transfer API with
+  `simple_admin` API.  Input parameter type for the `multi_asset`
+  contract is a union of `erc115` and `simple_admin` parameter types.
+  Depending on the input, `multi_asset` dispatches call to either
+  `erc1155` or `simple_admin` entry points. 
+  If contract is paused, erc1155 entry points cannot be invoked.
+*)
+
 #include "simple_admin.mligo"
 
 type multi_asset_storage = {
@@ -12,7 +21,7 @@ type multi_asset_param =
 let multi_asset_main (param : multi_asset_param) (s : multi_asset_storage) : (operation list) * multi_asset_storage =
   match param with
     | Admin p ->  
-        let ctx : simple_admin_context = {
+        let ctx = {
           admin_storage = s.admin;
           balance_storage = s.assets.balance_storage;
         } in
