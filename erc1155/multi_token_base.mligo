@@ -24,7 +24,29 @@
 (*  owner -> operator set *)
 type approvals = (address, address set) big_map
 
-let set_approval_for_all
+
+let add_operator (operator : address) (approvals : approvals) : approvals =
+  let new_operators =
+    match Map.find_opt sender approvals with
+    | Some(ops) -> Set.add operator ops
+    | None      -> Set [operator]
+  in
+  Map.update sender (Some new_operators) approvals
+
+let remove_operator (operator : address) (approvals : approvals) : approvals =
+  let new_operators_opt =
+    match Map.find_opt sender approvals with
+    | Some(ops) -> 
+        let ops = Set.remove operator ops in
+        if Set.size ops = 0p
+        then (None : address set option)
+        else Some(ops)
+    | None      -> (None : address set option)
+  in
+  Map.update sender new_operators_opt approvals
+
+
+(* let set_approval_for_all
     (param : set_approval_for_all_param) (approvals : approvals) : approvals =
   let operators = 
     match Map.find_opt sender approvals with
@@ -38,7 +60,7 @@ let set_approval_for_all
   in
     if Set.size new_operators = 0p
     then  Map.remove sender approvals
-    else Map.update sender (Some new_operators) approvals
+    else Map.update sender (Some new_operators) approvals *)
   
 
 let is_operator
@@ -233,8 +255,16 @@ let multi_token_main
       let op = balance_of p s.balance_storage in
       ([op], s)
 
-  | Set_approval_for_all p ->
-      let new_approvals = set_approval_for_all p s.approvals in
+  | Add_operator o ->
+      let new_approvals = add_operator o s.approvals in
+      let new_s = {
+        approvals = new_approvals;
+        balance_storage = s.balance_storage;
+      } in
+      (([] : operation list), new_s)
+
+    | Remove_operator o ->
+      let new_approvals = remove_operator o s.approvals in
       let new_s = {
         approvals = new_approvals;
         balance_storage = s.balance_storage;

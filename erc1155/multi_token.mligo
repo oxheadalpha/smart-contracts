@@ -30,13 +30,6 @@ type balance_of_param = {
   balance_view : ((balance_request * nat) list) -> operation;
 }
 
-type set_approval_for_all_param = {
-  (* Address to add or remove from the set of authorized operators for sender *)
-  operator : address;
-  (* True if the operator is approved, false to revoke approval *)
-  approved : bool;
-}
-
 type is_operator_request = {
   owner : address;    (* The owner of the tokens *)
   operator : address; (* Address of authorized operator *)
@@ -62,13 +55,15 @@ type multi_token =
     the transaction must fail.
   *)
   | Transfer of transfer_param
-  (* Get the balance of multiple account/token pairs *)
+  (* Gets the balance of multiple account/token pairs *)
   | Balance_of of balance_of_param
-  (*
-    Enable or disable approval for a third party ("operator") to manage all of
-    the caller's tokens.
+  (* Approves third party ("operator") to manage all of the caller's tokens. *)
+  | Add_operator of address
+  (* 
+    Withdraws approval for the  third party ("operator") to manage all of 
+    the caller's tokens. 
   *)
-  | Set_approval_for_all of set_approval_for_all_param
+  | Remove_operator of address
   (* Queries the approval status of an operator for a given owner. *)
   | Is_operator of is_operator_param
 

@@ -9,20 +9,21 @@
                (or (pair %create_token (string %descriptor) (nat %token_id)) (bool %pause)))
            (address %set_admin))
         (or %assets
-           (or (pair %balance_of
-                  (list %balance_request (pair (address %owner) (nat %token_id)))
-                  (lambda %balance_view
-                     (list (pair (pair (address %owner) (nat %token_id)) nat))
-                     operation))
-               (pair %is_operator
-                  (pair %is_operator_request (address %operator) (address %owner))
-                  (lambda %is_operator_view
-                     (pair (pair (address %operator) (address %owner)) bool)
-                     operation)))
-           (or (pair %set_approval_for_all (bool %approved) (address %operator))
-               (pair %transfer
-                  (pair (list %batch (pair (nat %amount) (nat %token_id))) (bytes %data))
-                  (pair (address %from_) (address %to_)))))) ;
+           (or (or (address %add_operator)
+                   (pair %balance_of
+                      (list %balance_request (pair (address %owner) (nat %token_id)))
+                      (lambda %balance_view
+                         (list (pair (pair (address %owner) (nat %token_id)) nat))
+                         operation)))
+               (or (pair %is_operator
+                      (pair %is_operator_request (address %operator) (address %owner))
+                      (lambda %is_operator_view
+                         (pair (pair (address %operator) (address %owner)) bool)
+                         operation))
+                   (address %remove_operator)))
+           (pair %transfer
+              (pair (list %batch (pair (nat %amount) (nat %token_id))) (bytes %data))
+              (pair (address %from_) (address %to_))))) ;
   storage
     (pair (pair %admin (pair (address %admin) (bool %paused)) (big_map %tokens nat string))
           (pair %assets
@@ -31,7 +32,7 @@
                 (big_map %balances nat nat)
                 (pair %owners (nat %owner_count) (big_map %owners address nat))))) ;
   code { LAMBDA
-           (pair (pair bool address) (big_map address (set address)))
+           (pair address (big_map address (set address)))
            (big_map address (set address))
            { DUP ;
              CAR ;
@@ -41,29 +42,52 @@
              DUP ;
              SENDER ;
              GET ;
-             IF_NONE { EMPTY_SET address } { DUP ; DIP { DROP } } ;
-             DIP 2 { DUP } ;
-             DIG 2 ;
-             CAR ;
-             IF { DIP 2 { DUP } ;
-                  DIG 2 ;
-                  CDR ;
-                  DIP { DUP ; PUSH bool True } ;
-                  UPDATE }
-                { DIP 2 { DUP } ;
-                  DIG 2 ;
-                  CDR ;
-                  DIP { DUP ; PUSH bool False } ;
-                  UPDATE } ;
+             IF_NONE
+               { DIP { DUP } ;
+                 SWAP ;
+                 DIP { EMPTY_SET address ; PUSH bool True } ;
+                 UPDATE }
+               { DIP 2 { DUP } ;
+                 DIG 2 ;
+                 DIP { DUP ; PUSH bool True } ;
+                 UPDATE ;
+                 DIP { DROP } } ;
              DUP ;
-             SIZE ;
-             PUSH nat 0 ;
+             SOME ;
+             DIP { DIP { DUP } ; SWAP } ;
+             SENDER ;
+             UPDATE ;
+             DIP { DROP 4 } } ;
+         LAMBDA
+           (pair address (big_map address (set address)))
+           (big_map address (set address))
+           { DUP ;
+             CAR ;
+             DIP { DUP } ;
              SWAP ;
-             COMPARE ;
-             EQ ;
-             IF { DIP 2 { DUP } ; DIG 2 ; NONE (set address) ; SENDER ; UPDATE }
-                { DUP ; SOME ; DIP { DIP 2 { DUP } ; DIG 2 } ; SENDER ; UPDATE } ;
-             DIP { DROP 5 } } ;
+             CDR ;
+             DUP ;
+             SENDER ;
+             GET ;
+             IF_NONE
+               { NONE (set address) }
+               { DIP 2 { DUP } ;
+                 DIG 2 ;
+                 DIP { DUP ; PUSH bool False } ;
+                 UPDATE ;
+                 DUP ;
+                 SIZE ;
+                 PUSH nat 0 ;
+                 SWAP ;
+                 COMPARE ;
+                 EQ ;
+                 IF { NONE (set address) } { DUP ; SOME } ;
+                 DIP { DROP 2 } } ;
+             DUP ;
+             DIP { DIP { DUP } ; SWAP } ;
+             SENDER ;
+             UPDATE ;
+             DIP { DROP 4 } } ;
          LAMBDA
            (pair (pair (pair address address) (lambda (pair (pair address address) bool) operation))
                  (big_map address (set address)))
@@ -655,7 +679,11 @@
              DIP { DROP 14 } } ;
          SWAP ;
          APPLY ;
-         DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DUP } ; DUP ; DIP { PAIR } ; SWAP } ; SWAP } ;
+         DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DUP } ; DUP ; DIP { PAIR } ; SWAP } ;
+                                                                                             DUP ;
+                                                                                             DIP { PAIR } ;
+                                                                                             SWAP } ;
+                                                                                       SWAP } ;
                                                                                  SWAP } ;
                                                                            SWAP } ;
                                                                      SWAP } ;
@@ -716,12 +744,13 @@
                                             (pair (pair (pair address address) (lambda (pair (pair address address) bool) operation))
                                                   (big_map address (set address)))
                                             operation)
-                                         (lambda
-                                            (pair (pair bool address) (big_map address (set address)))
-                                            (big_map address (set address)))))))
-                 (pair (or (or (pair (list (pair address nat)) (lambda (list (pair (pair address nat) nat)) operation))
-                               (pair (pair address address) (lambda (pair (pair address address) bool) operation)))
-                           (or (pair bool address) (pair (pair (list (pair nat nat)) bytes) (pair address address))))
+                                         (pair (lambda (pair address (big_map address (set address))) (big_map address (set address)))
+                                               (lambda (pair address (big_map address (set address))) (big_map address (set address))))))))
+                 (pair (or (or (or address
+                                   (pair (list (pair address nat)) (lambda (list (pair (pair address nat) nat)) operation)))
+                               (or (pair (pair address address) (lambda (pair (pair address address) bool) operation))
+                                   address))
+                           (pair (pair (list (pair nat nat)) bytes) (pair address address)))
                        (pair (big_map address (set address))
                              (pair (big_map nat nat) (pair nat (big_map address nat))))))
            (pair (list operation)
@@ -739,7 +768,11 @@
                          CDR ;
                          SWAP ;
                          CAR ;
-                         DIP { DUP ; CDR ; SWAP ; CAR ; DIP { DUP ; CDR ; SWAP ; CAR } } } } ;
+                         DIP { DUP ;
+                               CDR ;
+                               SWAP ;
+                               CAR ;
+                               DIP { DUP ; CDR ; SWAP ; CAR ; DIP { DUP ; CDR ; SWAP ; CAR } } } } } ;
              DUP ;
              CAR ;
              DIP { DUP } ;
@@ -751,74 +784,90 @@
                { DUP ;
                  IF_LEFT
                    { DUP ;
-                     DUP ;
-                     DIP { DIP 3 { DUP } ; DIG 3 ; CDR } ;
-                     PAIR ;
-                     DIP { DIP 8 { DUP } ; DIG 8 } ;
-                     EXEC ;
-                     DUP ;
-                     NIL operation ;
-                     SWAP ;
-                     CONS ;
-                     DIP { DIP 4 { DUP } ; DIG 4 } ;
-                     PAIR ;
-                     DIP { DROP 3 } }
+                     IF_LEFT
+                       { DUP ;
+                         DUP ;
+                         DIP { DIP 4 { DUP } ; DIG 4 ; CAR } ;
+                         PAIR ;
+                         DIP { DIP 12 { DUP } ; DIG 12 } ;
+                         EXEC ;
+                         DUP ;
+                         DIP { DIP 5 { DUP } ; DIG 5 ; CDR } ;
+                         PAIR ;
+                         DUP ;
+                         NIL operation ;
+                         PAIR ;
+                         DIP { DROP 4 } }
+                       { DUP ;
+                         DUP ;
+                         DIP { DIP 4 { DUP } ; DIG 4 ; CDR } ;
+                         PAIR ;
+                         DIP { DIP 9 { DUP } ; DIG 9 } ;
+                         EXEC ;
+                         DUP ;
+                         NIL operation ;
+                         SWAP ;
+                         CONS ;
+                         DIP { DIP 5 { DUP } ; DIG 5 } ;
+                         PAIR ;
+                         DIP { DROP 3 } } ;
+                     DIP { DROP } }
                    { DUP ;
-                     DUP ;
-                     DIP { DIP 3 { DUP } ; DIG 3 ; CAR } ;
-                     PAIR ;
-                     DIP { DIP 9 { DUP } ; DIG 9 } ;
-                     EXEC ;
-                     DUP ;
-                     NIL operation ;
-                     SWAP ;
-                     CONS ;
-                     DIP { DIP 4 { DUP } ; DIG 4 } ;
-                     PAIR ;
-                     DIP { DROP 3 } } ;
+                     IF_LEFT
+                       { DUP ;
+                         DUP ;
+                         DIP { DIP 4 { DUP } ; DIG 4 ; CAR } ;
+                         PAIR ;
+                         DIP { DIP 10 { DUP } ; DIG 10 } ;
+                         EXEC ;
+                         DUP ;
+                         NIL operation ;
+                         SWAP ;
+                         CONS ;
+                         DIP { DIP 5 { DUP } ; DIG 5 } ;
+                         PAIR ;
+                         DIP { DROP 3 } }
+                       { DUP ;
+                         DUP ;
+                         DIP { DIP 4 { DUP } ; DIG 4 ; CAR } ;
+                         PAIR ;
+                         DIP { DIP 11 { DUP } ; DIG 11 } ;
+                         EXEC ;
+                         DUP ;
+                         DIP { DIP 5 { DUP } ; DIG 5 ; CDR } ;
+                         PAIR ;
+                         DUP ;
+                         NIL operation ;
+                         PAIR ;
+                         DIP { DROP 4 } } ;
+                     DIP { DROP } } ;
                  DIP { DROP } }
                { DUP ;
-                 IF_LEFT
-                   { DUP ;
-                     DUP ;
-                     DIP { DIP 3 { DUP } ; DIG 3 ; CAR } ;
-                     PAIR ;
-                     DIP { DIP 10 { DUP } ; DIG 10 } ;
-                     EXEC ;
-                     DUP ;
-                     DIP { DIP 4 { DUP } ; DIG 4 ; CDR } ;
-                     PAIR ;
-                     DUP ;
-                     NIL operation ;
-                     PAIR ;
-                     DIP { DROP 4 } }
-                   { DUP ;
-                     DUP ;
-                     CDR ;
-                     CAR ;
-                     DIP { DIP 3 { DUP } ; DIG 3 ; CAR } ;
-                     PAIR ;
-                     DIP { DIP 6 { DUP } ; DIG 6 } ;
-                     EXEC ;
-                     DIP { DUP } ;
-                     SWAP ;
-                     DIP { DIP 4 { DUP } ; DIG 4 ; CDR } ;
-                     PAIR ;
-                     DIP { DIP 8 { DUP } ; DIG 8 } ;
-                     EXEC ;
-                     DIP 5 { DUP } ;
-                     DIG 5 ;
-                     CAR ;
-                     DIP { DUP ; CDR } ;
-                     PAIR ;
-                     DIP { DUP } ;
-                     SWAP ;
-                     CAR ;
-                     DIP { DUP } ;
-                     PAIR ;
-                     DIP { DROP 5 } } ;
-                 DIP { DROP } } ;
-             DIP { DROP 8 } } ;
+                 DUP ;
+                 CDR ;
+                 CAR ;
+                 DIP { DIP 2 { DUP } ; DIG 2 ; CAR } ;
+                 PAIR ;
+                 DIP { DIP 5 { DUP } ; DIG 5 } ;
+                 EXEC ;
+                 DIP { DUP } ;
+                 SWAP ;
+                 DIP { DIP 3 { DUP } ; DIG 3 ; CDR } ;
+                 PAIR ;
+                 DIP { DIP 7 { DUP } ; DIG 7 } ;
+                 EXEC ;
+                 DIP 4 { DUP } ;
+                 DIG 4 ;
+                 CAR ;
+                 DIP { DUP ; CDR } ;
+                 PAIR ;
+                 DIP { DUP } ;
+                 SWAP ;
+                 CAR ;
+                 DIP { DUP } ;
+                 PAIR ;
+                 DIP { DROP 5 } } ;
+             DIP { DROP 9 } } ;
          SWAP ;
          APPLY ;
          DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DIP { DUP } ; SWAP } ; DUP ; DIP { PAIR } ; SWAP } ;
@@ -1419,11 +1468,11 @@
              DIP { DROP 8 } } ;
          SWAP ;
          APPLY ;
-         DIP 27 { DUP } ;
-         DIG 27 ;
-         CAR ;
          DIP 28 { DUP } ;
          DIG 28 ;
+         CAR ;
+         DIP 29 { DUP } ;
+         DIG 29 ;
          CDR ;
          DIP { DUP } ;
          SWAP ;
@@ -1476,4 +1525,4 @@
                   PAIR ;
                   DIP { DROP 2 } } ;
              DIP { DROP 2 } } ;
-         DIP { DROP 30 } } }
+         DIP { DROP 31 } } }
