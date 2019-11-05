@@ -9,7 +9,7 @@
   Contract storage also keeps mapping between owner address and owner ID
   represented as `nat` (see `owner_lookup`).
 
-  If tokens are transferred to a new owner address which does not exists
+  If tokens are transferred to a new owner address which does not exist
   in `owner_loop` yet, new entry withing lookup is created and the owner
   is assigned a new `nat` ID. This implementation may change in future,
   if support for white list is needed.
