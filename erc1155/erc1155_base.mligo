@@ -1,5 +1,5 @@
 (*
-  Reference implementation if ERC1155 core API.
+  Reference implementation if `multi_token` core API.
 
   Since Babylon does not support pairs as keys for big_map,
   This implementation uses composite `balance_key` represented as `nat`.
@@ -211,14 +211,14 @@ let approved_transfer_from (from_ : address) (approvals : approvals) : unit =
     else failwith ("operator not approved to transfer tokens")
     
 
-type erc1155_storage = {
+type multi_token_storage = {
   approvals : approvals;
   balance_storage: balance_storage;
 }
 
 
-let erc1155_main
-    (param : erc1155) (s : erc1155_storage) : (operation  list) * irc1155_storage =
+let multi_token_main
+    (param : multi_token) (s : multi_token_storage) : (operation  list) * multi_token_storage =
   match param with
   | Transfer p ->
       let u : unit = approved_transfer_from p.from_ s.approvals in

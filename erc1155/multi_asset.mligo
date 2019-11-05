@@ -12,11 +12,11 @@
 
 type multi_asset_storage = {
   admin : simple_admin_storage;
-  assets : erc1155_storage;
+  assets : multi_token_storage;
 }
 
 type multi_asset_param =
-  | Assets of erc1155
+  | Assets of multi_token
   | Admin of simple_admin
 
 let multi_asset_main 
@@ -46,7 +46,7 @@ let multi_asset_main
       then 
         (failwith("contract is paused") : (operation list) * multi_asset_storage)
       else 
-        let ops_assets = erc1155_main p s.assets in
+        let ops_assets = multi_token_main p s.assets in
         let new_s = {
           admin = s.admin;
           assets = ops_assets.(1);

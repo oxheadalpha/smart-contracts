@@ -47,7 +47,7 @@ type is_approved_for_all_param = {
 }
 
 (* `multi-token` entry points *)
-type erc1155 =
+type multi_token =
   (*
     Transfers specified `amount`(s) of `token_id`(s) from the `from` address to
     the `to_` address specified (with safety call).
