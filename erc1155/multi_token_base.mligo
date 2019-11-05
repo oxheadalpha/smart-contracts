@@ -41,16 +41,16 @@ let set_approval_for_all
     else Map.update sender (Some new_operators) approvals
   
 
-let is_approved_for_all 
-    (param : is_approved_for_all_param) (approvals : approvals) : operation = 
-  let req = param.is_approved_for_all_request in
+let is_operator
+    (param : is_operator_param) (approvals : approvals) : operation = 
+  let req = param.is_operator_request in
   let operators = Map.find_opt req.owner approvals in
   let result = 
     match operators with
     | None      -> false
     | Some ops  -> Set.mem req.operator ops
   in
-  param.approved_view (req, result)
+  param.is_operator_view (req, result)
 
 
 let max_tokens = 4294967295p  (* 2^32-1 *)
@@ -241,7 +241,7 @@ let multi_token_main
       } in
       (([] : operation list), new_s)
 
-  | Is_approved_for_all p  ->
-      let op = is_approved_for_all p s.approvals in
+  | Is_operator p  ->
+      let op = is_operator p s.approvals in
       ([op], s)
         

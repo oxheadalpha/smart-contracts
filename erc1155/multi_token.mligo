@@ -37,13 +37,13 @@ type set_approval_for_all_param = {
   approved : bool;
 }
 
-type is_approved_for_all_request = {
+type is_operator_request = {
   owner : address;    (* The owner of the tokens *)
   operator : address; (* Address of authorized operator *)
 }
-type is_approved_for_all_param = {
-  is_approved_for_all_request : is_approved_for_all_request;
-  approved_view : (is_approved_for_all_request * bool) -> operation
+type is_operator_param = {
+  is_operator_request : is_operator_request;
+  is_operator_view : (is_operator_request * bool) -> operation
 }
 
 (* `multi-token` entry points *)
@@ -70,7 +70,7 @@ type multi_token =
   *)
   | Set_approval_for_all of set_approval_for_all_param
   (* Queries the approval status of an operator for a given owner. *)
-  | Is_approved_for_all of is_approved_for_all_param
+  | Is_operator of is_operator_param
 
 type on_multi_tokens_received_param = {
   operator : address;     (* The address which initiated the transfer (i. e. sender) *)
