@@ -123,7 +123,7 @@ let mint_safe_check (param : mint_tokens_param) : operation list =
   [op]
 
 let mint_tokens (param : mint_tokens_param) (a : simple_admin_storage) (b : balance_storage): (operation list) * balance_storage =
-  let u = token_exists param.token_id a.tokens in
+  let u : unit = token_exists param.token_id a.tokens in
   let new_b = mint_tokens_impl param b in
   let ops = mint_safe_check param in
   (ops, new_b)
@@ -132,7 +132,7 @@ let batch_mint_tokens_impl (param : batch_mint_tokens_param) (tokens : (nat, str
   let owner = ensure_owner_id param.owner s.owners in
 
   let make_transfer = fun (bals: balances) (t: tx) ->
-    let u = token_exists t.token_id tokens in
+    let u : unit = token_exists t.token_id tokens in
     let to_key  = make_balance_key_impl owner.id t.token_id in
     let old_bal = get_balance to_key bals in
     Map.update to_key (Some(old_bal + t.amount)) bals in

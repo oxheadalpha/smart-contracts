@@ -1,3 +1,4 @@
+
 (*
   `multi_asset` contract combines erc1155 transfer API with
   `simple_admin` API.  Input parameter type for the `multi_asset`
