@@ -98,7 +98,7 @@ let create_token (param : create_token_param) (s: simple_admin_storage) : simple
 let token_exists (token_id : nat) (tokens : (nat, string) big_map) : unit =
   let d = Map.find_opt token_id tokens in
   match d with  
-    | None ->   failwith("token does not exists")
+    | None ->   failwith("token does not exist")
     | Some d -> unit
 
 let mint_tokens_impl (param : mint_tokens_param) (s : balance_storage) : balance_storage =
@@ -191,7 +191,7 @@ let batch_burn_tokens (param : batch_burn_tokens_param) (s : balance_storage): b
 
   let new_bals = List.fold param.batch s.balances make_burn in
   {
-     owners = s.owners;
+    owners = s.owners;
     balances = new_bals;
   } 
 
