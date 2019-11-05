@@ -102,7 +102,10 @@ type erc1155 =
   | Balance_of of balance_of_param
   (* Get the balance of multiple account/token pairs *)
   | Balance_of_batch of balance_of_batch_param
-  (* Enable or disable approval for a third party ("operator") to manage all of the caller's tokens. *)
+  (*
+    Enable or disable approval for a third party ("operator") to manage all of
+    the caller's tokens.
+  *)
   | Set_approval_for_all of set_approval_for_all_param
   (* Queries the approval status of an operator for a given owner. *)
   | Is_approved_for_all of is_approved_for_all_param
