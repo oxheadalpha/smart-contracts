@@ -2,7 +2,7 @@
 (*
   `multi_asset` contract combines `multi_token` transfer API with
   `simple_admin` API.  Input parameter type for the `multi_asset`
-  contract is a union of `erc115` and `simple_admin` parameter types.
+  contract is a union of `multi_token` and `simple_admin` parameter types.
   Depending on the input, `multi_asset` dispatches call to either
   `multi_token` or `simple_admin` entry points. 
   If contract is paused, `multi_token` entry points cannot be invoked.

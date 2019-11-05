@@ -25,7 +25,7 @@ type balance_request = {
   token_id : nat;  (* ID of the  token *)
 }
 
-type balance_of_batch_param = {
+type balance_of_param = {
   balance_request : balance_request list;
   balance_view : ((balance_request * nat) list) -> operation;
 }
@@ -63,7 +63,7 @@ type multi_token =
   *)
   | Transfer of transfer_param
   (* Get the balance of multiple account/token pairs *)
-  | Balance_of_batch of balance_of_batch_param
+  | Balance_of of balance_of_param
   (*
     Enable or disable approval for a third party ("operator") to manage all of
     the caller's tokens.

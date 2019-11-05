@@ -141,8 +141,8 @@ let get_balance_req (r : balance_request) (s : balance_storage) : nat =
   let balance_key = make_balance_key r.owner r.token_id s.owners in
   get_balance balance_key s.balances
 
-let balance_of_batch 
-    (param : balance_of_batch_param) (s : balance_storage) : operation =
+let balance_of 
+    (param : balance_of_param) (s : balance_storage) : operation =
   let to_balance = fun (r: balance_request) ->
     let bal = get_balance_req r s in
     (r, bal) 
@@ -229,8 +229,8 @@ let multi_token_main
       } in
       (ops_bstore.(0), new_s)
 
-  | Balance_of_batch p ->
-      let op = balance_of_batch p s.balance_storage in
+  | Balance_of p ->
+      let op = balance_of p s.balance_storage in
       ([op], s)
 
   | Set_approval_for_all p ->

@@ -9,7 +9,7 @@
                (or (pair %create_token (string %descriptor) (nat %token_id)) (bool %pause)))
            (address %set_admin))
         (or %assets
-           (or (pair %balance_of_batch
+           (or (pair %balance_of
                   (list %balance_request (pair (address %owner) (nat %token_id)))
                   (lambda %balance_view
                      (list (pair (pair (address %owner) (nat %token_id)) nat))
