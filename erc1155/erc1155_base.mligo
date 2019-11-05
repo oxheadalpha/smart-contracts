@@ -171,13 +171,13 @@ let transfer_safe_check
     (param : transfer_param) : operation list =
   let receiver : multi_token_receiver contract = 
     Operation.get_contract param.to_ in
-  let p : on_erc1155_batch_received_param = {
+  let p : on_multi_tokens_received_param = {
       operator = sender;
       from_ = Some param.from_;
       batch = param.batch;
       data = param.data;
     } in
-  let op = Operation.transaction (On_erc1155_batch_received p) 0mutez receiver in
+  let op = Operation.transaction (On_multi_tokens_received p) 0mutez receiver in
   [op]
 
 let transfer 

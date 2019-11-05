@@ -15,7 +15,7 @@ type transfer_param = {
   batch : tx list;
   (* 
     Additional data with no specified format, MUST be sent unaltered in call to
-    `On_erc1155_batch_received` on `to_`
+    `On_erc1155_batch_receiveOn_multi_tokens_received` on `to_`
   *)
   data : bytes;
 }
@@ -71,7 +71,7 @@ type erc1155 =
   (* Queries the approval status of an operator for a given owner. *)
   | Is_approved_for_all of is_approved_for_all_param
 
-type on_erc1155_batch_received_param = {
+type on_multi_tokens_received_param = {
   operator : address;     (* The address which initiated the transfer (i. e. sender) *)
   from_ : address option; (* Source address. None for minting operation *)
   batch : tx list;        (* Batch of tokens and their amounts which are transferred *)
@@ -86,4 +86,4 @@ type multi_token_receiver =
     recipient contract from a `Transfer`.
     MUST revert if it rejects the transfer(s).
   *)
-  | On_erc1155_batch_received of on_erc1155_batch_received_param
+  | On_multi_tokens_received of on_multi_tokens_received_param
