@@ -167,8 +167,8 @@ let transfer_balance
     let s2 = Map.update to_key (Some tbal) s1 in
     s2
 
-let batch_transfer_safe_check
-    (param : safe_batch_transfer_from_param) : operation list =
+let transfer_safe_check
+    (param : transfer_param) : operation list =
   let receiver : erc1155_token_receiver contract = 
     Operation.get_contract param.to_ in
   let p : on_erc1155_batch_received_param = {
@@ -180,9 +180,8 @@ let batch_transfer_safe_check
   let op = Operation.transaction (On_erc1155_batch_received p) 0mutez receiver in
   [op]
 
-let safe_batch_transfer_from 
-    (param : safe_batch_transfer_from_param) (s : balance_storage) 
-    : (operation  list) * balance_store = 
+let transfer 
+    (param : transfer_param) (s : balance_storage) : (operation  list) * balance_store = 
   let from_id = get_owner_id param.from_ s.owners in
   let to_o = ensure_owner_id param.to_ s.owners in
   let make_transfer = fun (bals: balances) (t: tx) ->
@@ -195,7 +194,7 @@ let safe_batch_transfer_from
     owners = to_o.owners;
     balances = new_balances;
   } in
-  let ops = batch_transfer_safe_check param in
+  let ops = transfer_safe_check param in
   (ops, new_store)
 
 let approved_transfer_from (from_ : address) (approvals : approvals) : unit =
@@ -221,9 +220,9 @@ type erc1155_storage = {
 let erc1155_main
     (param : erc1155) (s : erc1155_storage) : (operation  list) * irc1155_storage =
   match param with
-  | Safe_batch_transfer_from p ->
+  | Transfer p ->
       let u : unit = approved_transfer_from p.from_ s.approvals in
-      let ops_bstore = safe_batch_transfer_from p s.balance_storage in
+      let ops_bstore =transfer p s.balance_storage in
       let new_s = {
         approvals = s.approvals;
         balance_storage = ops_bstore.(1);

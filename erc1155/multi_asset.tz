@@ -19,10 +19,10 @@
                      (pair (pair (address %operator) (address %owner)) bool)
                      operation)
                   (pair %is_approved_for_all_request (address %operator) (address %owner))))
-           (or (pair %safe_batch_transfer_from
+           (or (pair %set_approval_for_all (bool %approved) (address %operator))
+               (pair %transfer
                   (pair (list %batch (pair (nat %amount) (nat %token_id))) (bytes %data))
-                  (pair (address %from_) (address %to_)))
-               (pair %set_approval_for_all (bool %approved) (address %operator))))) ;
+                  (pair (address %from_) (address %to_)))))) ;
   storage
     (pair (pair %admin (pair (address %admin) (bool %paused)) (big_map %tokens nat string))
           (pair %assets
@@ -721,7 +721,7 @@
                                             (big_map address (set address)))))))
                  (pair (or (or (pair (list (pair address nat)) (lambda (list (pair (pair address nat) nat)) operation))
                                (pair (lambda (pair (pair address address) bool) operation) (pair address address)))
-                           (or (pair (pair (list (pair nat nat)) bytes) (pair address address)) (pair bool address)))
+                           (or (pair bool address) (pair (pair (list (pair nat nat)) bytes) (pair address address))))
                        (pair (big_map address (set address))
                              (pair (big_map nat nat) (pair nat (big_map address nat))))))
            (pair (list operation)
@@ -781,6 +781,19 @@
                  IF_LEFT
                    { DUP ;
                      DUP ;
+                     DIP { DIP 3 { DUP } ; DIG 3 ; CAR } ;
+                     PAIR ;
+                     DIP { DIP 10 { DUP } ; DIG 10 } ;
+                     EXEC ;
+                     DUP ;
+                     DIP { DIP 4 { DUP } ; DIG 4 ; CDR } ;
+                     PAIR ;
+                     DUP ;
+                     NIL operation ;
+                     PAIR ;
+                     DIP { DROP 4 } }
+                   { DUP ;
+                     DUP ;
                      CDR ;
                      CAR ;
                      DIP { DIP 3 { DUP } ; DIG 3 ; CAR } ;
@@ -803,20 +816,7 @@
                      CAR ;
                      DIP { DUP } ;
                      PAIR ;
-                     DIP { DROP 5 } }
-                   { DUP ;
-                     DUP ;
-                     DIP { DIP 3 { DUP } ; DIG 3 ; CAR } ;
-                     PAIR ;
-                     DIP { DIP 10 { DUP } ; DIG 10 } ;
-                     EXEC ;
-                     DUP ;
-                     DIP { DIP 4 { DUP } ; DIG 4 ; CDR } ;
-                     PAIR ;
-                     DUP ;
-                     NIL operation ;
-                     PAIR ;
-                     DIP { DROP 4 } } ;
+                     DIP { DROP 5 } } ;
                  DIP { DROP } } ;
              DIP { DROP 8 } } ;
          SWAP ;

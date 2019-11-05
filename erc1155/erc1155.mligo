@@ -3,7 +3,7 @@ type tx = {
   amount : nat;   (* Transfer amount *)
 }
 
-type safe_batch_transfer_from_param = {
+type transfer_param = {
   (* Source address *)
   from_ : address;
   (* 
@@ -60,7 +60,7 @@ type erc1155 =
     If `to_` contract implements `erc1155_receiver` interface. Otherwise skips
     safety check.
   *)
-  | Safe_batch_transfer_from of safe_batch_transfer_from_param
+  | Transfer of transfer_param
   (* Get the balance of multiple account/token pairs *)
   | Balance_of_batch of balance_of_batch_param
   (*
@@ -83,7 +83,7 @@ type erc1155_token_receiver =
   (*
     Handle the receipt of multiple ERC1155 token types.
     An ERC1155-compliant smart contract MUST call this function on the token
-    recipient contract from a `Safe_batch_transfer_from`.
+    recipient contract from a `Transfer`.
     MUST revert if it rejects the transfer(s).
   *)
   | On_erc1155_batch_received of on_erc1155_batch_received_param
