@@ -19,7 +19,7 @@
   aggregate data (like list all token types held by the owner).
 *)
 
-#include "erc1155.mligo"
+#include "multi_token.mligo"
 
 (*  owner -> operator set *)
 type approvals = (address, address set) big_map

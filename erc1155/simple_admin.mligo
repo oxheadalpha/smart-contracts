@@ -15,7 +15,7 @@
   less tokens then burn amount.
 *)
 
-#include "erc1155_base.mligo"
+#include "multi_token_base.mligo"
 
 type create_token_param = {
   token_id : nat;
