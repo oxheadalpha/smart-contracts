@@ -169,7 +169,7 @@ let transfer_balance
 
 let transfer_safe_check
     (param : transfer_param) : operation list =
-  let receiver : erc1155_token_receiver contract = 
+  let receiver : multi_token_receiver contract = 
     Operation.get_contract param.to_ in
   let p : on_erc1155_batch_received_param = {
       operator = sender;

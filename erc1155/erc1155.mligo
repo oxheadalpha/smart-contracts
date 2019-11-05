@@ -55,7 +55,7 @@ type erc1155 =
     `from` account (see "Approval" section of the standard).
     MUST revert if any of the balance(s) of the holder(s) for token(s) is lower
     than the respective amount(s) in `_values` sent to the recipient.
-    MUST call the relevant `erc1155_token_receiver` hook(s) on `to_` and act
+    MUST call the relevant `multi_token_receiver` hook(s) on `to_` and act
     appropriately (see "Safe Transfer Rules" section of the standard).
     If `to_` contract implements `erc1155_receiver` interface. Otherwise skips
     safety check.
@@ -79,7 +79,7 @@ type on_erc1155_batch_received_param = {
 }
 
 (* ERC1155TokenReceiver entry points *)
-type erc1155_token_receiver =
+type multi_token_receiver =
   (*
     Handle the receipt of multiple ERC1155 token types.
     An ERC1155-compliant smart contract MUST call this function on the token

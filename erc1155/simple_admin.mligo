@@ -105,7 +105,7 @@ let batch_mint_tokens_impl
   }
 
 let batch_mint_safe_check (param : batch_mint_tokens_param) : operation list =
-  let receiver : erc1155_token_receiver contract =
+  let receiver : multi_token_receiver contract =
     Operation.get_contract param.owner in
   let p : on_erc1155_batch_received_param = {
     operator = sender;
