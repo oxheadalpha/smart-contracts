@@ -141,12 +141,6 @@ let get_balance_req (r : balance_request) (s : balance_storage) : nat =
   let balance_key = make_balance_key r.owner r.token_id s.owners in
   get_balance balance_key s.balances
 
-
-
-let balance_of (param : balance_of_param) (s : balance_storage) : operation =
-  let bal = get_balance_req param.balance_request s in
-  param.balance_view (param.balance_request, bal)
-
 let balance_of_batch 
     (param : balance_of_batch_param) (s : balance_storage) : operation =
   let to_balance = fun (r: balance_request) ->
@@ -172,36 +166,6 @@ let transfer_balance
     let tbal = to_bal + amt in
     let s2 = Map.update to_key (Some tbal) s1 in
     s2
-
-let transfer_safe_check (param : safe_transfer_from_param) : operation list =
-  let receiver : erc1155_token_receiver contract =  
-    Operation.get_contract param.to_ in
-  (* let ops = 
-      match receiver with
-      | None    -> ([] : operation list)
-      | Some c  ->  *)
-  let p : on_erc1155_received_param = {
-    operator = sender;
-    from_ = Some param.from_;
-    token_id = param.token_id;
-    amount = param.amount;
-    data = param.data;
-  } in
-  let op = Operation.transaction (On_erc1155_received p) 0mutez receiver in
-  [op]
-
-let safe_transfer_from 
-    (param : safe_transfer_from_param) (s : balance_storage) 
-    : (operation  list) * balance_store = 
-  let from_key  = make_balance_key param.from_  param.token_id s.owners in
-  let to_o = make_balance_key_ensure param.to_ param.token_id s.owners in
-  let new_balances = transfer_balance from_key to_o.key param.amount s.balances in
-  let new_store: balance_storage = {
-      owners = to_o.owners;
-      balances = new_balances;
-    } in
-  let ops = transfer_safe_check param in
-  (ops, new_store)
 
 let batch_transfer_safe_check
     (param : safe_batch_transfer_from_param) : operation list =
@@ -257,15 +221,6 @@ type erc1155_storage = {
 let erc1155_main
     (param : erc1155) (s : erc1155_storage) : (operation  list) * irc1155_storage =
   match param with
-  | Safe_transfer_from p ->
-      let u : unit = approved_transfer_from p.from_ s.approvals in
-      let ops_bstore = safe_transfer_from p s.balance_storage in
-      let new_s = {
-        approvals = s.approvals;
-        balance_storage = ops_bstore.(1);
-      } in
-      (ops_bstore.(0), new_s)
-
   | Safe_batch_transfer_from p ->
       let u : unit = approved_transfer_from p.from_ s.approvals in
       let ops_bstore = safe_batch_transfer_from p s.balance_storage in
@@ -274,10 +229,6 @@ let erc1155_main
         balance_storage = ops_bstore.(1);
       } in
       (ops_bstore.(0), new_s)
-
-  | Balance_of p ->
-      let op = balance_of p s.balance_storage in
-      ([op], s)
 
   | Balance_of_batch p ->
       let op = balance_of_batch p s.balance_storage in
