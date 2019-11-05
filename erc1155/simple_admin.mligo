@@ -1,5 +1,5 @@
 (*
-  One of the possible implementations of admin API for erc1155 contract.
+  One of the possible implementations of admin API for `multi_token` contract.
 
   Only current `admin` of the contract can invoke admin API.
   Admin API allows to 
@@ -10,7 +10,7 @@
     pause the contract.
 
   Mint/burn operations exist in single token and batch versions.
-  Mint operation performs safety check as specified for erc1155
+  Mint operation performs safety check as specified for `multi_token`
   transfer entry points. Burn operation fails if the owner holds
   less tokens then burn amount.
 *)

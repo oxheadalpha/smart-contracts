@@ -8,14 +8,14 @@ type transfer_param = {
   from_ : address;
   (* 
     Target address. Target smart contract must implement entry points from
-    `erc1155_receiver` interface
+    `multi_token_receiver` interface
   *)
   to_ : address;
   (* Batch of tokens and their amounts to be transferred *)
   batch : tx list;
   (* 
     Additional data with no specified format, MUST be sent unaltered in call to
-    `On_erc1155_batch_receiveOn_multi_tokens_received` on `to_`
+    `On_multi_tokens_received` on `to_` contract.
   *)
   data : bytes;
 }
@@ -46,7 +46,7 @@ type is_approved_for_all_param = {
   approved_view : (is_approved_for_all_request * bool) -> operation
 }
 
-(* ERC1155 entry points *)
+(* `multi-token` entry points *)
 type erc1155 =
   (*
     Transfers specified `amount`(s) of `token_id`(s) from the `from` address to
@@ -54,11 +54,12 @@ type erc1155 =
     Caller must be approved to manage the tokens being transferred out of the
     `from` account (see "Approval" section of the standard).
     MUST revert if any of the balance(s) of the holder(s) for token(s) is lower
-    than the respective amount(s) in `_values` sent to the recipient.
-    MUST call the relevant `multi_token_receiver` hook(s) on `to_` and act
-    appropriately (see "Safe Transfer Rules" section of the standard).
-    If `to_` contract implements `erc1155_receiver` interface. Otherwise skips
-    safety check.
+    than the respective amount(s) in amounts sent to the recipient.
+    MUST call `On_multi_tokens_received` hook defined by `multi_token_receiver`
+    on `to_` and act appropriately (see "Safe Transfer Rules" section of the
+    standard).
+    If `to_` contract does not implement `multi_token_receiver` interface,
+    the transaction must fail.
   *)
   | Transfer of transfer_param
   (* Get the balance of multiple account/token pairs *)
@@ -78,11 +79,11 @@ type on_multi_tokens_received_param = {
   data : bytes;           (* Additional data with no specified format *)
 }
 
-(* ERC1155TokenReceiver entry points *)
+(* multi_token_receiver entry points *)
 type multi_token_receiver =
   (*
-    Handle the receipt of multiple ERC1155 token types.
-    An ERC1155-compliant smart contract MUST call this function on the token
+    Handle the receipt of multiple token types.
+    A  multi-asset compliant smart contract MUST call this function on the token
     recipient contract from a `Transfer`.
     MUST revert if it rejects the transfer(s).
   *)

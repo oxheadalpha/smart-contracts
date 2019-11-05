@@ -1,11 +1,11 @@
 
 (*
-  `multi_asset` contract combines erc1155 transfer API with
+  `multi_asset` contract combines `multi_token` transfer API with
   `simple_admin` API.  Input parameter type for the `multi_asset`
   contract is a union of `erc115` and `simple_admin` parameter types.
   Depending on the input, `multi_asset` dispatches call to either
-  `erc1155` or `simple_admin` entry points. 
-  If contract is paused, erc1155 entry points cannot be invoked.
+  `multi_token` or `simple_admin` entry points. 
+  If contract is paused, `multi_token` entry points cannot be invoked.
 *)
 
 #include "simple_admin.mligo"
