@@ -1149,7 +1149,7 @@
              DIP { DUP } ;
              GET ;
              DUP ;
-             IF_NONE { PUSH string "token does not exists" ; FAILWITH } { DROP ; UNIT } ;
+             IF_NONE { PUSH string "token does not exist" ; FAILWITH } { DROP ; UNIT } ;
              DIP { DROP 4 } } ;
          SWAP ;
          LAMBDA

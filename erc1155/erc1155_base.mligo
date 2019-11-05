@@ -4,7 +4,7 @@
   Since Babylon does not support pairs as keys for big_map,
   This implementation uses composite `balance_key` represented as `nat`.
   Assumed number of different token types is 2^32 (`max_tokens` constant).
-  Both token ID and owner ID are packed into single `nat` using first 32 bits
+  Both token ID and owner ID are "packed" into single `nat` using first 32 bits
   for token ID and the rest of the bits for owner ID.
   Contract storage also keeps mapping between owner address and owner ID
   represented as `nat` (see `owner_lookup`).
@@ -97,24 +97,24 @@ let get_owner_id (owner: address) (s: owner_lookup) : nat =
     | None    -> (failwith("No such owner") : nat)
     | Some id -> id
 
-let pack_balance_key_impl (owner_id : nat) (token_id : nat) : nat =
+let make_balance_key_impl (owner_id : nat) (token_id : nat) : nat =
   if token_id > max_tokens
   then (failwith("provided token ID is out of allowed range") : nat)
   else token_id + (owner_id * owner_offset)
 
-let pack_balance_key (owner : address) (token_id : nat) (s : owner_lookup) : nat =
+let make_balance_key (owner : address) (token_id : nat) (s : owner_lookup) : nat =
   let owner_id = get_owner_id owner s in
-  pack_balance_key_impl owner_id token_id
+  make_balance_key_impl owner_id token_id
 
 type owner_key_result = {
   key : nat;
   owners: owner_lookup;
 }
 
-(* Packs the key to access balance and if owner does not have an id, creates a new id and adds it to an owner_lookup *)
-let pack_balance_key_ensure (owner : address) (token_id : nat) (s : owner_lookup) : owner_key_result = 
+(* Makes the key to access balance and if owner does not have an id, creates a new id and adds it to an owner_lookup *)
+let make_balance_key_ensure (owner : address) (token_id : nat) (s : owner_lookup) : owner_key_result = 
   let o = ensure_owner_id owner s in
-  let key = pack_balance_key_impl o.id token_id in
+  let key = make_balance_key_impl o.id token_id in
   {
     key =key;
     owners = o.owners;
@@ -127,7 +127,7 @@ let get_balance (key : nat) (b : balances) : nat =
     | Some b  -> b
 
 let get_balance_req (r : balance_request) (s : balance_storage) : nat =
-  let balance_key = pack_balance_key r.owner r.token_id s.owners in
+  let balance_key = make_balance_key r.owner r.token_id s.owners in
   get_balance balance_key s.balances
 
 
@@ -176,8 +176,8 @@ let transfer_safe_check (param : safe_transfer_from_param) : operation list =
       [op]
 
 let safe_transfer_from (param : safe_transfer_from_param) (s : balance_storage) : (operation  list) * balance_store = 
-  let from_key  = pack_balance_key param.from_  param.token_id s.owners in
-  let to_o = pack_balance_key_ensure param.to_ param.token_id s.owners in
+  let from_key  = make_balance_key param.from_  param.token_id s.owners in
+  let to_o = make_balance_key_ensure param.to_ param.token_id s.owners in
   let new_balances = transfer_balance from_key to_o.key param.amount s.balances in
   let new_store: balance_storage = {
       owners = to_o.owners;
@@ -201,8 +201,8 @@ let safe_batch_transfer_from (param : safe_batch_transfer_from_param) (s : balan
   let from_id = get_owner_id param.from_ s.owners in
   let to_o = ensure_owner_id param.to_ s.owners in
   let make_transfer = fun (bals: balances) (t: tx) ->
-    let from_key  = pack_balance_key_impl from_id t.token_id in
-    let to_key  = pack_balance_key_impl to_o.id t.token_id in
+    let from_key  = make_balance_key_impl from_id t.token_id in
+    let to_key  = make_balance_key_impl to_o.id t.token_id in
     transfer_balance from_key to_key t.amount bals in 
 
   let new_balances = List.fold param.batch s.balances make_transfer in

@@ -102,7 +102,7 @@ let token_exists (token_id : nat) (tokens : (nat, string) big_map) : unit =
     | Some d -> unit
 
 let mint_tokens_impl (param : mint_tokens_param) (s : balance_storage) : balance_storage =
-  let to_ko = pack_balance_key_ensure param.owner param.token_id s.owners in
+  let to_ko = make_balance_key_ensure param.owner param.token_id s.owners in
   let old_bal = get_balance to_ko.key s.balances in
   let new_bals = Map.update to_ko.key (Some(old_bal + param.amount)) s.balances in
   {
@@ -133,7 +133,7 @@ let batch_mint_tokens_impl (param : batch_mint_tokens_param) (tokens : (nat, str
 
   let make_transfer = fun (bals: balances) (t: tx) ->
     let u = token_exists t.token_id tokens in
-    let to_key  = pack_balance_key_impl owner.id t.token_id in
+    let to_key  = make_balance_key_impl owner.id t.token_id in
     let old_bal = get_balance to_key bals in
     Map.update to_key (Some(old_bal + t.amount)) bals in
 
@@ -160,7 +160,7 @@ let batch_mint_tokens (param : batch_mint_tokens_param) (a : simple_admin_storag
   (ops, new_b)
 
 let burn_tokens (param : burn_tokens_param) (s : balance_storage): balance_storage =
-  let from_key = pack_balance_key param.owner param.token_id s.owners in
+  let from_key = make_balance_key param.owner param.token_id s.owners in
   let old_bal = get_balance from_key s.balances in
   let new_bal = old_bal - param.amount in
   let new_bals = 
@@ -178,7 +178,7 @@ let batch_burn_tokens (param : batch_burn_tokens_param) (s : balance_storage): b
   let owner_id = get_owner_id param.owner s.owners in
 
   let make_burn = fun (bals : balances) (t : tx) ->
-    let from_key = pack_balance_key_impl owner_id t.token_id in
+    let from_key = make_balance_key_impl owner_id t.token_id in
     let old_bal =  match Map.find_opt from_key bals with
       | Some b  -> b
       | None    -> 0p
