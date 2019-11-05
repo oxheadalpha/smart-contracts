@@ -50,7 +50,7 @@ type is_approved_for_all_param = {
 (* ERC1155 entry points *)
 type erc1155 =
   (*
-    Transfers specified `amount` of an `token_id` from the `from` address to the `to_`
+    Transfers specified `amount` of a `token_id` from the `from_` address to the `to_`
     address specified (with safety call). Caller must be approved to manage the tokens
     being transferred out of the `from` account (see "Approval" section of the standard).
     MUST revert if balance of holder for token `token_id` is lower than the `amount` sent.
