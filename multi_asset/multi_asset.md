@@ -123,14 +123,14 @@ type tx = {
 type transfer_param = {
   (* Source address *)
   from_ : address;
-  (*
+  (* 
     Target address. Target smart contract must implement entry points from
     `multi_token_receiver` interface
   *)
   to_ : address;
   (* Batch of tokens and their amounts to be transferred *)
   batch : tx list;
-  (*
+  (* 
     Additional data with no specified format, MUST be sent unaltered in call to
     `On_multi_tokens_received` on `to_` contract.
   *)
@@ -139,12 +139,12 @@ type transfer_param = {
 
 type balance_request = {
   owner : address; (* The address of the token holder *)
-  token_id : nat;  (* ID of the token *)
+  token_id : nat;  (* ID of the  token *)
 }
 
 type balance_of_param = {
   balance_request : balance_request list;
-  balance_view : ((balance_request * nat) list) -> operation;
+  balance_view : ((balance_request * nat) list) contract;
 }
 
 type is_operator_request = {
@@ -153,7 +153,7 @@ type is_operator_request = {
 }
 type is_operator_param = {
   is_operator_request : is_operator_request;
-  is_operator_view : (is_operator_request * bool) -> operation
+  is_operator_view : (is_operator_request * bool) contract
 }
 
 (* `multi-token` entry points *)
@@ -164,7 +164,7 @@ type multi_token =
     Caller must be approved to manage the tokens being transferred out of the
     `from_` account (see "Approval" section of the standard).
     MUST revert if any of the balance(s) of the holder for token(s) is lower
-    than the respective amount(s) to be sent to the recipient.
+    than the respective amount(s) in amounts to be sent to the recipient.
     MUST call `On_multi_tokens_received` hook defined by `multi_token_receiver`
     on `to_` and act appropriately (see "Safe Transfer Rules" section of the
     standard).
