@@ -54,7 +54,9 @@ let is_operator
     | None      -> false
     | Some ops  -> Set.mem req.operator ops
   in
-  param.is_operator_view (req, result)
+  Operation.transaction 
+    (req, result) 0mutez param.is_operator_view
+   
 
 
 let max_tokens = 4294967295n  (* 2^32-1 *)

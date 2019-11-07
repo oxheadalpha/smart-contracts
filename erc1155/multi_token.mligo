@@ -36,7 +36,7 @@ type is_operator_request = {
 }
 type is_operator_param = {
   is_operator_request : is_operator_request;
-  is_operator_view : (is_operator_request * bool) -> operation
+  is_operator_view : (is_operator_request * bool) contract
 }
 
 (* `multi-token` entry points *)
