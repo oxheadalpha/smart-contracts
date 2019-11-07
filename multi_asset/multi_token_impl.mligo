@@ -1,5 +1,5 @@
 (*
-  Reference implementation if ERC1155 core API.
+  Reference implementation if `multi_token` core API.
 
   Since Babylon does not support pairs as keys for big_map,
   This implementation uses composite `balance_key` represented as `nat`.
@@ -19,42 +19,48 @@
   aggregate data (like list all token types held by the owner).
 *)
 
-#include "erc1155.mligo"
+#include "multi_token_interface.mligo"
 
 (*  owner -> operator set *)
 type approvals = (address, address set) big_map
 
-let set_approval_for_all
-    (param : set_approval_for_all_param) (approvals : approvals) : approvals =
-  let operators = 
-    match Map.find_opt sender approvals with
-    | Some(ops) -> ops
-    | None      -> (Set.empty : address set)
-  in
-  let new_operators = 
-    if param.approved
-    then Set.add param.operator operators
-    else Set.remove param.operator operators
-  in
-    if Set.size new_operators = 0p
-    then  Map.remove sender approvals
-    else Map.update sender (Some new_operators) approvals
-  
 
-let is_approved_for_all 
-    (param : is_approved_for_all_param) (approvals : approvals) : operation = 
-  let req = param.is_approved_for_all_request in
+let add_operator (operator : address) (approvals : approvals) : approvals =
+  let new_operators =
+    match Map.find_opt sender approvals with
+    | Some(ops) -> Set.add operator ops
+    | None      -> Set.literal [operator]
+  in
+  Map.update sender (Some new_operators) approvals
+
+let remove_operator (operator : address) (approvals : approvals) : approvals =
+  let new_operators_opt =
+    match Map.find_opt sender approvals with
+    | Some(ops) -> 
+        let ops = Set.remove operator ops in
+        if Set.size ops = 0n
+        then (None : address set option)
+        else Some(ops)
+    | None      -> (None : address set option)
+  in
+  Map.update sender new_operators_opt approvals
+  
+let is_operator
+    (param : is_operator_param) (approvals : approvals) : operation = 
+  let req = param.is_operator_request in
   let operators = Map.find_opt req.owner approvals in
   let result = 
     match operators with
     | None      -> false
     | Some ops  -> Set.mem req.operator ops
   in
-  param.approved_view (req, result)
+  Operation.transaction 
+    (req, result) 0mutez param.is_operator_view
+   
 
 
-let max_tokens = 4294967295p  (* 2^32-1 *)
-let owner_offset = 4294967296p  (* 2^32 *)
+let max_tokens = 4294967295n  (* 2^32-1 *)
+let owner_offset = 4294967296n  (* 2^32 *)
 
 (* owner_token_id -> balance *)
 type balances = (nat, nat) big_map
@@ -76,7 +82,7 @@ type owner_result = {
 
 (* return updated storage and newly added owner id *)
 let add_owner (owner : address) (s : owner_lookup) : owner_result =
-  let owner_id  = s.owner_count + 1p in
+  let owner_id  = s.owner_count + 1n in
   let os = Map.add owner owner_id s.owners in
   let new_s = 
     { 
@@ -134,27 +140,21 @@ let make_balance_key_ensure
 let get_balance (key : nat) (b : balances) : nat =
   let bal : nat option = Map.find_opt key b in
   match bal with
-  | None    -> 0p
+  | None    -> 0n
   | Some b  -> b
 
 let get_balance_req (r : balance_request) (s : balance_storage) : nat =
   let balance_key = make_balance_key r.owner r.token_id s.owners in
   get_balance balance_key s.balances
 
-
-
-let balance_of (param : balance_of_param) (s : balance_storage) : operation =
-  let bal = get_balance_req param.balance_request s in
-  param.balance_view (param.balance_request, bal)
-
-let balance_of_batch 
-    (param : balance_of_batch_param) (s : balance_storage) : operation =
+let balance_of 
+    (param : balance_of_param) (s : balance_storage) : operation =
   let to_balance = fun (r: balance_request) ->
     let bal = get_balance_req r s in
     (r, bal) 
   in
   let requests_2_bals = List.map param.balance_request to_balance in
-  param.balance_view requests_2_bals
+  Operation.transaction requests_2_bals 0mutez param.balance_view
 
 let transfer_balance
     (from_key : nat) (to_key : nat) (amt : nat) (s : balances) : balances = 
@@ -164,7 +164,7 @@ let transfer_balance
   else
     let fbal = abs (from_bal - amt) in
     let s1 = 
-      if fbal = 0p 
+      if fbal = 0n 
       then Map.remove from_key s
       else Map.update from_key (Some fbal) s 
     in
@@ -173,52 +173,21 @@ let transfer_balance
     let s2 = Map.update to_key (Some tbal) s1 in
     s2
 
-let transfer_safe_check (param : safe_transfer_from_param) : operation list =
-  let receiver : erc1155_token_receiver contract =  
+let transfer_safe_check
+    (param : transfer_param) : operation list =
+  let receiver : multi_token_receiver contract = 
     Operation.get_contract param.to_ in
-  (* let ops = 
-      match receiver with
-      | None    -> ([] : operation list)
-      | Some c  ->  *)
-  let p : on_erc1155_received_param = {
-    operator = sender;
-    from_ = Some param.from_;
-    token_id = param.token_id;
-    amount = param.amount;
-    data = param.data;
-  } in
-  let op = Operation.transaction (On_erc1155_received p) 0mutez receiver in
-  [op]
-
-let safe_transfer_from 
-    (param : safe_transfer_from_param) (s : balance_storage) 
-    : (operation  list) * balance_store = 
-  let from_key  = make_balance_key param.from_  param.token_id s.owners in
-  let to_o = make_balance_key_ensure param.to_ param.token_id s.owners in
-  let new_balances = transfer_balance from_key to_o.key param.amount s.balances in
-  let new_store: balance_storage = {
-      owners = to_o.owners;
-      balances = new_balances;
-    } in
-  let ops = transfer_safe_check param in
-  (ops, new_store)
-
-let batch_transfer_safe_check
-    (param : safe_batch_transfer_from_param) : operation list =
-  let receiver : erc1155_token_receiver contract = 
-    Operation.get_contract param.to_ in
-  let p : on_erc1155_batch_received_param = {
+  let p : on_multi_tokens_received_param = {
       operator = sender;
       from_ = Some param.from_;
       batch = param.batch;
       data = param.data;
     } in
-  let op = Operation.transaction (On_erc1155_batch_received p) 0mutez receiver in
+  let op = Operation.transaction (On_multi_tokens_received p) 0mutez receiver in
   [op]
 
-let safe_batch_transfer_from 
-    (param : safe_batch_transfer_from_param) (s : balance_storage) 
-    : (operation  list) * balance_store = 
+let transfer 
+    (param : transfer_param) (s : balance_storage) : (operation  list) * balance_store = 
   let from_id = get_owner_id param.from_ s.owners in
   let to_o = ensure_owner_id param.to_ s.owners in
   let make_transfer = fun (bals: balances) (t: tx) ->
@@ -231,7 +200,7 @@ let safe_batch_transfer_from
     owners = to_o.owners;
     balances = new_balances;
   } in
-  let ops = batch_transfer_safe_check param in
+  let ops = transfer_safe_check param in
   (ops, new_store)
 
 let approved_transfer_from (from_ : address) (approvals : approvals) : unit =
@@ -248,50 +217,44 @@ let approved_transfer_from (from_ : address) (approvals : approvals) : unit =
     else failwith ("operator not approved to transfer tokens")
     
 
-type erc1155_storage = {
+type multi_token_storage = {
   approvals : approvals;
   balance_storage: balance_storage;
 }
 
-
-let erc1155_main
-    (param : erc1155) (s : erc1155_storage) : (operation  list) * irc1155_storage =
+let multi_token_main
+    (param : multi_token) (s : multi_token_storage) : (operation  list) * multi_token_storage =
   match param with
-  | Safe_transfer_from p ->
+  | Transfer p ->
       let u : unit = approved_transfer_from p.from_ s.approvals in
-      let ops_bstore = safe_transfer_from p s.balance_storage in
+      let ops_bstore =transfer p s.balance_storage in
       let new_s = {
         approvals = s.approvals;
-        balance_storage = ops_bstore.(1);
+        balance_storage = ops_bstore.1;
       } in
-      (ops_bstore.(0), new_s)
-
-  | Safe_batch_transfer_from p ->
-      let u : unit = approved_transfer_from p.from_ s.approvals in
-      let ops_bstore = safe_batch_transfer_from p s.balance_storage in
-      let new_s = {
-        approvals = s.approvals;
-        balance_storage = ops_bstore.(1);
-      } in
-      (ops_bstore.(0), new_s)
+      (ops_bstore.0, new_s)
 
   | Balance_of p ->
       let op = balance_of p s.balance_storage in
       ([op], s)
 
-  | Balance_of_batch p ->
-      let op = balance_of_batch p s.balance_storage in
-      ([op], s)
-
-  | Set_approval_for_all p ->
-      let new_approvals = set_approval_for_all p s.approvals in
+  | Add_operator o ->
+      let new_approvals = add_operator o s.approvals in
       let new_s = {
         approvals = new_approvals;
         balance_storage = s.balance_storage;
       } in
       (([] : operation list), new_s)
 
-  | Is_approved_for_all p  ->
-      let op = is_approved_for_all p s.approvals in
+    | Remove_operator o ->
+      let new_approvals = remove_operator o s.approvals in
+      let new_s = {
+        approvals = new_approvals;
+        balance_storage = s.balance_storage;
+      } in
+      (([] : operation list), new_s)
+
+  | Is_operator p  ->
+      let op = is_operator p s.approvals in
       ([op], s)
-        
+
