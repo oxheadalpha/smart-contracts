@@ -31,7 +31,7 @@ let multi_asset_main
 
       let ops_ctx = simple_admin p ctx in 
 
-      let new_ctx = ops_ctx.(1) in
+      let new_ctx = ops_ctx.1 in
       let new_s = {
         admin = new_ctx.admin_storage;
         assets = {
@@ -39,7 +39,7 @@ let multi_asset_main
           balances = new_ctx.balance_storage;
         };
       } in 
-      (ops_ctx.(0), s)
+      (ops_ctx.0, s)
 
   | Assets p -> 
       if s.admin.paused
@@ -49,6 +49,7 @@ let multi_asset_main
         let ops_assets = multi_token_main p s.assets in
         let new_s = {
           admin = s.admin;
-          assets = ops_assets.(1);
+          assets = ops_assets.1;
         } in
-        (ops_assets.(0), new_s)
+        (ops_assets.0, new_s)
+

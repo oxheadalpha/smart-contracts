@@ -29,7 +29,7 @@ let add_operator (operator : address) (approvals : approvals) : approvals =
   let new_operators =
     match Map.find_opt sender approvals with
     | Some(ops) -> Set.add operator ops
-    | None      -> Set [operator]
+    | None      -> Set.literal [operator]
   in
   Map.update sender (Some new_operators) approvals
 
@@ -38,31 +38,13 @@ let remove_operator (operator : address) (approvals : approvals) : approvals =
     match Map.find_opt sender approvals with
     | Some(ops) -> 
         let ops = Set.remove operator ops in
-        if Set.size ops = 0p
+        if Set.size ops = 0n
         then (None : address set option)
         else Some(ops)
     | None      -> (None : address set option)
   in
   Map.update sender new_operators_opt approvals
-
-
-(* let set_approval_for_all
-    (param : set_approval_for_all_param) (approvals : approvals) : approvals =
-  let operators = 
-    match Map.find_opt sender approvals with
-    | Some(ops) -> ops
-    | None      -> (Set.empty : address set)
-  in
-  let new_operators = 
-    if param.approved
-    then Set.add param.operator operators
-    else Set.remove param.operator operators
-  in
-    if Set.size new_operators = 0p
-    then  Map.remove sender approvals
-    else Map.update sender (Some new_operators) approvals *)
   
-
 let is_operator
     (param : is_operator_param) (approvals : approvals) : operation = 
   let req = param.is_operator_request in
@@ -75,8 +57,8 @@ let is_operator
   param.is_operator_view (req, result)
 
 
-let max_tokens = 4294967295p  (* 2^32-1 *)
-let owner_offset = 4294967296p  (* 2^32 *)
+let max_tokens = 4294967295n  (* 2^32-1 *)
+let owner_offset = 4294967296n  (* 2^32 *)
 
 (* owner_token_id -> balance *)
 type balances = (nat, nat) big_map
@@ -98,7 +80,7 @@ type owner_result = {
 
 (* return updated storage and newly added owner id *)
 let add_owner (owner : address) (s : owner_lookup) : owner_result =
-  let owner_id  = s.owner_count + 1p in
+  let owner_id  = s.owner_count + 1n in
   let os = Map.add owner owner_id s.owners in
   let new_s = 
     { 
@@ -156,7 +138,7 @@ let make_balance_key_ensure
 let get_balance (key : nat) (b : balances) : nat =
   let bal : nat option = Map.find_opt key b in
   match bal with
-  | None    -> 0p
+  | None    -> 0n
   | Some b  -> b
 
 let get_balance_req (r : balance_request) (s : balance_storage) : nat =
@@ -180,7 +162,7 @@ let transfer_balance
   else
     let fbal = abs (from_bal - amt) in
     let s1 = 
-      if fbal = 0p 
+      if fbal = 0n 
       then Map.remove from_key s
       else Map.update from_key (Some fbal) s 
     in
@@ -238,7 +220,6 @@ type multi_token_storage = {
   balance_storage: balance_storage;
 }
 
-
 let multi_token_main
     (param : multi_token) (s : multi_token_storage) : (operation  list) * multi_token_storage =
   match param with
@@ -247,9 +228,9 @@ let multi_token_main
       let ops_bstore =transfer p s.balance_storage in
       let new_s = {
         approvals = s.approvals;
-        balance_storage = ops_bstore.(1);
+        balance_storage = ops_bstore.1;
       } in
-      (ops_bstore.(0), new_s)
+      (ops_bstore.0, new_s)
 
   | Balance_of p ->
       let op = balance_of p s.balance_storage in
@@ -274,4 +255,4 @@ let multi_token_main
   | Is_operator p  ->
       let op = is_operator p s.approvals in
       ([op], s)
-        
+

@@ -132,7 +132,7 @@ let batch_burn_tokens
     let old_bal =  
       match Map.find_opt from_key bals with
       | Some b  -> b
-      | None    -> 0p
+      | None    -> 0n
     in
     if old_bal < t.amount
     then (failwith("Insufficient funds") : balances)
@@ -182,9 +182,9 @@ let simple_admin
         let ops_new_bals  = batch_mint_tokens param ctx.admin_storage ctx.balance_storage in
         let new_ctx : simple_admin_context = {
           admin_storage = ctx.admin_storage;
-          balance_storage = ops_new_bals.(1);
+          balance_storage = ops_new_bals.1;
         } in
-        (ops_new_bals.(0), new_ctx)
+        (ops_new_bals.0, new_ctx)
 
     | Batch_burn_tokens param ->
         let new_bals = batch_burn_tokens param ctx.balance_storage in
