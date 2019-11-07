@@ -215,7 +215,7 @@ transfer operation is transferring the token to itself.
 #### `Balance_of`
 
 Get the balance of multiple account/token pairs. Accepts a list of `balance_request`s
-and callback lambda `balance_view` which accepts a list of pairs of `balance_request`
+and callback contract `balance_view` which accepts a list of pairs of `balance_request`
 and balance.
 
 #### Approval
