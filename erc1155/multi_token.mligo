@@ -42,12 +42,12 @@ type is_operator_param = {
 (* `multi-token` entry points *)
 type multi_token =
   (*
-    Transfers specified `amount`(s) of `token_id`(s) from the `from` address to
-    the `to_` address specified (with safety call).
+    Transfers specified `amount`(s) of `token_id`(s) from the `from_` address to
+    the `to_` address (with safety call).
     Caller must be approved to manage the tokens being transferred out of the
-    `from` account (see "Approval" section of the standard).
-    MUST revert if any of the balance(s) of the holder(s) for token(s) is lower
-    than the respective amount(s) in amounts sent to the recipient.
+    `from_` account (see "Approval" section of the standard).
+    MUST revert if any of the balance(s) of the holder for token(s) is lower
+    than the respective amount(s) in amounts to be sent to the recipient.
     MUST call `On_multi_tokens_received` hook defined by `multi_token_receiver`
     on `to_` and act appropriately (see "Safe Transfer Rules" section of the
     standard).
@@ -79,7 +79,7 @@ type multi_token_receiver =
   (*
     Handle the receipt of multiple token types.
     A  multi-asset compliant smart contract MUST call this function on the token
-    recipient contract from a `Transfer`.
-    MUST revert if it rejects the transfer(s).
+    recipient contract from `Transfer`.
+    MUST fail if it rejects the transfer(s).
   *)
   | On_multi_tokens_received of on_multi_tokens_received_param

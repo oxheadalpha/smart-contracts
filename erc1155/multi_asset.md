@@ -17,16 +17,17 @@ and mix multiple fungible or non-fungible token types in a single contract.
 
 ## Multi-asset contract overview
 
-**Token type** is a specific token represented by its ID. **Owner** - Tezos address
-which can hold tokens. **Operator** - Tezos address which initiates token transfer
-operation. **Operator** must be approved to manage all tokens held by the owner
-to make a transfer from the owner account.
+**Token type** is a specific token represented by its ID. Non-fungible tokens can
+be represented as ID ranges. **Owner** - Tezos address which can hold tokens.
+**Operator** - Tezos address which initiates token transfer operation.
+**Operator** must be approved to manage all tokens held by the owner to make a
+transfer from the owner account.
 
 Destination address for the token transfer operation MUST implement `multi_token_receiver`
 interface, which MUST be called for transfer/mint transactions. Destination address
 may reject receiving tokens by generating failure. This is considered a safety
-feature ("safe transfer") to prevent unrecoverable tokens if sent to an address that
-does not expect to receive tokens.
+feature ("safe transfer") to prevent unrecoverable tokens if sent to an address
+that does not expect to receive tokens.
 
 Multi-asset contract supports atomic batch transfer of multiple tokens between two
 accounts.
@@ -50,11 +51,10 @@ if destination contract does not implement `multi_token_receiver` interface, the
 transaction should fail. Michelson does not provide API to distinguish between
 implicit (EOA) and originated addresses since Babylon version. Tezos specification
 requires that safety check MUST be performed for ALL targets and that target contract
-MUST implements `multi_token_receiver` interface.
+MUST implement `multi_token_receiver` interface.
 4. Ordering requirements for batch transfers is relaxed. Since Tezos smart contracts
 are referentially transparent, batch order must be preserved only for invocation
-of `On_multi_tokens_received` entry point of `multi_token_receiver`
-interface.
+of `On_multi_tokens_received` entry point of `multi_token_receiver` interface.
 5. Tezos multi-asset contract implements only batch entry points. Original ERC-1155
 has both single and batch entry points. The motivation was gas use optimization:
 single entry points *may* be implemented more efficiently. With Tezos multi-asset
@@ -103,7 +103,7 @@ Interface names
 ## Specification
 
 Specification is given as definition of Michelson entry points defined in
-[cameligo language](https://ligolang.org). Multi-asset specification consists of
+[cameLIGO language](https://ligolang.org). Multi-asset specification consists of
 two interfaces: `multi_token` and `multi_token_receiver`.
 
 **Smart contracts implementing multi-asset standard protocol MUST implement all
@@ -123,14 +123,14 @@ type tx = {
 type transfer_param = {
   (* Source address *)
   from_ : address;
-  (* 
+  (*
     Target address. Target smart contract must implement entry points from
     `multi_token_receiver` interface
   *)
   to_ : address;
   (* Batch of tokens and their amounts to be transferred *)
   batch : tx list;
-  (* 
+  (*
     Additional data with no specified format, MUST be sent unaltered in call to
     `On_multi_tokens_received` on `to_` contract.
   *)
@@ -139,7 +139,7 @@ type transfer_param = {
 
 type balance_request = {
   owner : address; (* The address of the token holder *)
-  token_id : nat;  (* ID of the  token *)
+  token_id : nat;  (* ID of the token *)
 }
 
 type balance_of_param = {
@@ -159,12 +159,12 @@ type is_operator_param = {
 (* `multi-token` entry points *)
 type multi_token =
   (*
-    Transfers specified `amount`(s) of `token_id`(s) from the `from` address to
-    the `to_` address specified (with safety call).
+    Transfers specified `amount`(s) of `token_id`(s) from the `from_` address to
+    the `to_` address (with safety call).
     Caller must be approved to manage the tokens being transferred out of the
-    `from` account (see "Approval" section of the standard).
-    MUST revert if any of the balance(s) of the holder(s) for token(s) is lower
-    than the respective amount(s) in amounts sent to the recipient.
+    `from_` account (see "Approval" section of the standard).
+    MUST revert if any of the balance(s) of the holder for token(s) is lower
+    than the respective amount(s) to be sent to the recipient.
     MUST call `On_multi_tokens_received` hook defined by `multi_token_receiver`
     on `to_` and act appropriately (see "Safe Transfer Rules" section of the
     standard).
@@ -176,16 +176,16 @@ type multi_token =
   | Balance_of of balance_of_param
   (* Approves third party ("operator") to manage all of the caller's tokens. *)
   | Add_operator of address
-  (* 
-    Withdraws approval for the  third party ("operator") to manage all of 
-    the caller's tokens. 
+  (*
+    Withdraws approval for the  third party ("operator") to manage all of
+    the caller's tokens.
   *)
   | Remove_operator of address
   (* Queries the approval status of an operator for a given owner. *)
   | Is_operator of is_operator_param
 ```
 
-#### `transfer` Rules
+#### Safe Transfer Rules
 
 Transfers amounts specified in the batch between two given addresses. Transfers
 should happen atomically: if at least one specified transfer cannot be completed,
@@ -220,7 +220,7 @@ and balance.
 
 #### Approval
 
-The entry points `Add_operator`/`Remove_operator` allows an operator to manage
+The entry points `Add_operator`/`Remove_operator` allow an operator to manage
 one’s entire set of tokens on behalf of the approver. To permit approval of a
 subset of token IDs, an interface such as
 [ERC-1761 Scoped Approval Interface](https://eips.ethereum.org/EIPS/eip-1761)
@@ -252,8 +252,8 @@ type multi_token_receiver =
   (*
     Handle the receipt of multiple token types.
     A  multi-asset compliant smart contract MUST call this function on the token
-    recipient contract from a `Transfer`.
-    MUST revert if it rejects the transfer(s).
+    recipient contract from `Transfer`.
+    MUST fail if it rejects the transfer(s).
   *)
   | On_multi_tokens_received of on_multi_tokens_received_param
 ```
