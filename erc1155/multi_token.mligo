@@ -27,7 +27,7 @@ type balance_request = {
 
 type balance_of_param = {
   balance_request : balance_request list;
-  balance_view : ((balance_request * nat) list) -> operation;
+  balance_view : ((balance_request * nat) list) contract;
 }
 
 type is_operator_request = {

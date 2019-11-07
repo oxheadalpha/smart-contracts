@@ -13,9 +13,7 @@
            (or (or (address %add_operator)
                    (pair %balance_of
                       (list %balance_request (pair (address %owner) (nat %token_id)))
-                      (lambda %balance_view
-                         (list (pair (pair (address %owner) (nat %token_id)) nat))
-                         operation)))
+                      (contract %balance_view (list (pair (pair (address %owner) (nat %token_id)) nat)))))
                (or (pair %is_operator
                       (pair %is_operator_request (address %operator) (address %owner))
                       (contract %is_operator_view (pair (pair (address %operator) (address %owner)) bool)))
@@ -311,7 +309,7 @@
            (pair (lambda
                     (pair (pair address nat) (pair (big_map nat nat) (pair nat (big_map address nat))))
                     nat)
-                 (pair (pair (list (pair address nat)) (lambda (list (pair (pair address nat) nat)) operation))
+                 (pair (pair (list (pair address nat)) (contract (list (pair (pair address nat) nat))))
                        (pair (big_map nat nat) (pair nat (big_map address nat)))))
            operation
            { DUP ;
@@ -337,8 +335,8 @@
                    PAIR ;
                    DIP { DROP 2 } } ;
              DUP ;
-             DIP { DIP 2 { DUP } ; DIG 2 ; CDR } ;
-             EXEC ;
+             DIP { DIP 2 { DUP } ; DIG 2 ; CDR ; PUSH mutez 0 } ;
+             TRANSFER_TOKENS ;
              DIP { DROP 5 } } ;
          SWAP ;
          APPLY ;
@@ -604,7 +602,7 @@
                                       (pair (big_map nat nat) (pair nat (big_map address nat))))
                                 (pair (list operation) (pair (big_map nat nat) (pair nat (big_map address nat)))))
                              (pair (lambda
-                                      (pair (pair (list (pair address nat)) (lambda (list (pair (pair address nat) nat)) operation))
+                                      (pair (pair (list (pair address nat)) (contract (list (pair (pair address nat) nat))))
                                             (pair (big_map nat nat) (pair nat (big_map address nat))))
                                       operation)
                                    (pair (lambda
@@ -613,8 +611,7 @@
                                             operation)
                                          (pair (lambda (pair address (big_map address (set address))) (big_map address (set address)))
                                                (lambda (pair address (big_map address (set address))) (big_map address (set address))))))))
-                 (pair (or (or (or address
-                                   (pair (list (pair address nat)) (lambda (list (pair (pair address nat) nat)) operation)))
+                 (pair (or (or (or address (pair (list (pair address nat)) (contract (list (pair (pair address nat) nat)))))
                                (or (pair (pair address address) (contract (pair (pair address address) bool))) address))
                            (pair (pair (list (pair nat nat)) bytes) (pair address address)))
                        (pair (big_map address (set address))

@@ -154,7 +154,7 @@ let balance_of
     (r, bal) 
   in
   let requests_2_bals = List.map param.balance_request to_balance in
-  param.balance_view requests_2_bals
+  Operation.transaction requests_2_bals 0mutez param.balance_view
 
 let transfer_balance
     (from_key : nat) (to_key : nat) (amt : nat) (s : balances) : balances = 
