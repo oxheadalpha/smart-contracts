@@ -14,7 +14,7 @@
   less tokens then burn amount.
 *)
 
-#include "multi_token_base.mligo"
+#include "multi_token_impl.mligo"
 
 type create_token_param = {
   token_id : nat;
