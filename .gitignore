@@ -1,3 +1,4 @@
 *.pp.mligo
+*.pp.ligo
 node_modules
 .DS_Store
