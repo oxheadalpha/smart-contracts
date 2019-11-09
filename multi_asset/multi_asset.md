@@ -9,11 +9,11 @@ for each token type or collection. Multi-asset contract manages multiple token t
 A new token can be created and configured without redeploying the contract. Both
 fungible and non-fungible tokens can be stored in the same smart-contract.
 
-New functionality is possible with this design such as transferring multiple
+This design enables new functionality, such as the transfer of multiple
 token types at once, saving on transaction costs. Trading (escrow / atomic swaps)
-of multiple tokens can be built on top of this standard and it removes the need
+of multiple tokens can be built on top of this standard as it removes the need
 to “approve” individual token contracts separately. It is also easy to describe
-and mix multiple fungible or non-fungible token types in a single contract.
+and mix multiple fungible or non-fungible token types within a single contract.
 
 ## Multi-asset contract overview
 
@@ -23,8 +23,8 @@ be represented as ID ranges. **Owner** - Tezos address which can hold tokens.
 **Operator** must be approved to manage all tokens held by the owner to make a
 transfer from the owner account.
 
-Destination address for the token transfer operation MUST implement `multi_token_receiver`
-interface, which MUST be called for transfer/mint transactions. Destination address
+The destination address for a token transfer operation MUST implement the `multi_token_receiver`
+interface, which MUST be called for transfer/mint transactions. The destination address
 may reject receiving tokens by generating failure. This is considered a safety
 feature ("safe transfer") to prevent unrecoverable tokens if sent to an address
 that does not expect to receive tokens.
@@ -37,7 +37,7 @@ part of multi-asset contract specification. Their implementation may differ depe
 on the particular business use-case. This specification focuses on token transfer
 logic only.
 
-## Difference between Ethereum ERC-1155 and Tezos multi-asset contracts
+## Difference between Ethereum ERC-1155 and the Tezos Multi-asset Contract
 
 Since Tezos and Michelson differ from Ethereum/Solidity, the following modifications
 are made:
@@ -65,8 +65,7 @@ specification.
 section) which are different from Ethereum ECR-1155. We believe that the new names
 better convey meaning of the operations.
 8. Tezos does not have equivalent of Ethereum view function (although there is a
-proposal to add one to Tezos/Michelson). `balance_of` entry point is specified using
-continuation style view pattern, but can be converted into view in future.
+[proposal](https://forum.tezosagora.org/t/adding-read-only-calls/1227 to add one to Tezos/Michelson). `balance_of` entry point is specified using continuation style view pattern, but can be converted into view in future.
 9. ERC-1155 `safeBatchTransferFrom` entry point receives two separate arrays of
 token ids and transfer amounts. Both caller and implementor of the contract are
 responsible to match values from those arrays and enforce their consistency. Tezos
