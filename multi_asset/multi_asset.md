@@ -221,11 +221,19 @@ and balance.
 #### Approval
 
 The entry points `Add_operator`/`Remove_operator` allow an operator to manage
-one’s entire set of tokens on behalf of the approver. To permit approval of a
+one’s entire set of tokens on behalf of the approver. To approve management of a
 subset of token IDs, an interface such as
 [ERC-1761 Scoped Approval Interface](https://eips.ethereum.org/EIPS/eip-1761)
 is suggested. The counterpart `Is_operator` provides introspection into
 any status set by ``Add_operator`/`Remove_operator`.
+
+Only token owner contract can invoke `Add_operator`/`Remove_operator` entry
+points on multi asset contract and manage its operators. Token owner contract
+MUST implement `multi_token_receiver` interface. If the owner does not implement
+`multi_token_receiver` interface, `Add_operator` SHOULD fail.
+
+The concrete implementation of multi asset contract can have custom entry points
+which allow administrator of the contract to manage operators for token owners.
 
 An owner SHOULD be assumed to always be able to operate on their own tokens
 regardless of approval status, so SHOULD NOT have to call `Add_operator`
@@ -266,3 +274,29 @@ implement the `multi_token_receiver`.
 
 Only non-standard transfer functions MAY allow tokens to be sent to a recipient
 contract that does NOT implement the necessary `multi_token_receiver` hook functions.
+
+#### Receiver contract implementation guidelines
+
+This specification focuses on token transfer logic only. Implementation of the
+actual token receiver contract may differ depending on the particular business
+use-case. However, potential locking of tokens on the receiver account must be
+taken into consideration.
+
+By default, tokens transfer **from** a receiver to another contract can be
+initiated only by the receiver itself. If receiver contract implementation does
+not allow to initiate such transfer and/or add operators (which also can be
+performed only by the receiver), tokens will remain locked on such receiver forever.
+
+There are a few possible ways to enable transferring tokens from a receiver
+contract. The concrete implementation of multi asset contract and/or receiver
+contract may use the following strategies or their combination:
+
+  1. Add administrative entry points to multi asset contract to allow burn
+  tokens for any token owner.
+  2. Implement forwarding token receiver contract. `On_multi_tokens_received`
+  implementation should initiate another transfer operation which will forward
+  all received tokens to another owner.
+  3. Add other entry points to the receiver contract which can initiate transfer
+  operation from the receiver.
+  4. Add other entry points to the receiver contract which can add operators on
+  behalf of the receiver.
