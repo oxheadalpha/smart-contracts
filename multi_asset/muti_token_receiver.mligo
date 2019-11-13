@@ -5,5 +5,14 @@
 
 #include "multi_token_interface.mligo"
 
+
+(*
+  This receiver implementation is WIP and may result in locked tokens.
+  The implementation needs to include entry points to either initiate tokens
+  transfer from this contract and/or add operators who can transfer tokens on
+  behalf of this contract.
+  Adding additional non `multi_token_receiver` entry points are pending on
+  LIGO support for multi entry points
+*)
 let receiver_stub (p : multi_token_receiver) (s : unit) : (operation list) * unit =
   (([] : operation list), unit)
