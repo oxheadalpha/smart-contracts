@@ -16,3 +16,4 @@
 *)
 let receiver_stub (p : multi_token_receiver) (s : unit) : (operation list) * unit =
   (([] : operation list), unit)
+  
