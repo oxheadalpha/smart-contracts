@@ -29,7 +29,14 @@ let add_operator (operator : address) (approvals : approvals) : approvals =
   let new_operators =
     match Map.find_opt sender approvals with
     | Some(ops) -> Set.add operator ops
-    | None      -> Set.literal [operator]
+    | None      ->
+        (* 
+          Check that sender implements `multi_token_receiver` interface.
+          If not, `get_contract` will fail
+        *)
+        let receiver : multi_token_receiver contract = 
+          Operation.get_contract sender in
+        Set.literal [operator]
   in
   Map.update sender (Some new_operators) approvals
 

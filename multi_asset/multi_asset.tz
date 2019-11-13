@@ -40,10 +40,14 @@
              SENDER ;
              GET ;
              IF_NONE
-               { DIP { DUP } ;
-                 SWAP ;
+               { SENDER ;
+                 CONTRACT (pair (pair (list (pair nat nat)) bytes) (pair (option address) address)) ;
+                 IF_NONE { PUSH string "bad address for get_contract" ; FAILWITH } {} ;
+                 DIP 2 { DUP } ;
+                 DIG 2 ;
                  DIP { EMPTY_SET address ; PUSH bool True } ;
-                 UPDATE }
+                 UPDATE ;
+                 DIP { DROP } }
                { DIP 2 { DUP } ;
                  DIG 2 ;
                  DIP { DUP ; PUSH bool True } ;
