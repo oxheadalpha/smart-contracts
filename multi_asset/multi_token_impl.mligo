@@ -130,19 +130,6 @@ type owner_key_result = {
   key : nat;
   owners: owner_lookup;
 }
-
-(* 
-  Makes the key to access balance and if owner does not have an id, creates
-  a new id and adds it to an owner_lookup 
-*)
-let make_balance_key_ensure 
-    (owner : address) (token_id : nat) (s : owner_lookup) : owner_key_result = 
-  let o = ensure_owner_id owner s in
-  let key = make_balance_key_impl o.id token_id in
-  {
-    key =key;
-    owners = o.owners;
-  }
  
 let get_balance (key : nat) (b : balances) : nat =
   let bal : nat option = Map.find_opt key b in
