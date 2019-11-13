@@ -275,20 +275,23 @@ implement the `multi_token_receiver`.
 Only non-standard transfer functions MAY allow tokens to be sent to a recipient
 contract that does NOT implement the necessary `multi_token_receiver` hook functions.
 
-#### Receiver contract implementation guidelines
+#### Token owner contract implementation guidelines
 
 This specification focuses on token transfer logic only. Implementation of the
 actual token receiver contract may differ depending on the particular business
 use-case. However, potential locking of tokens on the receiver account must be
 taken into consideration.
 
-By default, tokens transfer **from** a receiver to another contract can be
-initiated only by the receiver itself. If receiver contract implementation does
-not allow to initiate such transfer and/or add operators (which also can be
-performed only by the receiver), tokens will remain locked on such receiver forever.
+Token owner contract MUST implement `multi_token_receiver` interface to receive
+tokens.
 
-There are a few possible ways to enable transferring tokens from a receiver
-contract. The concrete implementation of multi asset contract and/or receiver
+By default, transfer **from** a token owner to another contract can be
+initiated only by the owner itself. If owner contract implementation does
+not allow to initiate such transfer and/or add operators (which also can be
+performed only by the owner), tokens will remain locked on such contract forever.
+
+There are a few possible ways to enable transferring tokens from a token owner
+contract. The concrete implementation of multi asset contract and/or owner
 contract may use the following strategies or their combination:
 
   1. Add administrative entry points to multi asset contract to allow burn
@@ -296,7 +299,7 @@ contract may use the following strategies or their combination:
   2. Implement forwarding token receiver contract. `On_multi_tokens_received`
   implementation should initiate another transfer operation which will forward
   all received tokens to another owner.
-  3. Add other entry points to the receiver contract which can initiate transfer
-  operation from the receiver.
-  4. Add other entry points to the receiver contract which can add operators on
-  behalf of the receiver.
+  3. Add other entry points to the owner contract which can initiate transfer
+  operation from the owner.
+  4. Add other entry points to the owner contract which can add operators on
+  behalf of the owner.
