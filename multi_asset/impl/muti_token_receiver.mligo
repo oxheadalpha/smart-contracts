@@ -3,7 +3,7 @@
   accepts transfer of any token.
 *)
 
-#include "multi_token_interface.mligo"
+#include "../multi_token_interface.mligo"
 
 
 (*

@@ -19,7 +19,7 @@
   aggregate data (like list all token types held by the owner).
 *)
 
-#include "multi_token_interface.mligo"
+#include "../multi_token_interface.mligo"
 
 (*  owner -> operator set *)
 type approvals = (address, address set) big_map
@@ -251,4 +251,3 @@ let multi_token_main
   | Is_operator p  ->
       let op = is_operator p s.approvals in
       ([op], s)
-
