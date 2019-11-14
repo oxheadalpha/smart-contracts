@@ -306,10 +306,11 @@ contract may use the following strategies or their combination:
 
   1. Add administrative entry points to multi asset contract to allow burn
   tokens for any token owner.
-  2. Implement forwarding token receiver contract. `On_multi_tokens_received`
-  implementation should initiate another transfer operation which will forward
-  all received tokens to another owner.
-  3. Add other entry points to the owner contract which can initiate transfer
+  2. Add other entry points to the owner contract which can initiate transfer
   operation from the owner.
-  4. Add other entry points to the owner contract which can add operators on
+  3. Add other entry points to the owner contract which can add operators on
   behalf of the owner.
+  4. Implement forwarding token receiver contract. `On_multi_tokens_received`
+  implementation should initiate another transfer operation which will forward
+  all received tokens to another owner. Another owner needs to address token
+  locking issue as well.
