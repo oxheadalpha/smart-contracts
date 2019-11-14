@@ -29,8 +29,9 @@ may reject receiving tokens by generating failure. This is considered a safety
 feature ("safe transfer") to prevent unrecoverable tokens if sent to an address
 that does not expect to receive tokens.
 
-Multi-asset contract supports atomic batch transfer of multiple tokens between two
-accounts.
+Multi-asset contract supports atomic batch transfer of multiple tokens between
+two accounts. Either all transfers in a batch are successful or all of the transfers
+are discarded.
 
 Administrative operations to create new token types, mint and burn tokens are not
 part of multi-asset contract specification. Their implementation may differ depending
