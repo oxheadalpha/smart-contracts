@@ -19,7 +19,7 @@
   aggregate data (like list all token types held by the owner).
 *)
 
-#include "multi_token_interface.mligo"
+#include "../multi_token_interface.mligo"
 
 (*  owner -> operator set *)
 type approvals = (address, address set) big_map
@@ -29,7 +29,14 @@ let add_operator (operator : address) (approvals : approvals) : approvals =
   let new_operators =
     match Map.find_opt sender approvals with
     | Some(ops) -> Set.add operator ops
-    | None      -> Set.literal [operator]
+    | None      ->
+        (* 
+          Check that sender implements `multi_token_receiver` interface.
+          If not, `get_contract` will fail
+        *)
+        let receiver : multi_token_receiver contract = 
+          Operation.get_contract sender in
+        Set.literal [operator]
   in
   Map.update sender (Some new_operators) approvals
 
@@ -123,19 +130,6 @@ type owner_key_result = {
   key : nat;
   owners: owner_lookup;
 }
-
-(* 
-  Makes the key to access balance and if owner does not have an id, creates
-  a new id and adds it to an owner_lookup 
-*)
-let make_balance_key_ensure 
-    (owner : address) (token_id : nat) (s : owner_lookup) : owner_key_result = 
-  let o = ensure_owner_id owner s in
-  let key = make_balance_key_impl o.id token_id in
-  {
-    key =key;
-    owners = o.owners;
-  }
  
 let get_balance (key : nat) (b : balances) : nat =
   let bal : nat option = Map.find_opt key b in
@@ -257,4 +251,3 @@ let multi_token_main
   | Is_operator p  ->
       let op = is_operator p s.approvals in
       ([op], s)
-
