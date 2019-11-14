@@ -212,6 +212,15 @@ that occurred during the transaction in the order submitted.
 * A contract MAY skip calling the `On_multi_tokens_received` hook function if the
 transfer operation is transferring the token to itself.
 
+When `On_multi_tokens_received` is invoked, the receiver can either accept tokens
+by successfully finishing execution or reject tokens by failing. If at least one
+receiver rejects tokens, the whole transaction fails.
+
+This specification does not put any restrictions on what receiver can do when
+`On_multi_tokens_received` is invoked. It can update its storage and/or initiate
+calls to other contracts, including initiation of another transfer(s) by
+`multi_token` contract.
+
 #### `Balance_of`
 
 Get the balance of multiple account/token pairs. Accepts a list of `balance_request`s
