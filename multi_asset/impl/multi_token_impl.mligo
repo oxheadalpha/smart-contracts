@@ -112,7 +112,7 @@ let ensure_owner_id (owner : address) (s : owner_lookup) : owner_result =
   | None    -> add_owner owner s
 
 let get_owner_id (owner: address) (s: owner_lookup) : nat =
-   let owner_id = Map.find_opt owner s.owners in
+  let owner_id = Map.find_opt owner s.owners in
   match owner_id with
   | None    -> (failwith("No such owner") : nat)
   | Some id -> id
@@ -240,13 +240,13 @@ let multi_token_main
       } in
       (([] : operation list), new_s)
 
-    | Remove_operator o ->
-      let new_approvals = remove_operator o s.approvals in
-      let new_s = {
-        approvals = new_approvals;
-        balance_storage = s.balance_storage;
-      } in
-      (([] : operation list), new_s)
+  | Remove_operator o ->
+    let new_approvals = remove_operator o s.approvals in
+    let new_s = {
+      approvals = new_approvals;
+      balance_storage = s.balance_storage;
+    } in
+    (([] : operation list), new_s)
 
   | Is_operator p  ->
       let op = is_operator p s.approvals in

@@ -99,7 +99,7 @@ let mint_tokens_impl
 
   let new_bals = List.fold param.batch s.balances make_transfer in
   {
-     owners = owner.owners;
+    owners = owner.owners;
     balances = new_bals;
   }
 
