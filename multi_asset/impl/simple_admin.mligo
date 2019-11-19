@@ -189,6 +189,6 @@ let simple_admin
         let new_bals = burn_tokens param ctx.balance_storage in
         let new_ctx = {
           admin_storage = ctx.admin_storage;
-          balance_storage = new_bals
+          balance_storage = new_bals;
         } in
         (([] : operation list), new_ctx)
