@@ -7,7 +7,7 @@
     1. Change administrator, 
     2. Create new toke types,
     3. Mint and burn tokens to some existing or new owner account,
-    pause the contract.
+    4. pause the contract.
 
   Mint operation performs safety check as specified for `multi_token`
   transfer entry points. Burn operation fails if the owner holds
