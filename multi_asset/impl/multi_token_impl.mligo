@@ -22,12 +22,12 @@
 #include "../multi_token_interface.mligo"
 
 (*  owner -> operator set *)
-type approvals = (address, address set) big_map
+type operators = (address, address set) big_map
 
 
-let add_operator (operator : address) (approvals : approvals) : approvals =
+let add_operator (operator : address) (operators : operators) : operators =
   let new_operators =
-    match Map.find_opt sender approvals with
+    match Map.find_opt sender operators with
     | Some(ops) -> Set.add operator ops
     | None      ->
         (* 
@@ -38,11 +38,11 @@ let add_operator (operator : address) (approvals : approvals) : approvals =
           Operation.get_contract sender in
         Set.literal [operator]
   in
-  Map.update sender (Some new_operators) approvals
+  Map.update sender (Some new_operators) operators
 
-let remove_operator (operator : address) (approvals : approvals) : approvals =
+let remove_operator (operator : address) (operators : operators) : operators =
   let new_operators_opt =
-    match Map.find_opt sender approvals with
+    match Map.find_opt sender operators with
     | Some(ops) -> 
         let ops = Set.remove operator ops in
         if Set.size ops = 0n
@@ -50,12 +50,12 @@ let remove_operator (operator : address) (approvals : approvals) : approvals =
         else Some(ops)
     | None      -> (None : address set option)
   in
-  Map.update sender new_operators_opt approvals
+  Map.update sender new_operators_opt operators
   
 let is_operator
-    (param : is_operator_param) (approvals : approvals) : operation = 
+    (param : is_operator_param) (operators : operators) : operation = 
   let req = param.is_operator_request in
-  let operators = Map.find_opt req.owner approvals in
+  let operators = Map.find_opt req.owner operators in
   let result = 
     match operators with
     | None      -> false
@@ -197,11 +197,11 @@ let transfer
   let ops = transfer_safe_check param in
   (ops, new_store)
 
-let approved_transfer_from (from_ : address) (approvals : approvals) : unit =
+let approved_transfer_from (from_ : address) (operators : operators) : unit =
   if sender = from_
   then unit
   else 
-    let ops = Map.find_opt sender approvals in
+    let ops = Map.find_opt sender operators in
     let is_op = match ops with
       | None -> (failwith ("operator not approved to transfer tokens") : bool)
       | Some o -> Set.mem from_ o 
@@ -212,7 +212,7 @@ let approved_transfer_from (from_ : address) (approvals : approvals) : unit =
     
 
 type multi_token_storage = {
-  approvals : approvals;
+  operators : operators;
   balance_storage: balance_storage;
 }
 
@@ -220,10 +220,10 @@ let multi_token_main
     (param : multi_token) (s : multi_token_storage) : (operation  list) * multi_token_storage =
   match param with
   | Transfer p ->
-      let u : unit = approved_transfer_from p.from_ s.approvals in
+      let u : unit = approved_transfer_from p.from_ s.operators in
       let ops_bstore =transfer p s.balance_storage in
       let new_s = {
-        approvals = s.approvals;
+        operators = s.operators;
         balance_storage = ops_bstore.1;
       } in
       (ops_bstore.0, new_s)
@@ -233,21 +233,21 @@ let multi_token_main
       ([op], s)
 
   | Add_operator o ->
-      let new_approvals = add_operator o s.approvals in
+      let new_operators = add_operator o s.operators in
       let new_s = {
-        approvals = new_approvals;
+        operators = new_operators;
         balance_storage = s.balance_storage;
       } in
       (([] : operation list), new_s)
 
   | Remove_operator o ->
-    let new_approvals = remove_operator o s.approvals in
+    let new_operators = remove_operator o s.operators in
     let new_s = {
-      approvals = new_approvals;
+      operators = new_operators;
       balance_storage = s.balance_storage;
     } in
     (([] : operation list), new_s)
 
   | Is_operator p  ->
-      let op = is_operator p s.approvals in
+      let op = is_operator p s.operators in
       ([op], s)

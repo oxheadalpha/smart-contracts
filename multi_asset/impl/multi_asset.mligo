@@ -35,7 +35,7 @@ let multi_asset_main
       let new_s = {
         admin = new_ctx.admin_storage;
         assets = {
-          approvals = s.assets.approvals;
+          operators = s.assets.operators;
           balances = new_ctx.balance_storage;
         };
       } in 
