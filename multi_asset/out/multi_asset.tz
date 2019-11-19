@@ -589,7 +589,7 @@
                   GET ;
                   DUP ;
                   IF_NONE
-                    { PUSH string "operator not approved to transfer tokens" ; FAILWITH }
+                    { PUSH bool False }
                     { DIP 3 { DUP } ; DIG 3 ; DIP { DUP } ; MEM ; DIP { DROP } } ;
                   DUP ;
                   IF { UNIT }

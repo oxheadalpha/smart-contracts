@@ -203,7 +203,7 @@ let approved_transfer_from (from_ : address) (operators : operators) : unit =
   else 
     let ops = Map.find_opt sender operators in
     let is_op = match ops with
-      | None -> (failwith ("operator not approved to transfer tokens") : bool)
+      | None -> false
       | Some o -> Set.mem from_ o 
     in
     if is_op
