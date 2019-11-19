@@ -214,7 +214,7 @@
              GT ;
              IF { PUSH string "provided token ID is out of allowed range" ; FAILWITH }
                 { DUP ;
-                  DIP { DIP { DUP } ; SWAP ; DIP { DIP 3 { DUP } ; DIG 3 } ; MUL } ;
+                  DIP { DIP { DUP } ; SWAP ; DIP { DIP 3 { DUP } ; DIG 3 } ; ADD } ;
                   ADD } ;
              DIP { DROP 5 } } ;
          SWAP ;

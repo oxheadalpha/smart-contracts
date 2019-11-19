@@ -120,7 +120,7 @@ let get_owner_id (owner: address) (s: owner_lookup) : nat =
 let make_balance_key_impl (owner_id : nat) (token_id : nat) : nat =
   if token_id > max_tokens
   then (failwith("provided token ID is out of allowed range") : nat)
-  else token_id + (owner_id * owner_offset)
+  else token_id + (owner_id + owner_offset)
 
 let make_balance_key (owner : address) (token_id : nat) (s : owner_lookup) : nat =
   let owner_id = get_owner_id owner s in
