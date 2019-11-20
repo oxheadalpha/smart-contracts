@@ -133,10 +133,12 @@ let burn_tokens
       | Some b  -> b
       | None    -> 0n
     in
-    if old_bal < t.amount
-    then (failwith("Insufficient funds") : balances)
-    else
-      Map.update from_key (Michelson.is_nat ( old_bal - t.amount )) bals
+    match Michelson.is_nat ( old_bal - t.amount ) with
+    | None -> (failwith("Insufficient funds") : balances)
+    | Some new_bal -> 
+        if new_bal = 0n
+        then Map.remove from_key bals
+        else Map.update from_key (Some new_bal) bals
     in
 
   let new_bals = List.fold make_burn param.batch s.balances in

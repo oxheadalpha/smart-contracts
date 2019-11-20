@@ -1120,17 +1120,24 @@
                     IF_NONE { PUSH nat 0 } { DUP ; DIP { DROP } } ;
                     DUP ;
                     DIP { DIP 2 { DUP } ; DIG 2 ; CAR } ;
-                    COMPARE ;
-                    LT ;
-                    IF { PUSH string "Insufficient funds" ; FAILWITH }
-                       { DIP { DUP } ;
-                         SWAP ;
-                         DIP { DUP ;
-                               DIP { DIP 2 { DUP } ; DIG 2 ; CAR } ;
-                               SUB ;
-                               ISNAT ;
-                               DIP { DIP 3 { DUP } ; DIG 3 } } ;
-                         UPDATE } ;
+                    SUB ;
+                    ISNAT ;
+                    IF_NONE
+                      { PUSH string "Insufficient funds" ; FAILWITH }
+                      { DUP ;
+                        PUSH nat 0 ;
+                        SWAP ;
+                        COMPARE ;
+                        EQ ;
+                        IF { DIP 2 { DUP } ;
+                             DIG 2 ;
+                             DIP { DIP 4 { DUP } ; DIG 4 ; NONE nat } ;
+                             UPDATE }
+                           { DIP 2 { DUP } ;
+                             DIG 2 ;
+                             DIP { DUP ; SOME ; DIP { DIP 4 { DUP } ; DIG 4 } } ;
+                             UPDATE } ;
+                        DIP { DROP } } ;
                     DIP { DROP 5 } } ;
              DUP ;
              DIP { DIP 2 { DUP } ; DIG 2 ; CDR } ;
