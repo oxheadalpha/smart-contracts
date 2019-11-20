@@ -136,7 +136,7 @@ let burn_tokens
     if old_bal < t.amount
     then (failwith("Insufficient funds") : balances)
     else
-      Map.update from_key (Some(abs(old_bal - t.amount))) bals
+      Map.update from_key (Michelson.is_nat ( old_bal - t.amount )) bals
     in
 
   let new_bals = List.fold make_burn param.batch s.balances in

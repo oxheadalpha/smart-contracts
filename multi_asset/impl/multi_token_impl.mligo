@@ -153,15 +153,15 @@ let balance_of
 let transfer_balance
     (from_key : nat) (to_key : nat) (amt : nat) (s : balances) : balances = 
   let from_bal = get_balance from_key s in
-  if from_bal < amt
-  then (failwith ("Insufficient balance") : balances)
-  else
-    let fbal = abs (from_bal - amt) in
+  match Michelson.is_nat ( from_bal - amt ) with
+  | None -> (failwith ("Insufficient balance") : balances)
+  | Some fbal ->
     let s1 = 
       if fbal = 0n 
       then Map.remove from_key s
       else Map.update from_key (Some fbal) s 
     in
+
     let to_bal = get_balance to_key s1 in
     let tbal = to_bal + amt in
     let s2 = Map.update to_key (Some tbal) s1 in
