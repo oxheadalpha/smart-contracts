@@ -32,10 +32,10 @@ let add_operator (operator : address) (operators : operators) : operators =
     | None      ->
         (* 
           Check that sender implements `multi_token_receiver` interface.
-          If not, `get_contract` will fail
+          If not, `get_entrypoint` will fail
         *)
         let receiver : multi_token_receiver contract = 
-          Operation.get_contract sender in
+          Operation.get_entrypoint "%multi_token_receiver" sender in
         Set.literal [operator]
   in
   Map.update sender (Some new_operators) operators
@@ -170,7 +170,7 @@ let transfer_balance
 let transfer_safe_check
     (param : transfer_param) : operation list =
   let receiver : multi_token_receiver contract = 
-    Operation.get_contract param.to_ in
+    Operation.get_entrypoint "%multi_token_receiver" param.to_ in
   let p : on_multi_tokens_received_param = {
       operator = sender;
       from_ = Some param.from_;

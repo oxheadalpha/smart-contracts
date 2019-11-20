@@ -105,7 +105,7 @@ let mint_tokens_impl
 
 let mint_safe_check (param : mint_tokens_param) : operation list =
   let receiver : multi_token_receiver contract =
-    Operation.get_contract param.owner in
+    Operation.get_entrypoint "%multi_token_receiver" param.owner in
   let p : on_multi_tokens_received_param = {
     operator = sender;
     from_ = (None : address option);

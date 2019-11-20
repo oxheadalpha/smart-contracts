@@ -5,6 +5,9 @@
 
 #include "../multi_token_interface.mligo"
 
+type receiver =
+  | Multi_token_receiver of multi_token_receiver
+  | Foo of unit
 
 (*
   This receiver implementation is WIP and may result in locked tokens.
@@ -14,6 +17,6 @@
   Adding additional non `multi_token_receiver` entry points are pending on
   LIGO support for multi entry points
 *)
-let receiver_stub (p : multi_token_receiver) (s : unit) : (operation list) * unit =
+let receiver_stub (p : receiver) (s : unit) : (operation list) * unit =
   (([] : operation list), unit)
   

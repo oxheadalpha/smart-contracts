@@ -1,5 +1,0 @@
-{ parameter
-    (pair (pair (list %batch (pair (nat %amount) (nat %token_id))) (bytes %data))
-          (pair (option %from_ address) (address %operator))) ;
-  storage unit ;
-  code { UNIT ; NIL operation ; PAIR ; DIP { DROP } } }
