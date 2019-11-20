@@ -147,7 +147,7 @@ let balance_of
     let bal = get_balance_req r s in
     (r, bal) 
   in
-  let requests_2_bals = List.map param.balance_request to_balance in
+  let requests_2_bals = List.map to_balance param.balance_request in
   Operation.transaction requests_2_bals 0mutez param.balance_view
 
 let transfer_balance
@@ -189,7 +189,7 @@ let transfer
     let to_key  = make_balance_key_impl to_o.id t.token_id in
     transfer_balance from_key to_key t.amount bals in 
 
-  let new_balances = List.fold param.batch s.balances make_transfer in
+  let new_balances = List.fold make_transfer param.batch s.balances  in
   let new_store: balance_storage = {
     owners = to_o.owners;
     balances = new_balances;

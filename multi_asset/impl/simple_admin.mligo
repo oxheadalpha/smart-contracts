@@ -97,7 +97,7 @@ let mint_tokens_impl
     let old_bal = get_balance to_key bals in
     Map.update to_key (Some(old_bal + t.amount)) bals in
 
-  let new_bals = List.fold param.batch s.balances make_transfer in
+  let new_bals = List.fold make_transfer param.batch s.balances in
   {
     owners = owner.owners;
     balances = new_bals;
@@ -139,7 +139,7 @@ let burn_tokens
       Map.update from_key (Some(abs(old_bal - t.amount))) bals
     in
 
-  let new_bals = List.fold param.batch s.balances make_burn in
+  let new_bals = List.fold make_burn param.batch s.balances in
   {
     owners = s.owners;
     balances = new_bals;

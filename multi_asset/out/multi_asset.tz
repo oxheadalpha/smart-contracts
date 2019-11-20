@@ -41,7 +41,9 @@
              GET ;
              IF_NONE
                { SENDER ;
-                 CONTRACT (pair (pair (list (pair nat nat)) bytes) (pair (option address) address)) ;
+                 CONTRACT
+                   (pair (pair (list %batch (pair (nat %amount) (nat %token_id))) (bytes %data))
+                         (pair (option %from_ address) (address %operator))) ;
                  IF_NONE { PUSH string "bad address for get_contract" ; FAILWITH } {} ;
                  DIP 2 { DUP } ;
                  DIG 2 ;
@@ -90,7 +92,8 @@
              UPDATE ;
              DIP { DROP 4 } } ;
          LAMBDA
-           (pair (pair (pair address address) (contract (pair (pair address address) bool)))
+           (pair (pair (pair %is_operator_request (address %operator) (address %owner))
+                       (contract %is_operator_view (pair (pair (address %operator) (address %owner)) bool)))
                  (big_map address (set address)))
            operation
            { DUP ;
@@ -119,8 +122,8 @@
          PUSH nat 4294967295 ;
          PUSH nat 4294967296 ;
          LAMBDA
-           (pair address (pair nat (big_map address nat)))
-           (pair nat (pair nat (big_map address nat)))
+           (pair address (pair (nat %owner_count) (big_map %owners address nat)))
+           (pair (nat %id) (pair %owners (nat %owner_count) (big_map %owners address nat)))
            { DUP ;
              CAR ;
              DIP { DUP } ;
@@ -146,10 +149,10 @@
          DUP ;
          LAMBDA
            (pair (lambda
-                    (pair address (pair nat (big_map address nat)))
-                    (pair nat (pair nat (big_map address nat))))
-                 (pair address (pair nat (big_map address nat))))
-           (pair nat (pair nat (big_map address nat)))
+                    (pair address (pair (nat %owner_count) (big_map %owners address nat)))
+                    (pair (nat %id) (pair %owners (nat %owner_count) (big_map %owners address nat))))
+                 (pair address (pair (nat %owner_count) (big_map %owners address nat))))
+           (pair (nat %id) (pair %owners (nat %owner_count) (big_map %owners address nat)))
            { DUP ;
              CAR ;
              SWAP ;
@@ -178,7 +181,7 @@
          DIP { DIP { DIP { DUP } ; DUP ; DIP { PAIR } ; SWAP } ; SWAP } ;
          SWAP ;
          LAMBDA
-           (pair address (pair nat (big_map address nat)))
+           (pair address (pair (nat %owner_count) (big_map %owners address nat)))
            nat
            { DUP ;
              CAR ;
@@ -225,8 +228,8 @@
          SWAP ;
          LAMBDA
            (pair (pair (lambda (pair nat nat) nat)
-                       (lambda (pair address (pair nat (big_map address nat))) nat))
-                 (pair (pair address nat) (pair nat (big_map address nat))))
+                       (lambda (pair address (pair (nat %owner_count) (big_map %owners address nat))) nat))
+                 (pair (pair address nat) (pair (nat %owner_count) (big_map %owners address nat))))
            nat
            { DUP ;
              CAR ;
@@ -278,8 +281,12 @@
          SWAP ;
          LAMBDA
            (pair (pair (lambda (pair nat (big_map nat nat)) nat)
-                       (lambda (pair (pair address nat) (pair nat (big_map address nat))) nat))
-                 (pair (pair address nat) (pair (big_map nat nat) (pair nat (big_map address nat)))))
+                       (lambda
+                          (pair (pair address nat) (pair (nat %owner_count) (big_map %owners address nat)))
+                          nat))
+                 (pair (pair (address %owner) (nat %token_id))
+                       (pair (big_map %balances nat nat)
+                             (pair %owners (nat %owner_count) (big_map %owners address nat)))))
            nat
            { DUP ;
              CAR ;
@@ -311,10 +318,14 @@
          DUP ;
          LAMBDA
            (pair (lambda
-                    (pair (pair address nat) (pair (big_map nat nat) (pair nat (big_map address nat))))
+                    (pair (pair (address %owner) (nat %token_id))
+                          (pair (big_map %balances nat nat)
+                                (pair %owners (nat %owner_count) (big_map %owners address nat))))
                     nat)
-                 (pair (pair (list (pair address nat)) (contract (list (pair (pair address nat) nat))))
-                       (pair (big_map nat nat) (pair nat (big_map address nat)))))
+                 (pair (pair (list %balance_request (pair (address %owner) (nat %token_id)))
+                             (contract %balance_view (list (pair (pair (address %owner) (nat %token_id)) nat))))
+                       (pair (big_map %balances nat nat)
+                             (pair %owners (nat %owner_count) (big_map %owners address nat)))))
            operation
            { DUP ;
              CAR ;
@@ -427,12 +438,15 @@
          DIP { PAIR } ;
          SWAP ;
          LAMBDA
-           (pair (pair (list (pair nat nat)) bytes) (pair address address))
+           (pair (pair (list %batch (pair (nat %amount) (nat %token_id))) (bytes %data))
+                 (pair (address %from_) (address %to_)))
            (list operation)
            { DUP ;
              CDR ;
              CDR ;
-             CONTRACT (pair (pair (list (pair nat nat)) bytes) (pair (option address) address)) ;
+             CONTRACT
+               (pair (pair (list %batch (pair (nat %amount) (nat %token_id))) (bytes %data))
+                     (pair (option %from_ address) (address %operator))) ;
              IF_NONE { PUSH string "bad address for get_contract" ; FAILWITH } {} ;
              DIP { DUP } ;
              SWAP ;
@@ -454,16 +468,23 @@
          DIP { PAIR } ;
          SWAP ;
          LAMBDA
-           (pair (pair (lambda (pair (pair (list (pair nat nat)) bytes) (pair address address)) (list operation))
+           (pair (pair (lambda
+                          (pair (pair (list %batch (pair (nat %amount) (nat %token_id))) (bytes %data))
+                                (pair (address %from_) (address %to_)))
+                          (list operation))
                        (pair (lambda (pair (pair nat nat) (pair nat (big_map nat nat))) (big_map nat nat))
                              (pair (lambda (pair nat nat) nat)
-                                   (pair (lambda (pair address (pair nat (big_map address nat))) nat)
+                                   (pair (lambda (pair address (pair (nat %owner_count) (big_map %owners address nat))) nat)
                                          (lambda
-                                            (pair address (pair nat (big_map address nat)))
-                                            (pair nat (pair nat (big_map address nat))))))))
-                 (pair (pair (pair (list (pair nat nat)) bytes) (pair address address))
-                       (pair (big_map nat nat) (pair nat (big_map address nat)))))
-           (pair (list operation) (pair (big_map nat nat) (pair nat (big_map address nat))))
+                                            (pair address (pair (nat %owner_count) (big_map %owners address nat)))
+                                            (pair (nat %id) (pair %owners (nat %owner_count) (big_map %owners address nat))))))))
+                 (pair (pair (pair (list %batch (pair (nat %amount) (nat %token_id))) (bytes %data))
+                             (pair (address %from_) (address %to_)))
+                       (pair (big_map %balances nat nat)
+                             (pair %owners (nat %owner_count) (big_map %owners address nat)))))
+           (pair (list operation)
+                 (pair (big_map %balances nat nat)
+                       (pair %owners (nat %owner_count) (big_map %owners address nat))))
            { DUP ;
              CAR ;
              SWAP ;
@@ -602,27 +623,46 @@
          LAMBDA
            (pair (pair (lambda (pair address (big_map address (set address))) unit)
                        (pair (lambda
-                                (pair (pair (pair (list (pair nat nat)) bytes) (pair address address))
-                                      (pair (big_map nat nat) (pair nat (big_map address nat))))
-                                (pair (list operation) (pair (big_map nat nat) (pair nat (big_map address nat)))))
+                                (pair (pair (pair (list %batch (pair (nat %amount) (nat %token_id))) (bytes %data))
+                                            (pair (address %from_) (address %to_)))
+                                      (pair (big_map %balances nat nat)
+                                            (pair %owners (nat %owner_count) (big_map %owners address nat))))
+                                (pair (list operation)
+                                      (pair (big_map %balances nat nat)
+                                            (pair %owners (nat %owner_count) (big_map %owners address nat)))))
                              (pair (lambda
-                                      (pair (pair (list (pair address nat)) (contract (list (pair (pair address nat) nat))))
-                                            (pair (big_map nat nat) (pair nat (big_map address nat))))
+                                      (pair (pair (list %balance_request (pair (address %owner) (nat %token_id)))
+                                                  (contract %balance_view (list (pair (pair (address %owner) (nat %token_id)) nat))))
+                                            (pair (big_map %balances nat nat)
+                                                  (pair %owners (nat %owner_count) (big_map %owners address nat))))
                                       operation)
                                    (pair (lambda
-                                            (pair (pair (pair address address) (contract (pair (pair address address) bool)))
+                                            (pair (pair (pair %is_operator_request (address %operator) (address %owner))
+                                                        (contract %is_operator_view (pair (pair (address %operator) (address %owner)) bool)))
                                                   (big_map address (set address)))
                                             operation)
                                          (pair (lambda (pair address (big_map address (set address))) (big_map address (set address)))
                                                (lambda (pair address (big_map address (set address))) (big_map address (set address))))))))
-                 (pair (or (or (or address (pair (list (pair address nat)) (contract (list (pair (pair address nat) nat)))))
-                               (or (pair (pair address address) (contract (pair (pair address address) bool))) address))
-                           (pair (pair (list (pair nat nat)) bytes) (pair address address)))
-                       (pair (pair (big_map nat nat) (pair nat (big_map address nat)))
-                             (big_map address (set address)))))
+                 (pair (or (or (or (address %add_operator)
+                                   (pair %balance_of
+                                      (list %balance_request (pair (address %owner) (nat %token_id)))
+                                      (contract %balance_view (list (pair (pair (address %owner) (nat %token_id)) nat)))))
+                               (or (pair %is_operator
+                                      (pair %is_operator_request (address %operator) (address %owner))
+                                      (contract %is_operator_view (pair (pair (address %operator) (address %owner)) bool)))
+                                   (address %remove_operator)))
+                           (pair %transfer
+                              (pair (list %batch (pair (nat %amount) (nat %token_id))) (bytes %data))
+                              (pair (address %from_) (address %to_))))
+                       (pair (pair %balance_storage
+                                (big_map %balances nat nat)
+                                (pair %owners (nat %owner_count) (big_map %owners address nat)))
+                             (big_map %operators address (set address)))))
            (pair (list operation)
-                 (pair (pair (big_map nat nat) (pair nat (big_map address nat)))
-                       (big_map address (set address))))
+                 (pair (pair %balance_storage
+                          (big_map %balances nat nat)
+                          (pair %owners (nat %owner_count) (big_map %owners address nat)))
+                       (big_map %operators address (set address))))
            { DUP ;
              CAR ;
              SWAP ;
@@ -753,8 +793,9 @@
                SWAP } ;
          SWAP ;
          LAMBDA
-           (pair address (pair (pair address bool) (big_map nat string)))
-           (pair (pair address bool) (big_map nat string))
+           (pair address
+                 (pair (pair (address %admin) (bool %paused)) (big_map %tokens nat string)))
+           (pair (pair (address %admin) (bool %paused)) (big_map %tokens nat string))
            { DUP ;
              CAR ;
              DIP { DUP } ;
@@ -769,8 +810,8 @@
              DIP { DROP 3 } } ;
          SWAP ;
          LAMBDA
-           (pair bool (pair (pair address bool) (big_map nat string)))
-           (pair (pair address bool) (big_map nat string))
+           (pair bool (pair (pair (address %admin) (bool %paused)) (big_map %tokens nat string)))
+           (pair (pair (address %admin) (bool %paused)) (big_map %tokens nat string))
            { DUP ;
              CAR ;
              DIP { DUP } ;
@@ -786,8 +827,9 @@
              DIP { DROP 3 } } ;
          SWAP ;
          LAMBDA
-           (pair (pair string nat) (pair (pair address bool) (big_map nat string)))
-           (pair (pair address bool) (big_map nat string))
+           (pair (pair (string %descriptor) (nat %token_id))
+                 (pair (pair (address %admin) (bool %paused)) (big_map %tokens nat string)))
+           (pair (pair (address %admin) (bool %paused)) (big_map %tokens nat string))
            { DUP ;
              CAR ;
              DIP { DUP } ;
@@ -844,11 +886,15 @@
                        (pair (lambda (pair nat (big_map nat nat)) nat)
                              (pair (lambda (pair nat nat) nat)
                                    (lambda
-                                      (pair address (pair nat (big_map address nat)))
-                                      (pair nat (pair nat (big_map address nat)))))))
-                 (pair (pair (pair (pair (list (pair nat nat)) bytes) address) (big_map nat string))
-                       (pair (big_map nat nat) (pair nat (big_map address nat)))))
-           (pair (big_map nat nat) (pair nat (big_map address nat)))
+                                      (pair address (pair (nat %owner_count) (big_map %owners address nat)))
+                                      (pair (nat %id) (pair %owners (nat %owner_count) (big_map %owners address nat)))))))
+                 (pair (pair (pair (pair (list %batch (pair (nat %amount) (nat %token_id))) (bytes %data))
+                                   (address %owner))
+                             (big_map nat string))
+                       (pair (big_map %balances nat nat)
+                             (pair %owners (nat %owner_count) (big_map %owners address nat)))))
+           (pair (big_map %balances nat nat)
+                 (pair %owners (nat %owner_count) (big_map %owners address nat)))
            { DUP ;
              CAR ;
              SWAP ;
@@ -922,11 +968,14 @@
          APPLY ;
          DUP ;
          LAMBDA
-           (pair (pair (list (pair nat nat)) bytes) address)
+           (pair (pair (list %batch (pair (nat %amount) (nat %token_id))) (bytes %data))
+                 (address %owner))
            (list operation)
            { DUP ;
              CDR ;
-             CONTRACT (pair (pair (list (pair nat nat)) bytes) (pair (option address) address)) ;
+             CONTRACT
+               (pair (pair (list %batch (pair (nat %amount) (nat %token_id))) (bytes %data))
+                     (pair (option %from_ address) (address %operator))) ;
              IF_NONE { PUSH string "bad address for get_contract" ; FAILWITH } {} ;
              DIP { DUP } ;
              SWAP ;
@@ -948,15 +997,26 @@
          DIP { PAIR } ;
          SWAP ;
          LAMBDA
-           (pair (pair (lambda (pair (pair (list (pair nat nat)) bytes) address) (list operation))
+           (pair (pair (lambda
+                          (pair (pair (list %batch (pair (nat %amount) (nat %token_id))) (bytes %data))
+                                (address %owner))
+                          (list operation))
                        (lambda
-                          (pair (pair (pair (pair (list (pair nat nat)) bytes) address) (big_map nat string))
-                                (pair (big_map nat nat) (pair nat (big_map address nat))))
-                          (pair (big_map nat nat) (pair nat (big_map address nat)))))
-                 (pair (pair (pair (pair (list (pair nat nat)) bytes) address)
-                             (pair (pair address bool) (big_map nat string)))
-                       (pair (big_map nat nat) (pair nat (big_map address nat)))))
-           (pair (list operation) (pair (big_map nat nat) (pair nat (big_map address nat))))
+                          (pair (pair (pair (pair (list %batch (pair (nat %amount) (nat %token_id))) (bytes %data))
+                                            (address %owner))
+                                      (big_map nat string))
+                                (pair (big_map %balances nat nat)
+                                      (pair %owners (nat %owner_count) (big_map %owners address nat))))
+                          (pair (big_map %balances nat nat)
+                                (pair %owners (nat %owner_count) (big_map %owners address nat)))))
+                 (pair (pair (pair (pair (list %batch (pair (nat %amount) (nat %token_id))) (bytes %data))
+                                   (address %owner))
+                             (pair (pair (address %admin) (bool %paused)) (big_map %tokens nat string)))
+                       (pair (big_map %balances nat nat)
+                             (pair %owners (nat %owner_count) (big_map %owners address nat)))))
+           (pair (list operation)
+                 (pair (big_map %balances nat nat)
+                       (pair %owners (nat %owner_count) (big_map %owners address nat))))
            { DUP ;
              CAR ;
              SWAP ;
@@ -1008,10 +1068,12 @@
          SWAP ;
          LAMBDA
            (pair (pair (lambda (pair nat nat) nat)
-                       (lambda (pair address (pair nat (big_map address nat))) nat))
-                 (pair (pair (list (pair nat nat)) address)
-                       (pair (big_map nat nat) (pair nat (big_map address nat)))))
-           (pair (big_map nat nat) (pair nat (big_map address nat)))
+                       (lambda (pair address (pair (nat %owner_count) (big_map %owners address nat))) nat))
+                 (pair (pair (list %batch (pair (nat %amount) (nat %token_id))) (address %owner))
+                       (pair (big_map %balances nat nat)
+                             (pair %owners (nat %owner_count) (big_map %owners address nat)))))
+           (pair (big_map %balances nat nat)
+                 (pair %owners (nat %owner_count) (big_map %owners address nat)))
            { DUP ;
              CAR ;
              SWAP ;
@@ -1086,31 +1148,53 @@
          SWAP ;
          LAMBDA
            (pair (pair (lambda
-                          (pair (pair (list (pair nat nat)) address)
-                                (pair (big_map nat nat) (pair nat (big_map address nat))))
-                          (pair (big_map nat nat) (pair nat (big_map address nat))))
+                          (pair (pair (list %batch (pair (nat %amount) (nat %token_id))) (address %owner))
+                                (pair (big_map %balances nat nat)
+                                      (pair %owners (nat %owner_count) (big_map %owners address nat))))
+                          (pair (big_map %balances nat nat)
+                                (pair %owners (nat %owner_count) (big_map %owners address nat))))
                        (pair (lambda
-                                (pair (pair (pair (pair (list (pair nat nat)) bytes) address)
-                                            (pair (pair address bool) (big_map nat string)))
-                                      (pair (big_map nat nat) (pair nat (big_map address nat))))
-                                (pair (list operation) (pair (big_map nat nat) (pair nat (big_map address nat)))))
+                                (pair (pair (pair (pair (list %batch (pair (nat %amount) (nat %token_id))) (bytes %data))
+                                                  (address %owner))
+                                            (pair (pair (address %admin) (bool %paused)) (big_map %tokens nat string)))
+                                      (pair (big_map %balances nat nat)
+                                            (pair %owners (nat %owner_count) (big_map %owners address nat))))
+                                (pair (list operation)
+                                      (pair (big_map %balances nat nat)
+                                            (pair %owners (nat %owner_count) (big_map %owners address nat)))))
                              (pair (lambda
-                                      (pair (pair string nat) (pair (pair address bool) (big_map nat string)))
-                                      (pair (pair address bool) (big_map nat string)))
+                                      (pair (pair (string %descriptor) (nat %token_id))
+                                            (pair (pair (address %admin) (bool %paused)) (big_map %tokens nat string)))
+                                      (pair (pair (address %admin) (bool %paused)) (big_map %tokens nat string)))
                                    (pair (lambda
-                                            (pair bool (pair (pair address bool) (big_map nat string)))
-                                            (pair (pair address bool) (big_map nat string)))
+                                            (pair bool (pair (pair (address %admin) (bool %paused)) (big_map %tokens nat string)))
+                                            (pair (pair (address %admin) (bool %paused)) (big_map %tokens nat string)))
                                          (lambda
-                                            (pair address (pair (pair address bool) (big_map nat string)))
-                                            (pair (pair address bool) (big_map nat string)))))))
-                 (pair (or (or (or (pair (list (pair nat nat)) address) (pair string nat))
-                               (or (pair (pair (list (pair nat nat)) bytes) address) bool))
-                           address)
-                       (pair (pair (pair address bool) (big_map nat string))
-                             (pair (big_map nat nat) (pair nat (big_map address nat))))))
+                                            (pair address
+                                                  (pair (pair (address %admin) (bool %paused)) (big_map %tokens nat string)))
+                                            (pair (pair (address %admin) (bool %paused)) (big_map %tokens nat string)))))))
+                 (pair (or (or (or (pair %burn_tokens
+                                      (list %batch (pair (nat %amount) (nat %token_id)))
+                                      (address %owner))
+                                   (pair %create_token (string %descriptor) (nat %token_id)))
+                               (or (pair %mint_tokens
+                                      (pair (list %batch (pair (nat %amount) (nat %token_id))) (bytes %data))
+                                      (address %owner))
+                                   (bool %pause)))
+                           (address %set_admin))
+                       (pair (pair %admin_storage
+                                (pair (address %admin) (bool %paused))
+                                (big_map %tokens nat string))
+                             (pair %balance_storage
+                                (big_map %balances nat nat)
+                                (pair %owners (nat %owner_count) (big_map %owners address nat))))))
            (pair (list operation)
-                 (pair (pair (pair address bool) (big_map nat string))
-                       (pair (big_map nat nat) (pair nat (big_map address nat)))))
+                 (pair (pair %admin_storage
+                          (pair (address %admin) (bool %paused))
+                          (big_map %tokens nat string))
+                       (pair %balance_storage
+                          (big_map %balances nat nat)
+                          (pair %owners (nat %owner_count) (big_map %owners address nat)))))
            { DUP ;
              CAR ;
              SWAP ;
@@ -1247,17 +1331,10 @@
              DIP { DIP 5 { DUP } ; DIG 5 } ;
              EXEC ;
              DUP ;
-             CDR ;
-             DUP ;
              CAR ;
-             DIP { DUP ; CDR ; DIP { DIP 5 { DUP } ; DIG 5 ; CDR ; CDR } ; PAIR } ;
+             DIP { DIP 4 { DUP } ; DIG 4 } ;
              PAIR ;
-             DIP 2 { DUP } ;
-             DIG 2 ;
-             CAR ;
-             DIP { DIP 6 { DUP } ; DIG 6 } ;
-             PAIR ;
-             DIP { DROP 6 } }
+             DIP { DROP 4 } }
            { DUP ;
              DIP 2 { DUP } ;
              DIG 2 ;
