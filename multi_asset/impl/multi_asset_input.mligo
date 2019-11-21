@@ -37,9 +37,18 @@ let storage : multi_asset_storage = {
     };
 }
 
+(*
+  (Pair (Pair (Pair "tz1hUXU4DPHPyrEEekqhmEEJvdCpB2gP4qtp" True) {})
+        (Pair {} (Pair {} (Pair 0 {}))))
+*)
+
 
 let param_pause : multi_asset_param =
   Admin (Pause true)
+
+(*
+(Left (Left (Right (Right True))))
+*)
 
 let param_create_token : multi_asset_param =
   Admin (
@@ -47,6 +56,10 @@ let param_create_token : multi_asset_param =
       token_id = 1n;
       descriptor = "first token";
     })
+
+(*
+(Left (Left (Left (Right (Pair "first token" 1)))))
+*)
 
 let param_mint_tokens : multi_asset_param =
   Admin (
@@ -56,6 +69,10 @@ let param_mint_tokens : multi_asset_param =
       data = ("" : bytes);
     })
 
+(*
+(Left (Left (Right (Left (Pair (Pair { Pair 10 1 } 0x) "tz1aYQcaXmowUu59gAgMGdiX6ARR7gdmikZk")))))
+*)
+
 let param_burn_tokens : multi_asset_param =
   Admin (
     Burn_tokens {
@@ -63,13 +80,24 @@ let param_burn_tokens : multi_asset_param =
       batch = ([{ token_id = 1n; amount = 5n; }] : tx list);
     })
 
+(*
+(Left (Left (Left (Left (Pair { Pair 5 1 } "tz1RZUEpGCVgDR9Q1GZD8bsp4WyWpNhu1MRY")))))
+*)
+
 let param_transfer : multi_asset_param =
-  Assets(
+  Assets (
     Transfer {
       from_ = ("tz1aYQcaXmowUu59gAgMGdiX6ARR7gdmikZk" : address);
       to_ = ("tz1RZUEpGCVgDR9Q1GZD8bsp4WyWpNhu1MRY" : address);
       batch = ([{ token_id = 1n; amount = 8n; }] : tx list);
       data = ("" : bytes);
     })
+
+(*
+(Right
+   (Right
+      (Pair (Pair { Pair 8 1 } 0x)
+            (Pair "tz1aYQcaXmowUu59gAgMGdiX6ARR7gdmikZk" "tz1RZUEpGCVgDR9Q1GZD8bsp4WyWpNhu1MRY"))))
+*)
 
 let test (p : unit) = unit
