@@ -185,6 +185,23 @@ type multi_token =
   | Is_operator of is_operator_param
 ```
 
+#### LIGO generated Michelson
+
+```
+{ parameter
+    (or (or (or (address %add_operator)
+                (pair %balance_of
+                   (list %balance_request (pair (address %owner) (nat %token_id)))
+                   (contract %balance_view (list (pair (pair (address %owner) (nat %token_id)) nat)))))
+            (or (pair %is_operator
+                   (pair %is_operator_request (address %operator) (address %owner))
+                   (contract %is_operator_view (pair (pair (address %operator) (address %owner)) bool)))
+                (address %remove_operator)))
+        (pair %transfer
+           (pair (list %batch (pair (nat %amount) (nat %token_id))) (bytes %data))
+           (pair (address %from_) (address %to_)))) ;
+```
+
 #### Safe Transfer Rules
 
 Transfers amounts specified in the batch between two given addresses. Transfers
