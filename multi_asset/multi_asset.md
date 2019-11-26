@@ -38,68 +38,6 @@ part of multi-asset contract specification. Their implementation may differ depe
 on the particular business use-case. This specification focuses on token transfer
 logic only.
 
-## Difference between Ethereum ERC-1155 and the Tezos Multi-asset Contract
-
-Since Tezos and Michelson differ from Ethereum/Solidity, the following modifications
-are made:
-
-1. Tezos multi-asset contract does not emit events (a feature not supported by Tezos).
-2. Tezos multi-asset contract does not implement ERC-165 `supportsInterface` entry
-point.
-3. Ethereum specification says that if destination transfer address is not a smart
-contract (Externally Owned Account),then safety check is not performed. Otherwise,
-if destination contract does not implement `multi_token_receiver` interface, the
-transaction should fail. Michelson does not provide API to distinguish between
-implicit (EOA) and originated addresses since Babylon version. Tezos specification
-requires that safety check MUST be performed for ALL targets and that target contract
-MUST implement `multi_token_receiver` interface.
-4. Ordering requirements for batch transfers is relaxed. Since Tezos smart contracts
-are referentially transparent, batch order must be preserved only for invocation
-of `On_multi_tokens_received` entry point of `multi_token_receiver` interface.
-5. Tezos multi-asset contract implements only batch entry points. Original ERC-1155
-has both single and batch entry points. The motivation was gas use optimization:
-single entry points *may* be implemented more efficiently. With Tezos multi-asset
-contract more favor was given to simplicity.
-6. Optional `ERC1155Metadata_URI` interface is not part of Tezos multi-asset contract
-specification.
-7. Tezos multi-asset contract use interfaces/entry point names (see next
-section) which are different from Ethereum ECR-1155. We believe that the new names
-better convey meaning of the operations.
-8. Tezos does not have equivalent of Ethereum view function (although there is a
-[proposal](https://forum.tezosagora.org/t/adding-read-only-calls/1227 to add one to Tezos/Michelson). `balance_of` entry point is specified using continuation style view pattern, but can be converted into view in future.
-9. ERC-1155 `safeBatchTransferFrom` entry point receives two separate arrays of
-token ids and transfer amounts. Both caller and implementor of the contract are
-responsible to match values from those arrays and enforce their consistency. Tezos
-multi-asset contract uses single array of `tx` records which have all the
-attributes specifying single transfer.
-
-### Interfaces/entry point names
-
-Interface names
-
-|  Ethereum ERC-1155 | Tezos multi-asset |
-| :--- | :--- |
-| `ERC1155` | `multi_token` |
-| `ERC1155TokenReceiver` | `multi_token_receiver` |
-
-`multi_asset` entry points
-
-|  Ethereum ERC-1155 | Tezos multi-asset |
-| :--- | :--- |
-| `safeTransferFrom` | N/A |
-| `safeBatchTransferFrom` | `Transfer` |
-| `balanceOf` | N/A |
-| `balanceOfBatch` | `Balance_of` |
-| `setApprovalForAll` | `Add_operator` \ `Remove_operator` |
-| `isApprovedForAll` | `Is_operator` |
-
-`multi_token_receiver` entry points
-
-|  Ethereum ERC-1155 | Tezos multi-asset |
-| :--- | :--- |
-| `onERC1155Received` | N/A |
-| `onERC1155BatchReceived` | `On_multi_tokens_received` |
-
 ## Specification
 
 Specification is given as definition of Michelson entry points defined in
@@ -330,3 +268,67 @@ contract may use the following strategies or their combination:
   implementation should initiate another transfer operation which will forward
   all received tokens to another owner. Another owner needs to address token
   locking issue as well.
+
+## Difference between Ethereum ERC-1155 and the Tezos Multi-asset Contract
+
+Since Tezos and Michelson differ from Ethereum/Solidity, the following modifications
+are made:
+
+1. Tezos multi-asset contract does not emit events (a feature not supported by Tezos).
+2. Tezos multi-asset contract does not implement ERC-165 `supportsInterface` entry
+point.
+3. Ethereum specification says that if destination transfer address is not a smart
+contract (Externally Owned Account),then safety check is not performed. Otherwise,
+if destination contract does not implement `multi_token_receiver` interface, the
+transaction should fail. Michelson does not provide API to distinguish between
+implicit (EOA) and originated addresses since Babylon version. Tezos specification
+requires that safety check MUST be performed for ALL targets and that target contract
+MUST implement `multi_token_receiver` interface.
+4. Ordering requirements for batch transfers is relaxed. Since Tezos smart contracts
+are referentially transparent, batch order must be preserved only for invocation
+of `On_multi_tokens_received` entry point of `multi_token_receiver` interface.
+5. Tezos multi-asset contract implements only batch entry points. Original ERC-1155
+has both single and batch entry points. The motivation was gas use optimization:
+single entry points *may* be implemented more efficiently. With Tezos multi-asset
+contract more favor was given to simplicity.
+6. Optional `ERC1155Metadata_URI` interface is not part of Tezos multi-asset contract
+specification.
+7. Tezos multi-asset contract use interfaces/entry point names (see next
+section) which are different from Ethereum ECR-1155. We believe that the new names
+better convey meaning of the operations.
+8. Tezos does not have equivalent of Ethereum view function (although there is a
+[proposal](https://forum.tezosagora.org/t/adding-read-only-calls/1227) to add
+one to Tezos/Michelson). `balance_of` entry point is specified using continuation
+style view pattern, but can be converted into view in future.
+9. ERC-1155 `safeBatchTransferFrom` entry point receives two separate arrays of
+token ids and transfer amounts. Both caller and implementor of the contract are
+responsible to match values from those arrays and enforce their consistency. Tezos
+multi-asset contract uses single array of `tx` records which have all the
+attributes specifying single transfer.
+
+### Interfaces/entry point names
+
+Interface names
+
+|  Ethereum ERC-1155 | Tezos multi-asset |
+| :--- | :--- |
+| `ERC1155` | `multi_token` |
+| `ERC1155TokenReceiver` | `multi_token_receiver` |
+
+`multi_asset` entry points
+
+|  Ethereum ERC-1155 | Tezos multi-asset |
+| :--- | :--- |
+| `safeTransferFrom` | N/A |
+| `safeBatchTransferFrom` | `Transfer` |
+| `balanceOf` | N/A |
+| `balanceOfBatch` | `Balance_of` |
+| `setApprovalForAll` | `Add_operator` \ `Remove_operator` |
+| `isApprovedForAll` | `Is_operator` |
+
+`multi_token_receiver` entry points
+
+|  Ethereum ERC-1155 | Tezos multi-asset |
+| :--- | :--- |
+| `onERC1155Received` | N/A |
+| `onERC1155BatchReceived` | `On_multi_tokens_received` |
