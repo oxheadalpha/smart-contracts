@@ -1,0 +1,68 @@
+{ parameter
+    (or (or (unit %default)
+            (pair %query (pair (address %mac) (address %owner)) (nat %token_id)))
+        (list %response (pair (pair (address %owner) (nat %token_id)) nat))) ;
+  storage (option (pair (pair (nat %balance) (address %owner)) (nat %token_id))) ;
+  code { DUP ;
+         CDR ;
+         DIP { DUP } ;
+         SWAP ;
+         CAR ;
+         IF_LEFT
+           { DUP ;
+             IF_LEFT
+               { DIP 2 { DUP } ; DIG 2 ; NIL operation ; PAIR ; DIP { DROP } }
+               { DUP ;
+                 DUP ;
+                 CAR ;
+                 CDR ;
+                 DIP { DUP ; CDR } ;
+                 PAIR ;
+                 NIL (pair (address %owner) (nat %token_id)) ;
+                 SWAP ;
+                 CONS ;
+                 DIP { SELF ;
+                       ADDRESS ;
+                       CONTRACT %response (list (pair (pair (address %owner) (nat %token_id)) nat)) ;
+                       IF_NONE
+                         { PUSH string "bad address for get_entrypoint (%response)" ; FAILWITH }
+                         {} } ;
+                 PAIR ;
+                 DIP { DUP } ;
+                 SWAP ;
+                 CAR ;
+                 CAR ;
+                 CONTRACT %balance_of
+                   (pair (list %balance_request (pair (address %owner) (nat %token_id)))
+                         (contract %balance_view (list (pair (pair (address %owner) (nat %token_id)) nat)))) ;
+                 IF_NONE
+                   { PUSH string "bad address for get_entrypoint (%balance_of)" ; FAILWITH }
+                   {} ;
+                 DIP { DUP } ;
+                 SWAP ;
+                 DIP { DUP ; PUSH mutez 0 } ;
+                 TRANSFER_TOKENS ;
+                 DUP ;
+                 NIL operation ;
+                 SWAP ;
+                 CONS ;
+                 DIP { DIP 6 { DUP } ; DIG 6 } ;
+                 PAIR ;
+                 DIP { DROP 5 } } ;
+             DIP { DROP } }
+           { DUP ;
+             IF_CONS
+               { DUP ;
+                 CDR ;
+                 DIP { DUP ; CAR ; CAR } ;
+                 PAIR ;
+                 DIP { DUP ; CAR ; CDR } ;
+                 PAIR ;
+                 DIP { DROP 2 } }
+               { PUSH string "invalid response" ; FAILWITH } ;
+             DUP ;
+             SOME ;
+             NIL operation ;
+             PAIR ;
+             DIP { DROP 2 } } ;
+         DIP { DROP 2 } } }

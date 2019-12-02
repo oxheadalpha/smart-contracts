@@ -1,19 +1,19 @@
 #include "multi_asset.mligo"
 
 (* let sas : simple_admin_storage = {
-  admin = ("tz1hUXU4DPHPyrEEekqhmEEJvdCpB2gP4qtp" : address);
+  admin = ("tz1YPSCGWXwBdTncK2aCctSZAXWvGsGwVJqU" : address);
   paused = true;
   tokens = (Big_map.empty : (nat, string) big_map);
 } *)
 
 (* let mts : multi_token_storage = {
-  approvals = (Big_map.empty : (address, address set) big_map);
+  operators = (Big_map.empty : (address, address set) big_map);
   balance_storage = {
     owners = {
       owner_count = 0n;
       owners = (Big_map.empty : (address, nat) big_map);
     };
-Admin    balances = (Big_map.empty : (nat, nat) big_map);
+    balances = (Big_map.empty : (nat, nat) big_map);
   }
 } *)
 
@@ -21,12 +21,12 @@ Admin    balances = (Big_map.empty : (nat, nat) big_map);
 
 let storage : multi_asset_storage = {
     admin = {
-      admin = ("tz1hUXU4DPHPyrEEekqhmEEJvdCpB2gP4qtp" : address);
+      admin = ("tz1YPSCGWXwBdTncK2aCctSZAXWvGsGwVJqU" : address);
       paused = true;
       tokens = (Big_map.empty : (nat, string) big_map);
     };
     assets = {
-      approvals = (Big_map.empty : (address, address set) big_map);
+      operators = (Big_map.empty : (address, address set) big_map);
       balance_storage = {
         owners = {
           owner_count = 0n;
@@ -38,8 +38,8 @@ let storage : multi_asset_storage = {
 }
 
 (*
-  (Pair (Pair (Pair "tz1hUXU4DPHPyrEEekqhmEEJvdCpB2gP4qtp" True) {})
-        (Pair {} (Pair {} (Pair 0 {}))))
+  (Pair (Pair (Pair "tz1YPSCGWXwBdTncK2aCctSZAXWvGsGwVJqU" True) {})
+      (Pair (Pair {} (Pair 0 {})) {}))
 *)
 
 
