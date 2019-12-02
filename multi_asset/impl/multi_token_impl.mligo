@@ -93,11 +93,11 @@ type owner_result = {
 
 (* return updated storage and newly added owner id *)
 
-let add_orig_owner (owner : address) (s : owner_lookup) : owner_result =
+let add_owner (owner : address) (is_implicit : bool) (s : owner_lookup) : owner_result =
   let owner_id  = s.owner_count + 1n in
   let entry = {
     id = owner_id;
-    is_implicit = false;
+    is_implicit = is_implicit;
   } in
   let os = Map.add owner entry s.owners in
   let new_s = 
@@ -119,7 +119,7 @@ let ensure_owner_id (owner : address) (s : owner_lookup) : owner_result =
   let owner_id = Map.find_opt owner s.owners in
   match owner_id with
   | Some entry -> { owner = entry; owners = s; }
-  | None    -> add_orig_owner owner s
+  | None    -> add_owner owner false s
 
 let get_owner_id (owner: address) (s: owner_lookup) : nat =
   let owner = Map.find_opt owner s.owners in
