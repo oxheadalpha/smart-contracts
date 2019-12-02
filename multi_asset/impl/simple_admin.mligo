@@ -87,40 +87,43 @@ let token_exists (token_id : nat) (tokens : (nat, string) big_map) : unit =
   | Some d -> unit
 
 let mint_tokens_impl
-    (param : mint_tokens_param) (tokens : (nat, string) big_map) 
-    (s : balance_storage) : balance_storage =
-  let owner = ensure_owner_id param.owner s.owners in
+    (param : mint_tokens_param) (owner_id : nat) (tokens : (nat, string) big_map) 
+    (b : balances) : balances =
 
   let make_transfer = fun (bals: balances) (t: tx) ->
     let u : unit = token_exists t.token_id tokens in
-    let to_key  = make_balance_key_impl owner.id t.token_id in
+    let to_key  = make_balance_key_impl owner_id t.token_id in
     let old_bal = get_balance to_key bals in
     Map.update to_key (Some(old_bal + t.amount)) bals in
 
-  let new_bals = List.fold make_transfer param.batch s.balances in
-  {
-    owners = owner.owners;
-    balances = new_bals;
-  }
+  List.fold make_transfer param.batch b
 
-let mint_safe_check (param : mint_tokens_param) : operation list =
-  let receiver : multi_token_receiver contract =
-    Operation.get_entrypoint "%multi_token_receiver" param.owner in
-  let p : on_multi_tokens_received_param = {
-    operator = sender;
-    from_ = (None : address option);
-    batch = param.batch;
-    data = param.data;
-  } in
-  let op = Operation.transaction (On_multi_tokens_received p) 0mutez receiver in
-  [op] 
+let mint_safe_check (param : mint_tokens_param) (is_owner_implicit : bool) : operation list =
+  if is_owner_implicit
+  then ([] : operation list)
+  else
+    let receiver : multi_token_receiver contract =
+      Operation.get_entrypoint "%multi_token_receiver" param.owner in
+    let p : on_multi_tokens_received_param = {
+      operator = sender;
+      from_ = (None : address option);
+      batch = param.batch;
+      data = param.data;
+    } in
+    let op = Operation.transaction (On_multi_tokens_received p) 0mutez receiver in
+    [op] 
 
 let mint_tokens 
     (param : mint_tokens_param) (a : simple_admin_storage) 
     (b : balance_storage) : (operation list) * balance_storage =
-  let new_b = mint_tokens_impl param a.tokens b in
-  let ops = mint_safe_check param in
-  (ops, new_b)
+  let owner = ensure_owner_id param.owner b.owners in
+  let ops = mint_safe_check param owner.owner.is_implicit in
+  let new_bals = mint_tokens_impl param owner.owner.id a.tokens b.balances in
+  let new_s = {
+    owners = owner.owners;
+    balances = new_bals;
+  } in 
+  (ops, new_s)
 
 let burn_tokens
     (param : burn_tokens_param) (s : balance_storage): balance_storage =
@@ -194,3 +197,4 @@ let simple_admin
           balance_storage = new_bals;
         } in
         (([] : operation list), new_ctx)
+
