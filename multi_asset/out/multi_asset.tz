@@ -1,6 +1,6 @@
 { parameter
     (or (or %admin
-           (or (or (key_hash %add_implicit_owner)
+           (or (or (list %add_implicit_owners key_hash)
                    (pair %burn_tokens
                       (list %batch (pair (nat %amount) (nat %token_id)))
                       (address %owner)))
@@ -8,7 +8,7 @@
                    (pair %mint_tokens
                       (pair (list %batch (pair (nat %amount) (nat %token_id))) (bytes %data))
                       (address %owner))))
-           (or (or (bool %pause) (key_hash %remove_implicit_owner)) (address %set_admin)))
+           (or (or (bool %pause) (list %remove_implicit_owners key_hash)) (address %set_admin)))
         (or %assets
            (or (or (address %add_operator)
                    (pair %balance_of
@@ -189,35 +189,71 @@
                               DIP { DUP } ;
                               SWAP ;
                               CAR ;
-                              DIP { DIP 9 { DUP } ; DIG 9 } ;
-                              EXEC ;
-                              DUP ;
-                              DIP { DIP { DUP } ; SWAP ; CDR ; CDR } ;
-                              GET ;
-                              IF_NONE
-                                { DUP ;
-                                  PUSH bool True ;
-                                  SWAP ;
-                                  PAIR ;
-                                  DIP { DIP { DUP } ; SWAP ; CDR } ;
-                                  PAIR ;
-                                  DIP { DIP 15 { DUP } ; DIG 15 } ;
-                                  EXEC ;
-                                  DUP ;
-                                  CDR ;
-                                  DIP { DROP } }
-                                { DUP ;
-                                  CDR ;
-                                  IF { DIP 2 { DUP } ; DIG 2 ; CDR }
-                                     { PUSH string "originated owner with the same address already exists" ;
-                                       FAILWITH } ;
-                                  DIP { DROP } } ;
-                              DIP 2 { DUP } ;
-                              DIG 2 ;
+                              DIP { DUP ; CDR } ;
+                              ITER { SWAP ;
+                                     PAIR ;
+                                     DUP ;
+                                     CAR ;
+                                     DIP { DUP } ;
+                                     SWAP ;
+                                     CDR ;
+                                     DIP { DIP 11 { DUP } ; DIG 11 } ;
+                                     EXEC ;
+                                     DUP ;
+                                     DIP { DIP { DUP } ; SWAP ; CDR } ;
+                                     GET ;
+                                     IF_NONE
+                                       { DUP ;
+                                         PUSH bool True ;
+                                         SWAP ;
+                                         PAIR ;
+                                         DIP { DIP { DUP } ; SWAP } ;
+                                         PAIR ;
+                                         DUP ;
+                                         CAR ;
+                                         DIP { DUP } ;
+                                         SWAP ;
+                                         CDR ;
+                                         DIP { DIP 14 { DUP } ; DIG 14 } ;
+                                         EXEC ;
+                                         DUP ;
+                                         DIP { DIP { DUP } ; SWAP ; CDR } ;
+                                         GET ;
+                                         IF_NONE
+                                           { DUP ;
+                                             PUSH bool True ;
+                                             SWAP ;
+                                             PAIR ;
+                                             DIP { DIP { DUP } ; SWAP } ;
+                                             PAIR ;
+                                             DIP { DIP 20 { DUP } ; DIG 20 } ;
+                                             EXEC ;
+                                             DUP ;
+                                             CDR ;
+                                             DIP { DROP } }
+                                           { DUP ;
+                                             CDR ;
+                                             IF { DIP 7 { DUP } ; DIG 7 ; CDR }
+                                                { PUSH string "originated owner with the same address already exists" ;
+                                                  FAILWITH } ;
+                                             DIP { DROP } } ;
+                                         DIP { DROP 3 } ;
+                                         DUP ;
+                                         CDR ;
+                                         DIP { DROP } }
+                                       { DUP ;
+                                         CDR ;
+                                         IF { DIP 4 { DUP } ; DIG 4 ; CDR }
+                                            { PUSH string "originated owner with the same address already exists" ;
+                                              FAILWITH } ;
+                                         DIP { DROP } } ;
+                                     DIP { DROP 3 } } ;
+                              DIP { DUP } ;
+                              SWAP ;
                               CAR ;
                               DIP { DUP } ;
                               PAIR ;
-                              DIP { DROP 4 } ;
+                              DIP { DROP 3 } ;
                               DIP 4 { DUP } ;
                               DIG 4 ;
                               CAR ;
@@ -482,37 +518,45 @@
                               DIP { DUP } ;
                               SWAP ;
                               CAR ;
-                              DIP { DIP 9 { DUP } ; DIG 9 } ;
-                              EXEC ;
-                              DUP ;
-                              DIP { DIP { DUP } ; SWAP ; CDR ; CDR } ;
-                              GET ;
-                              IF_NONE
-                                { DIP { DUP } ; SWAP }
-                                { DUP ;
-                                  CDR ;
-                                  NOT ;
-                                  IF { PUSH string "trying to remove non-implicit account" ; FAILWITH }
-                                     { DIP 2 { DUP } ;
-                                       DIG 2 ;
-                                       CDR ;
-                                       CAR ;
-                                       DIP { DIP { DUP } ;
-                                             SWAP ;
-                                             DIP { DIP 2 { DUP } ;
-                                                   DIG 2 ;
-                                                   CDR ;
-                                                   CDR ;
-                                                   NONE (pair (nat %id) (bool %is_implicit)) } ;
-                                             UPDATE } ;
-                                       PAIR ;
-                                       DIP 3 { DUP } ;
-                                       DIG 3 ;
-                                       CAR ;
-                                       DIP { DUP } ;
-                                       PAIR ;
-                                       DIP { DROP } } ;
-                                  DIP { DROP } } ;
+                              DIP { DUP ; CDR } ;
+                              ITER { SWAP ;
+                                     PAIR ;
+                                     DUP ;
+                                     CAR ;
+                                     DIP { DUP } ;
+                                     SWAP ;
+                                     CDR ;
+                                     DIP { DIP 11 { DUP } ; DIG 11 } ;
+                                     EXEC ;
+                                     DUP ;
+                                     DIP { DIP { DUP } ; SWAP ; CDR } ;
+                                     GET ;
+                                     IF_NONE
+                                       { DIP { DUP } ; SWAP }
+                                       { DUP ;
+                                         CDR ;
+                                         NOT ;
+                                         IF { PUSH string "trying to remove non-implicit account" ; FAILWITH }
+                                            { DIP 4 { DUP } ;
+                                              DIG 4 ;
+                                              CDR ;
+                                              CAR ;
+                                              DIP { DIP { DUP } ;
+                                                    SWAP ;
+                                                    DIP { DIP 4 { DUP } ;
+                                                          DIG 4 ;
+                                                          CDR ;
+                                                          CDR ;
+                                                          NONE (pair (nat %id) (bool %is_implicit)) } ;
+                                                    UPDATE } ;
+                                              PAIR } ;
+                                         DIP { DROP } } ;
+                                     DIP { DROP 3 } } ;
+                              DIP { DUP } ;
+                              SWAP ;
+                              CAR ;
+                              DIP { DUP } ;
+                              PAIR ;
                               DIP { DROP 3 } ;
                               DIP 4 { DUP } ;
                               DIG 4 ;

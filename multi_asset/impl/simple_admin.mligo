@@ -42,14 +42,14 @@ type simple_admin =
   (*
     Adds implicit account to the white list to be able to receive tokens
   *)
-  | Add_implicit_owner of key_hash
+  | Add_implicit_owners of key_hash list
   (*
     Removes implicit account from the white list. Not whitelisted implicit accounts
     cannot receive tokens. All existing account token balances if any, will remain
     unchanged. It is still possible to transfer tokens from not whitelisted
     implicit account
   *)
-  | Remove_implicit_owner of key_hash
+  | Remove_implicit_owners of key_hash list
 
 
 type simple_admin_storage = {
@@ -165,42 +165,50 @@ let get_implicit_address (hash : key_hash) : address =
   let c : unit contract = Operation.get_contract sender (* Current.implicit_account hash *) in
   Current.address c
 
-let add_implicit_owner
-    (owner_hash : key_hash) (s : balance_storage): balance_storage =
-  let owner = get_implicit_address owner_hash in
-  let entry = Map.find_opt owner s.owners.owners in
-  let new_lookup = match entry with
-  | None -> 
-    let r = add_owner owner true s.owners in
-    r.owners
-  | Some o_e ->
-    if o_e.is_implicit
-    then s.owners
-    else (failwith "originated owner with the same address already exists" : owner_lookup)
-  in
+let add_implicit_owners
+    (owner_hashes : key_hash list) (s : balance_storage): balance_storage =
+
+  let add_owner = fun (l : owner_lookup) (h : key_hash) -> 
+    let owner = get_implicit_address h in
+    let entry = Map.find_opt owner l.owners in
+    match entry with
+    | None -> 
+      let r = add_owner owner true l in
+      r.owners
+    | Some o_e ->
+      if o_e.is_implicit
+      then s.owners
+      else (failwith "originated owner with the same address already exists" : owner_lookup)
+    in
+
+let new_lookup = List.fold add_owner owner_hashes s.owners in
+{
+  owners = new_lookup;
+  balances = s.balances;
+}
+
+let remove_implicit_owners
+    (owner_hashes : key_hash list) (s : balance_storage): balance_storage =
+  
+  let remove_owner = fun (l : owner_lookup) (h : key_hash) ->
+    let owner = get_implicit_address h in
+    let entry = Map.find_opt owner l.owners in
+    match entry with
+    | None -> l
+    | Some o_e ->
+      if not o_e.is_implicit
+      then (failwith "trying to remove non-implicit account" : owner_lookup)
+      else
+        {
+          owner_count = s.owners.owner_count;
+          owners = Map.remove owner s.owners.owners;
+        } 
+    in
+  let new_lookup = List.fold remove_owner owner_hashes s.owners in
   {
     owners = new_lookup;
     balances = s.balances;
   }
-
-let remove_implicit_owner
-    (owner_hash : key_hash) (s : balance_storage): balance_storage =
-  let owner = get_implicit_address owner_hash in
-  let entry = Map.find_opt owner s.owners.owners in
-  match entry with
-  | None -> s
-  | Some o_e ->
-    if not o_e.is_implicit
-    then (failwith "trying to remove non-implicit account" : balance_storage)
-    else
-      let new_lookup : owner_lookup = {
-        owner_count = s.owners.owner_count;
-        owners = Map.remove owner s.owners.owners;
-      } in
-      {
-        owners = new_lookup;
-        balances = s.balances;
-      }
 
 
 let simple_admin 
@@ -251,16 +259,16 @@ let simple_admin
         } in
         (([] : operation list), new_ctx)
 
-    | Add_implicit_owner hash ->
-        let new_bals = add_implicit_owner hash ctx.balance_storage in
+    | Add_implicit_owners hashes ->
+        let new_bals = add_implicit_owners hashes ctx.balance_storage in
         let new_ctx = {
           admin_storage = ctx.admin_storage;
           balance_storage = new_bals;
         } in
         (([] : operation list), new_ctx)
 
-    | Remove_implicit_owner hash ->
-        let new_bals = remove_implicit_owner hash ctx.balance_storage in
+    | Remove_implicit_owners hashes ->
+        let new_bals = remove_implicit_owners hashes ctx.balance_storage in
         let new_ctx = {
           admin_storage = ctx.admin_storage;
           balance_storage = new_bals;
