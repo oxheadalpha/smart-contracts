@@ -143,12 +143,7 @@
          LAMBDA
            key_hash
            address
-           { SENDER ;
-             CONTRACT unit ;
-             IF_NONE { PUSH string "bad address for get_contract" ; FAILWITH } {} ;
-             DUP ;
-             ADDRESS ;
-             DIP { DROP 2 } } ;
+           { DUP ; IMPLICIT_ACCOUNT ; DUP ; ADDRESS ; DIP { DROP 2 } } ;
          DIP 6 { DUP } ;
          DIG 6 ;
          CDR ;

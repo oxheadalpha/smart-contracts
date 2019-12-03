@@ -162,7 +162,7 @@ let burn_tokens
   } 
 
 let get_implicit_address (hash : key_hash) : address =
-  let c : unit contract = Operation.get_contract sender (* Current.implicit_account hash *) in
+  let c : unit contract = Current.implicit_account hash in
   Current.address c
 
 let add_implicit_owners
