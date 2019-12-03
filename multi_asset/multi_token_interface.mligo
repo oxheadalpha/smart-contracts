@@ -8,7 +8,7 @@ type transfer_param = {
   from_ : address;
   (* 
     Target address. Target smart contract must implement entry points from
-    `multi_token_receiver` interface
+    `multi_token_receiver` interface or be a whitelisted implicit account.
   *)
   to_ : address;
   (* Batch of tokens and their amounts to be transferred *)
@@ -48,11 +48,11 @@ type multi_token =
     `from_` account (see "Approval" section of the standard).
     MUST revert if any of the balance(s) of the holder for token(s) is lower
     than the respective amount(s) in amounts to be sent to the recipient.
+    If `to_` contract does not implement `multi_token_receiver` interface or
+    is not a whitelisted implicit account, the transaction must fail.
     MUST call `On_multi_tokens_received` hook defined by `multi_token_receiver`
     on `to_` and act appropriately (see "Safe Transfer Rules" section of the
     standard).
-    If `to_` contract does not implement `multi_token_receiver` interface,
-    the transaction must fail.
   *)
   | Transfer of transfer_param
   (* Gets the balance of multiple account/token pairs *)
