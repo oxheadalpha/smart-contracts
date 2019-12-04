@@ -71,10 +71,14 @@ let owner_offset = 4294967296n  (* 2^32 *)
 
 (* owner_token_id -> balance *)
 type balances = (nat, nat) big_map
+type owner_entry = {
+  id : nat;
+  is_implicit : bool;
+}
 type owner_lookup = {
   owner_count : nat;
-  (* owner_address -> owner_id *)
-  owners: (address, nat) big_map
+  (* owner_address -> (id * is_implicit) *)
+  owners: (address, owner_entry) big_map
 }
 
 type balance_storage = {
@@ -83,21 +87,26 @@ type balance_storage = {
 }
 
 type owner_result = {
-  id : nat;
+  owner : owner_entry;
   owners : owner_lookup;
 }
 
 (* return updated storage and newly added owner id *)
-let add_owner (owner : address) (s : owner_lookup) : owner_result =
+
+let add_owner (owner : address) (is_implicit : bool) (s : owner_lookup) : owner_result =
   let owner_id  = s.owner_count + 1n in
-  let os = Map.add owner owner_id s.owners in
+  let entry = {
+    id = owner_id;
+    is_implicit = is_implicit;
+  } in
+  let os = Map.add owner entry s.owners in
   let new_s = 
     { 
       owner_count = owner_id;
       owners = os;
     } in
   {
-    id = owner_id;
+    owner = entry;
     owners = new_s;
   }
 
@@ -105,17 +114,18 @@ let add_owner (owner : address) (s : owner_lookup) : owner_result =
   gets existing owner id. If owner does not have one, creates a new id and adds
   it to an owner_lookup 
 *)
+
 let ensure_owner_id (owner : address) (s : owner_lookup) : owner_result =
   let owner_id = Map.find_opt owner s.owners in
   match owner_id with
-  | Some id -> { id = id; owners = s; }
-  | None    -> add_owner owner s
+  | Some entry -> { owner = entry; owners = s; }
+  | None    -> add_owner owner false s
 
 let get_owner_id (owner: address) (s: owner_lookup) : nat =
-  let owner_id = Map.find_opt owner s.owners in
-  match owner_id with
+  let owner = Map.find_opt owner s.owners in
+  match owner with
   | None    -> (failwith("No such owner") : nat)
-  | Some id -> id
+  | Some o -> o.id
 
 let make_balance_key_impl (owner_id : nat) (token_id : nat) : nat =
   if token_id > max_tokens
@@ -130,7 +140,7 @@ type owner_key_result = {
   key : nat;
   owners: owner_lookup;
 }
- 
+
 let get_balance (key : nat) (b : balances) : nat =
   let bal : nat option = Map.find_opt key b in
   match bal with
@@ -168,25 +178,30 @@ let transfer_balance
     s2
 
 let transfer_safe_check
-    (param : transfer_param) : operation list =
-  let receiver : multi_token_receiver contract = 
-    Operation.get_entrypoint "%multi_token_receiver" param.to_ in
-  let p : on_multi_tokens_received_param = {
-      operator = sender;
-      from_ = Some param.from_;
-      batch = param.batch;
-      data = param.data;
-    } in
-  let op = Operation.transaction (On_multi_tokens_received p) 0mutez receiver in
-  [op]
+    (param : transfer_param) (to_is_implicit : bool) : operation list =
+  if to_is_implicit
+  then ([] : operation list)
+  else
+    let receiver : multi_token_receiver contract = 
+      Operation.get_entrypoint "%multi_token_receiver" param.to_ in
+    let p : on_multi_tokens_received_param = {
+        operator = sender;
+        from_ = Some param.from_;
+        batch = param.batch;
+        data = param.data;
+      } in
+    let op = Operation.transaction (On_multi_tokens_received p) 0mutez receiver in
+    [op] 
 
 let transfer 
-    (param : transfer_param) (s : balance_storage) : (operation  list) * balance_store = 
-  let from_id = get_owner_id param.from_ s.owners in
+    (param : transfer_param) (s : balance_storage) : (operation  list) * balance_store =
   let to_o = ensure_owner_id param.to_ s.owners in
+  let ops = transfer_safe_check param to_o.owner.is_implicit in
+
+  let from_id = get_owner_id param.from_ s.owners in
   let make_transfer = fun (bals: balances) (t: tx) ->
     let from_key  = make_balance_key_impl from_id t.token_id in
-    let to_key  = make_balance_key_impl to_o.id t.token_id in
+    let to_key  = make_balance_key_impl to_o.owner.id t.token_id in
     transfer_balance from_key to_key t.amount bals in 
 
   let new_balances = List.fold make_transfer param.batch s.balances  in
@@ -194,8 +209,8 @@ let transfer
     owners = to_o.owners;
     balances = new_balances;
   } in
-  let ops = transfer_safe_check param in
-  (ops, new_store)
+  
+  (ops, new_store) 
 
 let approved_transfer_from (from_ : address) (operators : operators) : unit =
   if sender = from_

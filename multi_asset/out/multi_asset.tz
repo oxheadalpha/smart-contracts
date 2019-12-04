@@ -1,14 +1,14 @@
 { parameter
     (or (or %admin
-           (or (or (pair %burn_tokens
+           (or (or (list %add_implicit_owners key_hash)
+                   (pair %burn_tokens
                       (list %batch (pair (nat %amount) (nat %token_id)))
-                      (address %owner))
-                   (pair %create_token (string %descriptor) (nat %token_id)))
-               (or (pair %mint_tokens
+                      (address %owner)))
+               (or (pair %create_token (string %descriptor) (nat %token_id))
+                   (pair %mint_tokens
                       (pair (list %batch (pair (nat %amount) (nat %token_id))) (bytes %data))
-                      (address %owner))
-                   (bool %pause)))
-           (address %set_admin))
+                      (address %owner))))
+           (or (or (bool %pause) (list %remove_implicit_owners key_hash)) (address %set_admin)))
         (or %assets
            (or (or (address %add_operator)
                    (pair %balance_of
@@ -26,12 +26,61 @@
           (pair %assets
              (pair %balance_storage
                 (big_map %balances nat nat)
-                (pair %owners (nat %owner_count) (big_map %owners address nat)))
+                (pair %owners
+                   (nat %owner_count)
+                   (big_map %owners address (pair (nat %id) (bool %is_implicit)))))
              (big_map %operators address (set address)))) ;
   code { LAMBDA
-           (pair address (pair (nat %owner_count) (big_map %owners address nat)))
-           (pair (nat %id) (pair %owners (nat %owner_count) (big_map %owners address nat)))
+           (pair (pair address bool)
+                 (pair (nat %owner_count)
+                       (big_map %owners address (pair (nat %id) (bool %is_implicit)))))
+           (pair (pair %owner (nat %id) (bool %is_implicit))
+                 (pair %owners
+                    (nat %owner_count)
+                    (big_map %owners address (pair (nat %id) (bool %is_implicit)))))
            { DUP ;
+             CDR ;
+             DUP ;
+             CAR ;
+             PUSH nat 1 ;
+             ADD ;
+             DUP ;
+             DIP { DIP 2 { DUP } ; DIG 2 ; CAR ; CDR } ;
+             PAIR ;
+             DUP ;
+             DIP { DIP { DUP } ;
+                   SWAP ;
+                   DIP { DIP 3 { DUP } ;
+                         DIG 3 ;
+                         CAR ;
+                         CAR ;
+                         DIP { DUP ; SOME ; DIP { DIP 2 { DUP } ; DIG 2 ; CDR } } ;
+                         UPDATE } ;
+                   PAIR } ;
+             PAIR ;
+             DIP { DROP 4 } } ;
+         DUP ;
+         LAMBDA
+           (pair (lambda
+                    (pair (pair address bool)
+                          (pair (nat %owner_count)
+                                (big_map %owners address (pair (nat %id) (bool %is_implicit)))))
+                    (pair (pair %owner (nat %id) (bool %is_implicit))
+                          (pair %owners
+                             (nat %owner_count)
+                             (big_map %owners address (pair (nat %id) (bool %is_implicit))))))
+                 (pair address
+                       (pair (nat %owner_count)
+                             (big_map %owners address (pair (nat %id) (bool %is_implicit))))))
+           (pair (pair %owner (nat %id) (bool %is_implicit))
+                 (pair %owners
+                    (nat %owner_count)
+                    (big_map %owners address (pair (nat %id) (bool %is_implicit)))))
+           { DUP ;
+             CAR ;
+             SWAP ;
+             CDR ;
+             DUP ;
              CAR ;
              DIP { DUP } ;
              SWAP ;
@@ -43,28 +92,21 @@
              IF_NONE
                { DIP { DUP } ;
                  SWAP ;
+                 PUSH bool False ;
+                 SWAP ;
+                 PAIR ;
                  DIP { DUP } ;
                  PAIR ;
-                 DUP ;
-                 CDR ;
-                 DUP ;
-                 CAR ;
-                 PUSH nat 1 ;
-                 ADD ;
-                 DUP ;
-                 DIP { DUP ;
-                       DIP { DIP 2 { DUP } ;
-                             DIG 2 ;
-                             CAR ;
-                             DIP { DUP ; SOME ; DIP { DIP { DUP } ; SWAP ; CDR } } ;
-                             UPDATE } ;
-                       PAIR } ;
-                 PAIR ;
-                 DIP { DROP 3 } }
+                 DIP { DIP 3 { DUP } ; DIG 3 } ;
+                 EXEC }
                { DUP ; DIP { DIP { DUP } ; SWAP } ; PAIR ; DIP { DROP } } ;
-             DIP { DROP 3 } } ;
+             DIP { DROP 4 } } ;
+         SWAP ;
+         APPLY ;
          LAMBDA
-           (pair address (pair (nat %owner_count) (big_map %owners address nat)))
+           (pair address
+                 (pair (nat %owner_count)
+                       (big_map %owners address (pair (nat %id) (bool %is_implicit)))))
            nat
            { DUP ;
              CAR ;
@@ -72,7 +114,7 @@
              GET ;
              IF_NONE
                { PUSH string "No such owner" ; FAILWITH }
-               { DUP ; DIP { DROP } } ;
+               { DUP ; CAR ; DIP { DROP } } ;
              DIP { DROP } } ;
          LAMBDA
            (pair nat nat)
@@ -98,11 +140,15 @@
              GET ;
              IF_NONE { PUSH nat 0 } { DUP ; DIP { DROP } } ;
              DIP { DROP } } ;
-         DIP 4 { DUP } ;
-         DIG 4 ;
+         LAMBDA
+           key_hash
+           address
+           { DUP ; IMPLICIT_ACCOUNT ; DUP ; ADDRESS ; DIP { DROP 2 } } ;
+         DIP 6 { DUP } ;
+         DIG 6 ;
          CDR ;
-         DIP 5 { DUP } ;
-         DIG 5 ;
+         DIP 7 { DUP } ;
+         DIG 7 ;
          CAR ;
          IF_LEFT
            { DUP ;
@@ -134,6 +180,87 @@
                               DIP { DIP 3 { DUP } ; DIG 3 ; CDR } ;
                               PAIR ;
                               DUP ;
+                              CDR ;
+                              DIP { DUP } ;
+                              SWAP ;
+                              CAR ;
+                              DIP { DUP ; CDR } ;
+                              ITER { SWAP ;
+                                     PAIR ;
+                                     DUP ;
+                                     CAR ;
+                                     DIP { DUP } ;
+                                     SWAP ;
+                                     CDR ;
+                                     DIP { DIP 11 { DUP } ; DIG 11 } ;
+                                     EXEC ;
+                                     DUP ;
+                                     DIP { DIP { DUP } ; SWAP ; CDR } ;
+                                     GET ;
+                                     IF_NONE
+                                       { DUP ;
+                                         PUSH bool True ;
+                                         SWAP ;
+                                         PAIR ;
+                                         DIP { DIP { DUP } ; SWAP } ;
+                                         PAIR ;
+                                         DUP ;
+                                         CAR ;
+                                         DIP { DUP } ;
+                                         SWAP ;
+                                         CDR ;
+                                         DIP { DIP 14 { DUP } ; DIG 14 } ;
+                                         EXEC ;
+                                         DUP ;
+                                         DIP { DIP { DUP } ; SWAP ; CDR } ;
+                                         GET ;
+                                         IF_NONE
+                                           { DUP ;
+                                             PUSH bool True ;
+                                             SWAP ;
+                                             PAIR ;
+                                             DIP { DIP { DUP } ; SWAP } ;
+                                             PAIR ;
+                                             DIP { DIP 20 { DUP } ; DIG 20 } ;
+                                             EXEC ;
+                                             DUP ;
+                                             CDR ;
+                                             DIP { DROP } }
+                                           { DUP ;
+                                             CDR ;
+                                             IF { DIP 7 { DUP } ; DIG 7 ; CDR }
+                                                { PUSH string "originated owner with the same address already exists" ;
+                                                  FAILWITH } ;
+                                             DIP { DROP } } ;
+                                         DIP { DROP 3 } ;
+                                         DUP ;
+                                         CDR ;
+                                         DIP { DROP } }
+                                       { DUP ;
+                                         CDR ;
+                                         IF { DIP 4 { DUP } ; DIG 4 ; CDR }
+                                            { PUSH string "originated owner with the same address already exists" ;
+                                              FAILWITH } ;
+                                         DIP { DROP } } ;
+                                     DIP { DROP 3 } } ;
+                              DIP { DUP } ;
+                              SWAP ;
+                              CAR ;
+                              DIP { DUP } ;
+                              PAIR ;
+                              DIP { DROP 3 } ;
+                              DIP 4 { DUP } ;
+                              DIG 4 ;
+                              CAR ;
+                              DIP { DUP } ;
+                              PAIR ;
+                              NIL operation ;
+                              PAIR ;
+                              DIP { DROP 2 } }
+                            { DUP ;
+                              DIP { DIP 3 { DUP } ; DIG 3 ; CDR } ;
+                              PAIR ;
+                              DUP ;
                               CAR ;
                               DIP { DUP } ;
                               SWAP ;
@@ -143,7 +270,7 @@
                               CDR ;
                               DIP { DUP ; CDR } ;
                               PAIR ;
-                              DIP { DIP 12 { DUP } ; DIG 12 } ;
+                              DIP { DIP 13 { DUP } ; DIG 13 } ;
                               EXEC ;
                               DIP 2 { DUP } ;
                               DIG 2 ;
@@ -160,7 +287,7 @@
                                      DIG 3 ;
                                      DIP { DUP ; CDR } ;
                                      PAIR ;
-                                     DIP { DIP 15 { DUP } ; DIG 15 } ;
+                                     DIP { DIP 16 { DUP } ; DIG 16 } ;
                                      EXEC ;
                                      DUP ;
                                      DIP { DIP 2 { DUP } ; DIG 2 } ;
@@ -197,7 +324,10 @@
                               PAIR ;
                               NIL operation ;
                               PAIR ;
-                              DIP { DROP 2 } }
+                              DIP { DROP 2 } } ;
+                          DIP { DROP } }
+                        { DUP ;
+                          IF_LEFT
                             { DUP ;
                               DIP { DIP 3 { DUP } ; DIG 3 ; CAR } ;
                               PAIR ;
@@ -230,22 +360,11 @@
                               PAIR ;
                               NIL operation ;
                               PAIR ;
-                              DIP { DROP 2 } } ;
-                          DIP { DROP } }
-                        { DUP ;
-                          IF_LEFT
+                              DIP { DROP 2 } }
                             { DUP ;
                               DIP { DIP 3 { DUP } ; DIG 3 ; CAR } ;
                               PAIR ;
                               DIP { DIP 3 { DUP } ; DIG 3 ; CDR } ;
-                              PAIR ;
-                              DUP ;
-                              CAR ;
-                              CAR ;
-                              DUP ;
-                              DIP { DIP { DUP } ; SWAP ; CAR ; CDR ; CDR } ;
-                              PAIR ;
-                              DIP { DIP { DUP } ; SWAP ; CDR } ;
                               PAIR ;
                               DUP ;
                               CAR ;
@@ -258,13 +377,62 @@
                               CDR ;
                               DIP { DUP ; CDR } ;
                               PAIR ;
-                              DIP { DIP 15 { DUP } ; DIG 15 } ;
+                              DIP { DIP 14 { DUP } ; DIG 14 } ;
                               EXEC ;
                               DIP 2 { DUP } ;
                               DIG 2 ;
+                              DIP { DUP ; CAR ; CDR } ;
+                              PAIR ;
+                              DUP ;
+                              CAR ;
+                              DIP { DUP } ;
+                              SWAP ;
+                              CDR ;
+                              IF { NIL operation }
+                                 { DUP ;
+                                   CDR ;
+                                   CONTRACT %multi_token_receiver
+                                     (pair (pair (list %batch (pair (nat %amount) (nat %token_id))) (bytes %data))
+                                           (pair (option %from_ address) (address %operator))) ;
+                                   IF_NONE
+                                     { PUSH string "bad address for get_entrypoint (%multi_token_receiver)" ;
+                                       FAILWITH }
+                                     {} ;
+                                   DIP { DUP } ;
+                                   SWAP ;
+                                   CAR ;
+                                   CAR ;
+                                   DIP { DIP { DUP } ; SWAP ; CAR ; CDR } ;
+                                   PAIR ;
+                                   DIP { SENDER ; NONE address ; PAIR } ;
+                                   PAIR ;
+                                   DUP ;
+                                   DIP { DIP { DUP } ; SWAP ; PUSH mutez 0 } ;
+                                   TRANSFER_TOKENS ;
+                                   DUP ;
+                                   NIL operation ;
+                                   SWAP ;
+                                   CONS ;
+                                   DIP { DROP 3 } } ;
+                              DIP { DROP 2 } ;
+                              DIP 3 { DUP } ;
+                              DIG 3 ;
+                              DIP { DIP { DUP } ; SWAP ; CAR ; CAR } ;
+                              PAIR ;
+                              DIP { DIP 4 { DUP } ;
+                                    DIG 4 ;
+                                    CAR ;
+                                    CDR ;
+                                    CDR ;
+                                    DIP { DIP 2 { DUP } ; DIG 2 ; CAR } ;
+                                    PAIR } ;
+                              PAIR ;
+                              DUP ;
                               CAR ;
                               CAR ;
-                              DIP { DIP { DUP } ; SWAP ; CAR } ;
+                              CAR ;
+                              CAR ;
+                              DIP { DUP ; CDR ; CDR } ;
                               ITER { SWAP ;
                                      PAIR ;
                                      DUP ;
@@ -274,7 +442,7 @@
                                      CDR ;
                                      DUP ;
                                      CDR ;
-                                     DIP { DIP 6 { DUP } ; DIG 6 ; CAR ; CDR } ;
+                                     DIP { DIP 3 { DUP } ; DIG 3 ; CDR ; CAR } ;
                                      PAIR ;
                                      DUP ;
                                      CAR ;
@@ -285,14 +453,15 @@
                                      DIP 4 { DUP } ;
                                      DIG 4 ;
                                      CAR ;
+                                     CDR ;
                                      DIP { DIP { DUP } ; SWAP ; CDR } ;
                                      PAIR ;
-                                     DIP { DIP 18 { DUP } ; DIG 18 } ;
+                                     DIP { DIP 19 { DUP } ; DIG 19 } ;
                                      EXEC ;
                                      DUP ;
                                      DIP { DIP 3 { DUP } ; DIG 3 } ;
                                      PAIR ;
-                                     DIP { DIP 18 { DUP } ; DIG 18 } ;
+                                     DIP { DIP 19 { DUP } ; DIG 19 } ;
                                      EXEC ;
                                      DIP { DUP } ;
                                      SWAP ;
@@ -303,45 +472,22 @@
                                            DIP { DIP 4 { DUP } ; DIG 4 } } ;
                                      UPDATE ;
                                      DIP { DROP 6 } } ;
-                              DUP ;
-                              DIP { DIP { DUP } ; SWAP ; CDR } ;
-                              PAIR ;
-                              DIP { DROP 5 ; DUP } ;
+                              DIP { DROP ; DUP } ;
                               SWAP ;
-                              DUP ;
-                              CDR ;
-                              CONTRACT %multi_token_receiver
-                                (pair (pair (list %batch (pair (nat %amount) (nat %token_id))) (bytes %data))
-                                      (pair (option %from_ address) (address %operator))) ;
-                              IF_NONE
-                                { PUSH string "bad address for get_entrypoint (%multi_token_receiver)" ;
-                                  FAILWITH }
-                                {} ;
-                              DIP { DUP } ;
-                              SWAP ;
-                              CAR ;
-                              CAR ;
-                              DIP { DIP { DUP } ; SWAP ; CAR ; CDR } ;
+                              DIP { DUP ; DIP { DIP 2 { DUP } ; DIG 2 ; CDR } ; PAIR } ;
                               PAIR ;
-                              DIP { SENDER ; NONE address ; PAIR } ;
-                              PAIR ;
-                              DUP ;
-                              DIP { DIP { DUP } ; SWAP ; PUSH mutez 0 } ;
-                              TRANSFER_TOKENS ;
-                              DUP ;
-                              NIL operation ;
-                              SWAP ;
-                              CONS ;
-                              DIP { DROP 4 } ;
-                              DUP ;
-                              DIP { DIP { DUP } ; SWAP } ;
-                              PAIR ;
-                              DIP { DROP 4 } ;
+                              DIP { DROP 6 } ;
                               DUP ;
                               CAR ;
                               DIP { DIP 4 { DUP } ; DIG 4 ; CAR ; DIP { DUP ; CDR } ; PAIR } ;
                               PAIR ;
-                              DIP { DROP 2 } }
+                              DIP { DROP 2 } } ;
+                          DIP { DROP } } ;
+                      DIP { DROP } }
+                    { DUP ;
+                      IF_LEFT
+                        { DUP ;
+                          IF_LEFT
                             { DUP ;
                               DIP { DIP 3 { DUP } ; DIG 3 ; CAR } ;
                               PAIR ;
@@ -358,25 +504,81 @@
                               PAIR ;
                               NIL operation ;
                               PAIR ;
-                              DIP { DROP } } ;
+                              DIP { DROP } }
+                            { DUP ;
+                              DIP { DIP 3 { DUP } ; DIG 3 ; CDR } ;
+                              PAIR ;
+                              DUP ;
+                              CDR ;
+                              DIP { DUP } ;
+                              SWAP ;
+                              CAR ;
+                              DIP { DUP ; CDR } ;
+                              ITER { SWAP ;
+                                     PAIR ;
+                                     DUP ;
+                                     CAR ;
+                                     DIP { DUP } ;
+                                     SWAP ;
+                                     CDR ;
+                                     DIP { DIP 11 { DUP } ; DIG 11 } ;
+                                     EXEC ;
+                                     DUP ;
+                                     DIP { DIP { DUP } ; SWAP ; CDR } ;
+                                     GET ;
+                                     IF_NONE
+                                       { DIP { DUP } ; SWAP }
+                                       { DUP ;
+                                         CDR ;
+                                         NOT ;
+                                         IF { PUSH string "trying to remove non-implicit account" ; FAILWITH }
+                                            { DIP 4 { DUP } ;
+                                              DIG 4 ;
+                                              CDR ;
+                                              CAR ;
+                                              DIP { DIP { DUP } ;
+                                                    SWAP ;
+                                                    DIP { DIP 4 { DUP } ;
+                                                          DIG 4 ;
+                                                          CDR ;
+                                                          CDR ;
+                                                          NONE (pair (nat %id) (bool %is_implicit)) } ;
+                                                    UPDATE } ;
+                                              PAIR } ;
+                                         DIP { DROP } } ;
+                                     DIP { DROP 3 } } ;
+                              DIP { DUP } ;
+                              SWAP ;
+                              CAR ;
+                              DIP { DUP } ;
+                              PAIR ;
+                              DIP { DROP 3 } ;
+                              DIP 4 { DUP } ;
+                              DIG 4 ;
+                              CAR ;
+                              DIP { DUP } ;
+                              PAIR ;
+                              NIL operation ;
+                              PAIR ;
+                              DIP { DROP 2 } } ;
+                          DIP { DROP } }
+                        { DUP ;
+                          DIP { DIP 2 { DUP } ; DIG 2 ; CAR } ;
+                          PAIR ;
+                          DUP ;
+                          CDR ;
+                          DIP { DUP } ;
+                          SWAP ;
+                          CAR ;
+                          DIP { DUP ; CAR ; CDR } ;
+                          PAIR ;
+                          DIP { DUP ; CDR } ;
+                          PAIR ;
+                          DIP { DROP 2 ; DIP 2 { DUP } ; DIG 2 ; CDR } ;
+                          PAIR ;
+                          NIL operation ;
+                          PAIR ;
                           DIP { DROP } } ;
-                      DIP { DROP } }
-                    { DUP ;
-                      DIP { DIP { DUP } ; SWAP ; CAR } ;
-                      PAIR ;
-                      DUP ;
-                      CDR ;
-                      DIP { DUP } ;
-                      SWAP ;
-                      CAR ;
-                      DIP { DUP ; CAR ; CDR } ;
-                      PAIR ;
-                      DIP { DUP ; CDR } ;
-                      PAIR ;
-                      DIP { DROP 2 ; DIP { DUP } ; SWAP ; CDR } ;
-                      PAIR ;
-                      NIL operation ;
-                      PAIR ;
                       DIP { DROP } } } ;
              DIP { DROP 2 } ;
              DUP ;
@@ -474,18 +676,18 @@
                                     CAR ;
                                     DIP { DUP ; CDR } ;
                                     PAIR ;
-                                    DIP { DIP 16 { DUP } ; DIG 16 } ;
+                                    DIP { DIP 17 { DUP } ; DIG 17 } ;
                                     EXEC ;
                                     DUP ;
                                     DIP { DIP { DUP } ; SWAP ; CAR ; CDR } ;
                                     PAIR ;
-                                    DIP { DIP 16 { DUP } ; DIG 16 } ;
+                                    DIP { DIP 17 { DUP } ; DIG 17 } ;
                                     EXEC ;
                                     DIP { DROP 2 } ;
                                     DUP ;
                                     DIP { DIP { DUP } ; SWAP ; CAR } ;
                                     PAIR ;
-                                    DIP { DIP 14 { DUP } ; DIG 14 } ;
+                                    DIP { DIP 15 { DUP } ; DIG 15 } ;
                                     EXEC ;
                                     DIP { DROP 4 ; DUP } ;
                                     SWAP ;
@@ -605,40 +807,77 @@
                       DIP { DUP } ;
                       SWAP ;
                       CDR ;
-                      CAR ;
+                      CDR ;
                       DIP { DUP ; CDR } ;
-                      PAIR ;
-                      DIP { DIP 12 { DUP } ; DIG 12 } ;
-                      EXEC ;
-                      DIP 2 { DUP } ;
-                      DIG 2 ;
-                      CDR ;
-                      CDR ;
-                      DIP { DIP { DUP } ; SWAP ; CDR } ;
                       PAIR ;
                       DIP { DIP 14 { DUP } ; DIG 14 } ;
                       EXEC ;
+                      DIP 2 { DUP } ;
+                      DIG 2 ;
+                      DIP { DUP ; CAR ; CDR } ;
+                      PAIR ;
+                      DUP ;
+                      CAR ;
+                      DIP { DUP } ;
+                      SWAP ;
+                      CDR ;
+                      IF { NIL operation }
+                         { DUP ;
+                           CDR ;
+                           CDR ;
+                           CONTRACT %multi_token_receiver
+                             (pair (pair (list %batch (pair (nat %amount) (nat %token_id))) (bytes %data))
+                                   (pair (option %from_ address) (address %operator))) ;
+                           IF_NONE
+                             { PUSH string "bad address for get_entrypoint (%multi_token_receiver)" ;
+                               FAILWITH }
+                             {} ;
+                           DIP { DUP } ;
+                           SWAP ;
+                           CAR ;
+                           CAR ;
+                           DIP { DIP { DUP } ; SWAP ; CAR ; CDR } ;
+                           PAIR ;
+                           DIP { DIP { DUP } ; SWAP ; CDR ; CAR ; SOME ; SENDER ; SWAP ; PAIR } ;
+                           PAIR ;
+                           DIP { DUP ; PUSH mutez 0 } ;
+                           TRANSFER_TOKENS ;
+                           DUP ;
+                           NIL operation ;
+                           SWAP ;
+                           CONS ;
+                           DIP { DROP 2 } } ;
+                      DIP { DROP 2 } ;
                       DIP 3 { DUP } ;
                       DIG 3 ;
+                      CDR ;
+                      CAR ;
+                      DIP { DIP 2 { DUP } ; DIG 2 ; CDR } ;
+                      PAIR ;
+                      DIP { DIP 15 { DUP } ; DIG 15 } ;
+                      EXEC ;
+                      DIP 4 { DUP } ;
+                      DIG 4 ;
                       CAR ;
                       CAR ;
-                      DIP { DIP 2 { DUP } ; DIG 2 ; CAR } ;
+                      DIP { DIP 3 { DUP } ; DIG 3 ; CAR } ;
                       ITER { SWAP ;
                              PAIR ;
                              DUP ;
                              CDR ;
-                             DIP 3 { DUP } ;
-                             DIG 3 ;
+                             DIP 2 { DUP } ;
+                             DIG 2 ;
                              DIP { DUP ; CDR } ;
                              PAIR ;
-                             DIP { DIP 15 { DUP } ; DIG 15 } ;
+                             DIP { DIP 17 { DUP } ; DIG 17 } ;
                              EXEC ;
-                             DIP 3 { DUP } ;
-                             DIG 3 ;
+                             DIP 5 { DUP } ;
+                             DIG 5 ;
+                             CAR ;
                              CAR ;
                              DIP { DIP { DUP } ; SWAP ; CDR } ;
                              PAIR ;
-                             DIP { DIP 16 { DUP } ; DIG 16 } ;
+                             DIP { DIP 18 { DUP } ; DIG 18 } ;
                              EXEC ;
                              DIP { DUP } ;
                              SWAP ;
@@ -669,7 +908,7 @@
                              DIG 3 ;
                              DIP { DUP } ;
                              PAIR ;
-                             DIP { DIP 21 { DUP } ; DIG 21 } ;
+                             DIP { DIP 23 { DUP } ; DIG 23 } ;
                              EXEC ;
                              DUP ;
                              DIP { DIP 2 { DUP } ; DIG 2 } ;
@@ -694,7 +933,7 @@
                                  DIG 5 ;
                                  DIP { DUP } ;
                                  PAIR ;
-                                 DIP { DIP 24 { DUP } ; DIG 24 } ;
+                                 DIP { DIP 26 { DUP } ; DIG 26 } ;
                                  EXEC ;
                                  DUP ;
                                  DIP { DIP 5 { DUP } ; DIG 5 } ;
@@ -705,35 +944,9 @@
                                  UPDATE ;
                                  DIP { DROP 4 } } ;
                              DIP { DROP 10 } } ;
-                      DIP 4 { DUP } ;
-                      DIG 4 ;
-                      DUP ;
-                      CDR ;
-                      CDR ;
-                      CONTRACT %multi_token_receiver
-                        (pair (pair (list %batch (pair (nat %amount) (nat %token_id))) (bytes %data))
-                              (pair (option %from_ address) (address %operator))) ;
-                      IF_NONE
-                        { PUSH string "bad address for get_entrypoint (%multi_token_receiver)" ;
-                          FAILWITH }
-                        {} ;
-                      DIP { DUP } ;
-                      SWAP ;
-                      CAR ;
-                      CAR ;
-                      DIP { DIP { DUP } ; SWAP ; CAR ; CDR } ;
-                      PAIR ;
-                      DIP { DIP { DUP } ; SWAP ; CDR ; CAR ; SOME ; SENDER ; SWAP ; PAIR } ;
-                      PAIR ;
-                      DIP { DUP ; PUSH mutez 0 } ;
-                      TRANSFER_TOKENS ;
-                      DUP ;
-                      NIL operation ;
-                      SWAP ;
-                      CONS ;
-                      DIP { DROP 3 } ;
-                      DUP ;
-                      DIP { DIP { DUP } ; SWAP ; DIP { DIP 2 { DUP } ; DIG 2 ; CDR } ; PAIR } ;
+                      DIP 2 { DUP } ;
+                      DIG 2 ;
+                      DIP { DUP ; DIP { DIP 3 { DUP } ; DIG 3 ; CDR } ; PAIR } ;
                       PAIR ;
                       DIP { DROP 7 } ;
                       DUP ;
@@ -748,4 +961,4 @@
                   PAIR ;
                   DIP { DROP } } ;
              DIP { DROP } } ;
-         DIP { DROP 6 } } }
+         DIP { DROP 8 } } }

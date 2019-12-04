@@ -25,18 +25,20 @@ transfer from the owner account.
 
 The destination address for a token transfer operation MUST implement the `multi_token_receiver`
 interface, which MUST be called for transfer/mint transactions. The destination address
-may reject receiving tokens by generating failure. This is considered a safety
-feature ("safe transfer") to prevent unrecoverable tokens if sent to an address
-that does not expect to receive tokens.
+may reject receiving tokens by generating failure. Alternatively, destination
+address can be a whitelisted implicit account (interface specification does not
+provide entry points to manage white list which can be implementation specific).
+This is considered a safety feature ("safe transfer") to prevent unrecoverable
+tokens if sent to an address that does not expect to receive tokens.
 
 Multi-asset contract supports atomic batch transfer of multiple tokens between
 two accounts. Either all transfers in a batch are successful or all of the transfers
 are discarded.
 
-Administrative operations to create new token types, mint and burn tokens are not
-part of multi-asset contract specification. Their implementation may differ depending
-on the particular business use-case. This specification focuses on token transfer
-logic only.
+Administrative operations to create new token types, mint and burn tokens, manage
+implicit accounts whitelist are not part of multi-asset contract specification.
+Their implementation may differ depending on the particular business use-case.
+This specification focuses on token transfer logic only.
 
 ## Specification
 
@@ -48,7 +50,8 @@ two interfaces: `multi_token` and `multi_token_receiver`.
 of the entry points in the `multi_asset` interface.**
 
 **All smart contracts which can be a target destination for the token transfers
-MUST implement all of the entry points in the `multi_token_receiver` interface.**
+MUST implement all of the entry points in the `multi_token_receiver` interface or
+be whitelisted implicit accounts.**
 
 ### `multi_token` entry points
 
@@ -63,7 +66,7 @@ type transfer_param = {
   from_ : address;
   (* 
     Target address. Target smart contract must implement entry points from
-    `multi_token_receiver` interface
+    `multi_token_receiver` interface or be a whitelisted implicit account.
   *)
   to_ : address;
   (* Batch of tokens and their amounts to be transferred *)
@@ -103,20 +106,20 @@ type multi_token =
     `from_` account (see "Approval" section of the standard).
     MUST revert if any of the balance(s) of the holder for token(s) is lower
     than the respective amount(s) in amounts to be sent to the recipient.
+    If `to_` contract does not implement `multi_token_receiver` interface or
+    is not a whitelisted implicit account, the transaction must fail.
     MUST call `On_multi_tokens_received` hook defined by `multi_token_receiver`
     on `to_` and act appropriately (see "Safe Transfer Rules" section of the
     standard).
-    If `to_` contract does not implement `multi_token_receiver` interface,
-    the transaction must fail.
   *)
   | Transfer of transfer_param
   (* Gets the balance of multiple account/token pairs *)
   | Balance_of of balance_of_param
   (* Approves third party ("operator") to manage all of the caller's tokens. *)
   | Add_operator of address
-  (*
-    Withdraws approval for the  third party ("operator") to manage all of
-    the caller's tokens.
+  (* 
+    Withdraws approval for the  third party ("operator") to manage all of 
+    the caller's tokens. 
   *)
   | Remove_operator of address
   (* Queries the approval status of an operator for a given owner. *)
@@ -154,10 +157,15 @@ The transaction MUST fail if any of the balance(s) of the holder for token(s) in
 the batch is lower than the respective amount(s) sent. If holder does not hold any
 tokens of type `token_id`, holder's balance is interpreted as zero.
 
-The transaction MUST call entry point `On_multi_tokens_received` of contract `to_`
-and MUST return call `operation` among other operations it might create. If `to_`
-contract does not implement entry point `On_multi_tokens_received`, the transaction
-MUST fail. `data` argument must be passed unaltered to a receiver hook entry point.
+`to_` address must be either whitelisted implicit account or a smart contract
+implementing `multi_token_receiver` interface. If `to_` is an implicit account and
+it is not whitelisted, the transaction MUST fail. If `to_` is an originated smart
+contract, the transaction MUST call entry point `On_multi_tokens_received` of that
+contract and MUST return call `operation` among other operations it might create.
+If `to_` contract does not implement entry point `On_multi_tokens_received`, the
+transaction MUST fail. `data` argument must be passed unaltered to a receiver
+hook entry point.
+
 `On_multi_tokens_received` MAY be called multiple times from the transaction in
 any combination and the following requirements must be met:
 
@@ -234,10 +242,11 @@ type multi_token_receiver =
 
 If an implementation specific API function is used to transfer token(s) to a contract,
 `transfer` (as appropriate) rules MUST still be followed and the receiver MUST
-implement the `multi_token_receiver`.
+implement the `multi_token_receiver` or be a whitelisted implicit account.
 
 Only non-standard transfer functions MAY allow tokens to be sent to a recipient
-contract that does NOT implement the necessary `multi_token_receiver` hook functions.
+contract that does NOT implement the necessary `multi_token_receiver` hook functions
+or whitelisted.
 
 #### Token owner contract implementation guidelines
 
@@ -247,10 +256,10 @@ use-case. However, potential locking of tokens on the receiver account must be
 taken into consideration.
 
 Token owner contract MUST implement `multi_token_receiver` interface to receive
-tokens.
+tokens or be a whitelisted implicit account.
 
-By default, transfer **from** a token owner to another contract can be
-initiated only by the owner itself. If owner contract implementation does
+By default, transfer **from_** a token owner to another contract can be
+initiated only by the owner itself. If the owner contract implementation does
 not allow to initiate such transfer and/or add operators (which also can be
 performed only by the owner), tokens will remain locked on such contract forever.
 
@@ -282,8 +291,11 @@ contract (Externally Owned Account),then safety check is not performed. Otherwis
 if destination contract does not implement `multi_token_receiver` interface, the
 transaction should fail. Michelson does not provide API to distinguish between
 implicit (EOA) and originated addresses since Babylon version. Tezos specification
-requires that safety check MUST be performed for ALL targets and that target contract
-MUST implement `multi_token_receiver` interface.
+requires that target must be a whitelisted implicit account or be an originated
+contract which MUST implement `multi_token_receiver` interface. Safety check MUST
+be performed for ALL targets either by checking against implicit accounts white
+list or by invoking `multi_token_receiver`.
+
 4. Ordering requirements for batch transfers is relaxed. Since Tezos smart contracts
 are referentially transparent, batch order must be preserved only for invocation
 of `On_multi_tokens_received` entry point of `multi_token_receiver` interface.
