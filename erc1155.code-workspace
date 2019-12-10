@@ -4,5 +4,10 @@
 			"path": "."
 		}
 	],
-	"settings": {}
+	"settings": {
+		"python.pythonPath": "${workspaceFolder}/.venv/bin/python3",
+		"python.testing.unittestEnabled": true,
+		"python.formatting.provider": "black",
+		"python.testing.cwd": "${workspaceFolder}/multi_asset"
+	}
 }
