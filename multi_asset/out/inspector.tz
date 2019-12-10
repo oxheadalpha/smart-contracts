@@ -2,7 +2,8 @@
     (or (or (unit %default)
             (pair %query (pair (address %mac) (address %owner)) (nat %token_id)))
         (list %response (pair (pair (address %owner) (nat %token_id)) nat))) ;
-  storage (option (pair (pair (nat %balance) (address %owner)) (nat %token_id))) ;
+  storage
+    (or (unit %empty) (pair %state (pair (nat %balance) (address %owner)) (nat %token_id))) ;
   code { DUP ;
          CDR ;
          DIP { DUP } ;
@@ -61,7 +62,7 @@
                  DIP { DROP 2 } }
                { PUSH string "invalid response" ; FAILWITH } ;
              DUP ;
-             SOME ;
+             RIGHT unit ;
              NIL operation ;
              PAIR ;
              DIP { DROP 2 } } ;

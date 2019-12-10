@@ -6,6 +6,10 @@ type state = {
   balance : nat;
 }
 
+type storage =
+  | State of state
+  | Empty of unit
+
 type query_param = {
   mac : address;
   token_id: nat;
@@ -17,7 +21,7 @@ type param =
   | Response of (balance_request * nat) list
   | Default of unit
 
-let main (p : param) ( s : state option) : (operation list) * (state option) =
+let main (p : param) ( s : storage) : (operation list) * (state option) =
   match p with
 
   | Query q ->
@@ -47,6 +51,6 @@ let main (p : param) ( s : state option) : (operation list) * (state option) =
         }
       | [] -> (failwith "invalid response" : state)
     in
-    ([] : operation list), Some new_s
+    ([] : operation list), State new_s
 
   | Default u -> ([] : operation list), s
