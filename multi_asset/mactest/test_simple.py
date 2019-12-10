@@ -11,27 +11,39 @@ ligo_env = LigoEnv(root_dir / "impl", root_dir / "out")
 class TestSimple(TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.ligo_inspector = ligo_env.contract_from_file("inspector.mligo", "main")
-        cls.inspector = cls.ligo_inspector.compile_contract()
+        cls.inspector = ligo_env.contract_from_file("inspector.mligo", "main")
 
-    def test_response(self):
-        res = self.inspector.response(
-            [["tz1YPSCGWXwBdTncK2aCctSZAXWvGsGwVJqU", 42, 532]]
-        ).result(storage={"empty": None})
+    def test_response2(self):
+        param = self.inspector.compile_parameter(
+            """
+            Response [
+                ({ 
+                    owner = ("tz1YPSCGWXwBdTncK2aCctSZAXWvGsGwVJqU" : address);
+                    token_id = 42n;
+                },  532n)
+            ]
+        """
+        )
+
+        init_storage = self.inspector.compile_storage("Empty unit")
+        expected_storage = self.inspector.compile_storage(
+            """
+            State {
+                owner = ("tz1YPSCGWXwBdTncK2aCctSZAXWvGsGwVJqU" : address);
+                token_id = 42n;
+                balance = 532n;
+            }
+        """
+        )
+
+        res = self.inspector().response(param["response"]).result(storage=init_storage)
+
         self.assertDictEqual(
-            {
-                "state": {
-                    "balance": 532,
-                    "owner": "tz1YPSCGWXwBdTncK2aCctSZAXWvGsGwVJqU",
-                    "token_id": 42,
-                }
-            },
-            res.storage,
-            "updated storage is different",
+            expected_storage, res.storage, "updated storage is different",
         )
 
     def test_storage(self):
-        storage = self.ligo_inspector.compile_storage("Empty unit")
+        storage = self.inspector.compile_storage("Empty unit")
         print(storage)
 
     def test_parameter(self):
@@ -43,5 +55,5 @@ class TestSimple(TestCase):
                 },  532n)
             ]
         """
-        parameter = self.ligo_inspector.compile_parameter(ligo)
+        parameter = self.inspector.compile_parameter(ligo)
         print(parameter)

@@ -29,6 +29,9 @@ class LigoContract:
         self.main_func = main_func
         self.contract_interface = None
 
+    def __call__(self):
+        return self.get_contract()
+
     def compile_contract(self):
         """
         Force compilation of LIGO contract from source file and loads it into
@@ -51,7 +54,7 @@ class LigoContract:
         if self.contract_interface:
             return self.contract_interface
         else:
-            self.compile_contract()
+            return self.compile_contract()
 
     def compile_storage(self, ligo_storage):
         """
