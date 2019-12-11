@@ -13,7 +13,10 @@ class TestSimple(TestCase):
     def setUpClass(cls):
         cls.inspector = ligo_env.contract_from_file("inspector.mligo", "main")
 
-    def test_response2(self):
+    def test_compile(self):
+        self.inspector.compile_contract()
+
+    def test_response(self):
         param = self.inspector.compile_parameter(
             """
             Response [

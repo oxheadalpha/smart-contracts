@@ -38,11 +38,10 @@ class LigoContract:
         pytezos.
         :return: pytezos.ContractInterface
         """
-        command = (
-            f"ligo compile-contract {self.ligo_file} {self.main_func} > {self.tz_file}"
-        )
-        os.system(command)
-        self.contract_interface = ContractInterface.create_from(str(self.tz_file))
+        command = f"ligo compile-contract {self.ligo_file} {self.main_func}"
+        michelson = self._ligo_to_michelson(command, sanitize=False)
+        self.tz_file.write_text(michelson)
+        self.contract_interface = ContractInterface.create_from(michelson)
         return self.contract_interface
 
     def get_contract(self):
@@ -79,14 +78,16 @@ class LigoContract:
         c = self.get_contract()
         return c.contract.parameter.decode(michelson)
 
-    def _ligo_to_michelson(self, command):
+    def _ligo_to_michelson(self, command, sanitize=True):
         p = Popen(command, stdout=PIPE, stderr=PIPE, shell=True)
         with TextIOWrapper(p.stdout) as out, TextIOWrapper(p.stderr) as err:
             michelson = out.read()
             if not michelson:
                 raise Exception(err.read())
-            else:
+            elif sanitize:
                 return self._sanitize(michelson)
+            else:
+                return michelson
 
     def _sanitize(self, michelson):
         stripped = michelson.strip()

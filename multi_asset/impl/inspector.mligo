@@ -16,6 +16,7 @@ type query_param = {
   owner : address;
 }
 
+
 type param =
   | Query of query_param
   | Response of (balance_request * nat) list
