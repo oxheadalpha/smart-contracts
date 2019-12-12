@@ -2,7 +2,7 @@ from pathlib import Path
 from unittest import TestCase
 
 from pytezos import pytezos
-from mactest.ligo import LigoEnv, LigoContract, flextesa_sandbox
+from mactest.ligo import LigoEnv, LigoContract, PtzUtils, flextesa_sandbox
 
 
 root_dir = Path(__file__).parent.parent
@@ -14,6 +14,7 @@ class TestSimple(TestCase):
     def setUpClass(cls):
         cls.sandbox = flextesa_sandbox
         cls.inspector = ligo_env.contract_from_file("inspector.mligo", "main")
+        cls.util = PtzUtils(flextesa_sandbox, wait_time=10)
 
     def test_response(self):
         param = self.inspector.compile_parameter(
@@ -60,8 +61,7 @@ class TestSimple(TestCase):
         """
         )
         op = ci.response(param["response"]).operation_group.sign().inject()
-        self.sandbox.shell.wait_next_block(block_time=10)
-        self.sandbox.shell.blocks[-5:].find_operation(op["hash"])
+        self.util.wait_for_ops(op)
 
         s = ci.storage()
         expected_storage = self.inspector.compile_storage(

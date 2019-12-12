@@ -104,19 +104,62 @@ class LigoContract:
         Originates contract on blockchain.
         :param client: pytezos client connected to Tezos RPC
         :param storage: initial storage python object
-        :return: originated contract address
+        :return: originated contract id
+        """
+
+        op = self.originate_async(client, storage)
+        contract_id = PtzUtils(client, wait_time=10).wait_for_contracts(op)[0]
+
+        return contract_id
+
+    def originate_async(self, client, storage=None):
+        """
+        Originates contract on blockchain.
+        :param client: pytezos client connected to Tezos RPC
+        :param storage: initial storage python object
+        :return: operation descriptor returned by inject()
         """
         c = self.get_contract()
         script = c.contract.script(storage=storage)
-        op = client.origination(script=script).autofill().sign().inject()
+        return client.origination(script=script).autofill().sign().inject()
 
-        client.shell.wait_next_block(block_time=10)
-        opg = client.shell.blocks[-5:].find_operation(op["hash"])
-        contract_id = opg["contents"][0]["metadata"]["operation_result"][
-            "originated_contracts"
-        ][0]
 
-        return contract_id
+class PtzUtils:
+    def __init__(self, client, wait_time=60, block_depth=5):
+        """
+        :param client: PyTezosClient
+        :param block_time: block baking time in seconds
+        """
+        self.client = client
+        self.wait_time = wait_time
+        self.block_depth = block_depth
+
+    def wait_for_ops(self, *args):
+        """
+        Waits for specified operations to be completed successfully.
+        :param *args: list of operation descriptors returned by inject()
+        """
+        self.client.shell.wait_next_block(block_time=self.wait_time)
+        blocks = self.client.shell.blocks[-self.block_depth :]
+        for op in args:
+            blocks.find_operation(op["hash"])
+
+    def wait_for_contracts(self, *args):
+        """
+        Waits for specified contracts to be originated successfully.
+        :param *args: list of operation descriptors returned by inject()
+        :return: corresponding list of contract ids
+        """
+        self.client.shell.wait_next_block(block_time=self.wait_time)
+        blocks = self.client.shell.blocks[-self.block_depth :]
+
+        def get_contract_id(op):
+            opg = blocks.find_operation(op["hash"])
+            return opg["contents"][0]["metadata"]["operation_result"][
+                "originated_contracts"
+            ][0]
+
+        return [get_contract_id(op) for op in args]
 
 
 flextesa_sandbox = pytezos.using(
