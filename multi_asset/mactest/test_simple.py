@@ -45,8 +45,34 @@ class TestSimple(TestCase):
         )
 
     def test_response_sandbox(self):
-        print(self.sandbox.balance())
         init_storage = self.inspector.compile_storage("Empty unit")
         inspector_id = self.inspector.originate(self.sandbox, init_storage)
         ci = self.sandbox.contract(inspector_id)
-        print(ci)
+
+        param = self.inspector.compile_parameter(
+            """
+        Response [
+            ({ 
+                owner = ("tz1YPSCGWXwBdTncK2aCctSZAXWvGsGwVJqU" : address);
+                token_id = 42n;
+            },  532n)
+        ]
+        """
+        )
+        op = ci.response(param["response"]).operation_group.sign().inject()
+        self.sandbox.shell.wait_next_block(block_time=10)
+        self.sandbox.shell.blocks[-5:].find_operation(op["hash"])
+
+        s = ci.storage()
+        expected_storage = self.inspector.compile_storage(
+            """
+            State {
+                owner = ("tz1YPSCGWXwBdTncK2aCctSZAXWvGsGwVJqU" : address);
+                token_id = 42n;
+                balance = 532n;
+            }
+        """
+        )
+        self.assertDictEqual(
+            expected_storage, s, "updated storage is different",
+        )
