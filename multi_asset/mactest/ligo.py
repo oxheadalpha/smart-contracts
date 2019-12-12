@@ -2,7 +2,7 @@ from pathlib import Path
 import os
 from subprocess import Popen, PIPE
 from io import TextIOWrapper
-from pytezos import ContractInterface
+from pytezos import pytezos, ContractInterface
 
 
 class LigoEnv:
@@ -79,13 +79,14 @@ class LigoContract:
         return c.contract.parameter.decode(michelson)
 
     def _ligo_to_michelson(self, command):
-        p = Popen(command, stdout=PIPE, stderr=PIPE, shell=True)
-        with TextIOWrapper(p.stdout) as out, TextIOWrapper(p.stderr) as err:
-            michelson = out.read()
-            if not michelson:
-                raise Exception(err.read())
-            else:
-                return michelson
+        with Popen(command, stdout=PIPE, stderr=PIPE, shell=True) as p:
+            with TextIOWrapper(p.stdout) as out, TextIOWrapper(p.stderr) as err:
+                michelson = out.read()
+                if not michelson:
+                    msg = err.read()
+                    raise Exception(msg)
+                else:
+                    return michelson
 
     def _ligo_to_michelson_sanitized(self, command):
         michelson = self._ligo_to_michelson(command)
@@ -97,3 +98,29 @@ class LigoContract:
             return stripped[1:-1]
         else:
             return stripped
+
+    def originate(self, client, storage=None):
+        """
+        Originates contract on blockchain.
+        :param client: pytezos client connected to Tezos RPC
+        :param storage: initial storage python object
+        :return: originated contract address
+        """
+        c = self.get_contract()
+        script = c.contract.script(storage=storage)
+        op = client.origination(script=script).autofill().sign().inject()
+
+        client.shell.wait_next_block()
+        opg = client.shell.blocks[-1:].find_operation(op["hash"])
+        contract_id = opg["contents"][0]["metadata"]["operation_result"][
+            "originated_contracts"
+        ][0]
+
+        return contract_id
+
+
+flextesa_sandbox = pytezos.using(
+    shell="http://localhost:20000",
+    key="edsk3RFgDiCt7tWB2oe96w1eRw72iYiiqZPLu9nnEY23MYRp2d8Kkx",
+)
+

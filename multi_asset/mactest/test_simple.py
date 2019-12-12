@@ -1,7 +1,8 @@
 from pathlib import Path
 from unittest import TestCase
 
-from mactest.ligo import LigoEnv, LigoContract
+from pytezos import pytezos
+from mactest.ligo import LigoEnv, LigoContract, flextesa_sandbox
 
 
 root_dir = Path(__file__).parent.parent
@@ -11,10 +12,8 @@ ligo_env = LigoEnv(root_dir / "impl", root_dir / "out")
 class TestSimple(TestCase):
     @classmethod
     def setUpClass(cls):
+        cls.sandbox = flextesa_sandbox
         cls.inspector = ligo_env.contract_from_file("inspector.mligo", "main")
-
-    def test_compile(self):
-        self.inspector.compile_contract()
 
     def test_response(self):
         param = self.inspector.compile_parameter(
@@ -45,18 +44,9 @@ class TestSimple(TestCase):
             expected_storage, res.storage, "updated storage is different",
         )
 
-    def test_storage(self):
-        storage = self.inspector.compile_storage("Empty unit")
-        print(storage)
-
-    def test_parameter(self):
-        ligo = """
-            Response [
-                ({ 
-                    owner = ("tz1YPSCGWXwBdTncK2aCctSZAXWvGsGwVJqU" : address);
-                    token_id = 42n;
-                },  532n)
-            ]
-        """
-        parameter = self.inspector.compile_parameter(ligo)
-        print(parameter)
+    def test_response_sandbox(self):
+        print(self.sandbox.balance())
+        init_storage = self.inspector.compile_storage("Empty unit")
+        inspector_id = self.inspector.originate(self.sandbox, init_storage)
+        ci = self.sandbox.contract(inspector_id)
+        print(ci)
