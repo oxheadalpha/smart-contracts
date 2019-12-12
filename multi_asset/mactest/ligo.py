@@ -110,7 +110,8 @@ class LigoContract:
         script = c.contract.script(storage=storage)
         op = client.origination(script=script).autofill().sign().inject()
 
-        client.shell.wait_next_block()
+        client.shell.wait_next_block(block_time=8)
+        print("NEXT")
         opg = client.shell.blocks[-1:].find_operation(op["hash"])
         contract_id = opg["contents"][0]["metadata"]["operation_result"][
             "originated_contracts"
