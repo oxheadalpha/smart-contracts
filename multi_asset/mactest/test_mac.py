@@ -33,11 +33,11 @@ class TestMac(TestCase):
         # mac_op = cls.orig_mac(mac)
 
         print("waiting for contracts origination to complete...")
-        # contract_ids = cls.util.wait_for_contracts(
-        #     mac_op, alice_op, bob_op, inspector_op
-        # )
-        # contracts = [cls.sandbox.contract(id for id in contract_ids)]
-        # cls.mac, cls.alice, cls.bob, cls.inspector = contracts
+        contract_ids = cls.util.wait_for_contracts(
+            alice_op, bob_op, inspector_op  # , mac_op
+        )
+        contracts = [cls.sandbox.contract(id) for id in contract_ids]
+        (cls.alice, cls.bob, cls.inspector) = contracts  # cls.mac,
 
     @classmethod
     def orig_mac(cls, mac):
@@ -86,5 +86,5 @@ class TestMac(TestCase):
         return (op, key)
 
     def test_dummy(self):
-        self.assertIsNotNone(1)
+        self.assertIsNotNone(self.alice)
 

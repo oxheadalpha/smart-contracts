@@ -128,7 +128,7 @@ class LigoContract:
         counter = util.contract_counter()
         op = util.client.origination(script=script).autofill().sign().inject()
         util.wait_for_contract_counter(counter + 1)
-        print("after orig: " + str(util.contract_counter()))
+
         return op
 
 
@@ -151,10 +151,11 @@ class PtzUtils:
         """
 
         for _ in range(self.num_blocks_wait):
-            self.client.shell.wait_next_block(block_time=self.wait_time)
-            res = [self._check_op(op) for op in ops if op]
+            chr = (self._check_op(op) for op in ops)
+            res = [op_res for op_res in chr if op_res]
             if len(ops) == len(res):
                 return res
+            self.client.shell.wait_next_block(block_time=self.wait_time)
 
         raise TimeoutError("waiting for operations")
 
@@ -164,7 +165,7 @@ class PtzUtils:
         :param *ops: list of operation descriptors returned by inject()
         :return: corresponding list of contract ids
         """
-        res = self.wait_for_ops(ops)
+        res = self.wait_for_ops(*ops)
 
         def get_contract_id(op):
             return op["contents"][0]["metadata"]["operation_result"][
