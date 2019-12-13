@@ -3,7 +3,10 @@ import os
 from subprocess import Popen, PIPE
 from io import TextIOWrapper
 from time import sleep
+
 from pytezos import pytezos, ContractInterface
+from pytezos.operation.result import OperationResult
+from pytezos.rpc.errors import RpcError
 
 
 class LigoEnv:
@@ -130,7 +133,7 @@ class LigoContract:
 
 
 class PtzUtils:
-    def __init__(self, client, wait_time=60, block_depth=5):
+    def __init__(self, client, wait_time=60, block_depth=5, num_blocks_wait=2):
         """
         :param client: PyTezosClient
         :param block_time: block baking time in seconds
@@ -138,6 +141,62 @@ class PtzUtils:
         self.client = client
         self.wait_time = wait_time
         self.block_depth = block_depth
+        self.num_blocks_wait = num_blocks_wait
+
+    def wait_for_ops(self, *ops):
+        """
+        Waits for specified operations to be completed successfully.
+        If any of the operations fails, raises exception.
+        :param *ops: list of operation descriptors returned by inject()
+        """
+
+        for _ in range(self.num_blocks_wait):
+            self.client.shell.wait_next_block(block_time=self.wait_time)
+            res = [self._check_op(op) for op in ops if op]
+            if len(ops) == len(res):
+                return res
+
+        raise TimeoutError("waiting for operations")
+
+    def wait_for_contracts(self, *ops):
+        """
+        Waits for specified contracts to be originated successfully.
+        :param *ops: list of operation descriptors returned by inject()
+        :return: corresponding list of contract ids
+        """
+        res = self.wait_for_ops(ops)
+
+        def get_contract_id(op):
+            return op["contents"][0]["metadata"]["operation_result"][
+                "originated_contracts"
+            ][0]
+
+        return [get_contract_id(op) for op in res]
+
+    def _check_op(self, op):
+        """
+        Returns None if operation is not completed
+        Raises error if operation failed
+        Return operation result if operation is completed
+        """
+
+        op_data = op[0] if isinstance(op, tuple) else op
+        op_hash = op_data["hash"]
+        op_source = op_data["contents"][0]["source"]
+        source = self.client.key.public_key_hash()
+        assert (
+            source == op_source
+        ), f"operation from different source. Expected '{source}' actual '{op_source}'"
+
+        blocks = self.client.shell.blocks[-self.block_depth :]
+        try:
+            res = blocks.find_operation(op_hash)
+            if not OperationResult.is_applied(res):
+                raise RpcError.from_errors(OperationResult.errors(res)) from op_hash
+            return res
+        except StopIteration:
+            # not found
+            return None
 
     def contract_counter(self):
         source = self.client.key.public_key_hash()
@@ -155,33 +214,6 @@ class PtzUtils:
             sleep(1)
             poll_time_sec += 1
         raise TimeoutError("waiting for contract counter")
-
-    def wait_for_ops(self, *ops):
-        """
-        Waits for specified operations to be completed successfully.
-        :param *ops: list of operation descriptors returned by inject()
-        """
-        self.client.shell.wait_next_block(block_time=self.wait_time)
-        blocks = self.client.shell.blocks[-self.block_depth :]
-        for op in ops:
-            blocks.find_operation(op["hash"])
-
-    def wait_for_contracts(self, *ops):
-        """
-        Waits for specified contracts to be originated successfully.
-        :param *ops: list of operation descriptors returned by inject()
-        :return: corresponding list of contract ids
-        """
-        self.client.shell.wait_next_block(block_time=self.wait_time)
-        blocks = self.client.shell.blocks[-self.block_depth :]
-
-        def get_contract_id(op):
-            opg = blocks.find_operation(op["hash"])
-            return opg["contents"][0]["metadata"]["operation_result"][
-                "originated_contracts"
-            ][0]
-
-        return [get_contract_id(op) for op in ops]
 
 
 flextesa_sandbox = pytezos.using(
