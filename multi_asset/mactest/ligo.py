@@ -100,51 +100,33 @@ class LigoContract:
         else:
             return stripped
 
-    def originate(self, client, storage=None):
+    def originate(self, util, storage=None):
         """
         Originates contract on blockchain.
-        :param client: pytezos client connected to Tezos RPC
+        :param util: PtzUtils wrapping pytezos client connected to Tezos RPC
         :param storage: initial storage python object
         :return: originated contract id
         """
 
-        op = self.originate_async(client, storage)
-        contract_id = PtzUtils(client, wait_time=10).wait_for_contracts(op)[0]
+        op = self.originate_async(util, storage)
+        contract_id = util.wait_for_contracts(op)[0]
 
         return contract_id
 
-    def originate_async(self, client, storage=None):
+    def originate_async(self, util, storage=None):
         """
         Originates contract on blockchain.
-        :param client: pytezos client connected to Tezos RPC
+        :param util: PtzUtils wrapping pytezos client connected to Tezos RPC
         :param storage: initial storage python object
         :return: operation descriptor returned by inject()
         """
         c = self.get_contract()
         script = c.contract.script(storage=storage)
-        counter = self._counter(client)
-        print("before orig: " + str(self._counter(client)))
-        op = client.origination(script=script).autofill().sign().inject()
-        self._wait_for_contract_counter(client, counter + 1)
-        print("after orig: " + str(self._counter(client)))
+        counter = util.contract_counter()
+        op = util.client.origination(script=script).autofill().sign().inject()
+        util.wait_for_contract_counter(counter + 1)
+        print("after orig: " + str(util.contract_counter()))
         return op
-
-    def _counter(self, client):
-        source = client.key.public_key_hash()
-        counter = client.shell.contracts[source].count()
-        return next(counter)
-
-    # quick and dirty polling of the node to increase contract counter
-    def _wait_for_contract_counter(self, client, cnt):
-        poll_time_sec = 0.0
-        while poll_time_sec < 20.0:
-            counter = self._counter(client)
-            if counter == cnt:
-                print(f"waited for counter update for {poll_time_sec}sec")
-                return
-            sleep(1)
-            poll_time_sec += 1
-        raise TimeoutError("waiting for contract counter")
 
 
 class PtzUtils:
@@ -156,6 +138,23 @@ class PtzUtils:
         self.client = client
         self.wait_time = wait_time
         self.block_depth = block_depth
+
+    def contract_counter(self):
+        source = self.client.key.public_key_hash()
+        counter = self.client.shell.contracts[source].count()
+        return next(counter)
+
+    # quick and dirty polling of the node to increase contract counter
+    def wait_for_contract_counter(self, cnt):
+        poll_time_sec = 0.0
+        while poll_time_sec < self.wait_time * 2:
+            counter = self.contract_counter()
+            if counter == cnt:
+                print(f"waited for counter update for {poll_time_sec}sec")
+                return
+            sleep(1)
+            poll_time_sec += 1
+        raise TimeoutError("waiting for contract counter")
 
     def wait_for_ops(self, *ops):
         """
