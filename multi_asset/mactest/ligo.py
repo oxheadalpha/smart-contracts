@@ -2,6 +2,7 @@ from pathlib import Path
 import os
 from subprocess import Popen, PIPE
 from io import TextIOWrapper
+from time import sleep
 from pytezos import pytezos, ContractInterface
 
 
@@ -121,7 +122,29 @@ class LigoContract:
         """
         c = self.get_contract()
         script = c.contract.script(storage=storage)
-        return client.origination(script=script).autofill().sign().inject()
+        counter = self._counter(client)
+        print("before orig: " + str(self._counter(client)))
+        op = client.origination(script=script).autofill().sign().inject()
+        self._wait_for_contract_counter(client, counter + 1)
+        print("after orig: " + str(self._counter(client)))
+        return op
+
+    def _counter(self, client):
+        source = client.key.public_key_hash()
+        counter = client.shell.contracts[source].count()
+        return next(counter)
+
+    # quick and dirty polling of the node to increase contract counter
+    def _wait_for_contract_counter(self, client, cnt):
+        poll_time_sec = 0.0
+        while poll_time_sec < 20.0:
+            counter = self._counter(client)
+            if counter == cnt:
+                print(f"waited for counter update for {poll_time_sec}sec")
+                return
+            sleep(1)
+            poll_time_sec += 1
+        raise TimeoutError("waiting for contract counter")
 
 
 class PtzUtils:
@@ -134,20 +157,20 @@ class PtzUtils:
         self.wait_time = wait_time
         self.block_depth = block_depth
 
-    def wait_for_ops(self, *args):
+    def wait_for_ops(self, *ops):
         """
         Waits for specified operations to be completed successfully.
-        :param *args: list of operation descriptors returned by inject()
+        :param *ops: list of operation descriptors returned by inject()
         """
         self.client.shell.wait_next_block(block_time=self.wait_time)
         blocks = self.client.shell.blocks[-self.block_depth :]
-        for op in args:
+        for op in ops:
             blocks.find_operation(op["hash"])
 
-    def wait_for_contracts(self, *args):
+    def wait_for_contracts(self, *ops):
         """
         Waits for specified contracts to be originated successfully.
-        :param *args: list of operation descriptors returned by inject()
+        :param *ops: list of operation descriptors returned by inject()
         :return: corresponding list of contract ids
         """
         self.client.shell.wait_next_block(block_time=self.wait_time)
@@ -159,7 +182,7 @@ class PtzUtils:
                 "originated_contracts"
             ][0]
 
-        return [get_contract_id(op) for op in args]
+        return [get_contract_id(op) for op in ops]
 
 
 flextesa_sandbox = pytezos.using(

@@ -1,7 +1,6 @@
 from pathlib import Path
 from unittest import TestCase
 
-from pytezos import pytezos
 from mactest.ligo import LigoEnv, LigoContract, PtzUtils, flextesa_sandbox
 
 
@@ -13,8 +12,8 @@ class TestSimple(TestCase):
     @classmethod
     def setUpClass(cls):
         cls.sandbox = flextesa_sandbox
-        cls.inspector = ligo_env.contract_from_file("inspector.mligo", "main")
         cls.util = PtzUtils(flextesa_sandbox, wait_time=10)
+        cls.inspector = ligo_env.contract_from_file("inspector.mligo", "main")
 
     def test_response(self):
         param = self.inspector.compile_parameter(
