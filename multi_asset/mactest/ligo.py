@@ -4,7 +4,7 @@ from subprocess import Popen, PIPE
 from io import TextIOWrapper
 from time import sleep
 
-from pytezos import pytezos, ContractInterface
+from pytezos import pytezos, ContractInterface, Key
 from pytezos.operation.result import OperationResult
 from pytezos.rpc.errors import RpcError
 
@@ -103,7 +103,7 @@ class LigoContract:
         else:
             return stripped
 
-    def originate(self, util, storage=None):
+    def originate(self, util, storage=None, balance=0):
         """
         Originates contract on blockchain.
         :param util: PtzUtils wrapping pytezos client connected to Tezos RPC
@@ -111,12 +111,12 @@ class LigoContract:
         :return: originated contract id
         """
 
-        op = self.originate_async(util, storage)
+        op = self.originate_async(util, storage, balance)
         contract_id = util.wait_for_contracts(op)[0]
 
         return contract_id
 
-    def originate_async(self, util, storage=None):
+    def originate_async(self, util, storage=None, balance=0):
         """
         Originates contract on blockchain.
         :param util: PtzUtils wrapping pytezos client connected to Tezos RPC
@@ -126,7 +126,12 @@ class LigoContract:
         c = self.get_contract()
         script = c.contract.script(storage=storage)
         counter = util.contract_counter()
-        op = util.client.origination(script=script).autofill().sign().inject()
+        op = (
+            util.client.origination(script=script, balance=balance)
+            .autofill()
+            .sign()
+            .inject()
+        )
         util.wait_for_contract_counter(counter + 1)
 
         return op
@@ -143,6 +148,17 @@ class PtzUtils:
         self.block_depth = block_depth
         self.num_blocks_wait = num_blocks_wait
 
+    def using(self, shell=None, key=None):
+        new_client = self.client.using(
+            shell=shell or self.client.shell, key=key or self.client.key
+        )
+        return PtzUtils(
+            new_client,
+            wait_time=self.wait_time,
+            block_depth=self.block_depth,
+            num_blocks_wait=self.num_blocks_wait,
+        )
+
     def wait_for_ops(self, *ops):
         """
         Waits for specified operations to be completed successfully.
@@ -155,6 +171,7 @@ class PtzUtils:
             res = [op_res for op_res in chr if op_res]
             if len(ops) == len(res):
                 return res
+            print(f"{len(res)} out of {len(ops)} operations are completed")
             self.client.shell.wait_next_block(block_time=self.wait_time)
 
         raise TimeoutError("waiting for operations")
@@ -174,6 +191,12 @@ class PtzUtils:
 
         return [get_contract_id(op) for op in res]
 
+    def transfer_async(self, to_address, amount):
+        count = self.contract_counter()
+        op = self.client.transaction(to_address, amount).autofill().sign().inject()
+        self.wait_for_contract_counter(count + 1)
+        return op
+
     def _check_op(self, op):
         """
         Returns None if operation is not completed
@@ -183,11 +206,11 @@ class PtzUtils:
 
         op_data = op[0] if isinstance(op, tuple) else op
         op_hash = op_data["hash"]
-        op_source = op_data["contents"][0]["source"]
-        source = self.client.key.public_key_hash()
-        assert (
-            source == op_source
-        ), f"operation from different source. Expected '{source}' actual '{op_source}'"
+        # op_source = op_data["contents"][0]["source"]
+        # source = self.client.key.public_key_hash()
+        # assert (
+        #     source == op_source
+        # ), f"operation from different source. Expected '{source}' actual '{op_source}'"
 
         blocks = self.client.shell.blocks[-self.block_depth :]
         try:
@@ -219,6 +242,6 @@ class PtzUtils:
 
 flextesa_sandbox = pytezos.using(
     shell="http://localhost:20000",
-    key="edsk3RFgDiCt7tWB2oe96w1eRw72iYiiqZPLu9nnEY23MYRp2d8Kkx",
+    key=Key.from_encoded_key("edsk3RFgDiCt7tWB2oe96w1eRw72iYiiqZPLu9nnEY23MYRp2d8Kkx"),
 )
 

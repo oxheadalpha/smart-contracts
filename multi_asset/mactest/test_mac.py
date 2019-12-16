@@ -1,11 +1,10 @@
 from pathlib import Path
+from decimal import *
 from unittest import TestCase
 
 from pytezos import Key
 
 from mactest.ligo import LigoEnv, LigoContract, PtzUtils, flextesa_sandbox
-
-from time import sleep
 
 
 root_dir = Path(__file__).parent.parent
@@ -17,8 +16,17 @@ class TestMac(TestCase):
     def setUpClass(cls):
         cls.sandbox = flextesa_sandbox
         cls.util = PtzUtils(flextesa_sandbox, wait_time=10)
-        cls.admin = cls.sandbox.key.public_key_hash()
+        cls.admin = cls.sandbox.key
 
+        cls.orig_contracts()
+
+        cls.mike = Key.generate(export=False)
+        cls.kyle = Key.generate(export=False)
+
+        cls.transfer_init_funds()
+
+    @classmethod
+    def orig_contracts(cls):
         print("loading ligo contracts...")
         mac = ligo_env.contract_from_file("multi_asset.mligo", "multi_asset_main")
         receiver = ligo_env.contract_from_file(
@@ -62,7 +70,7 @@ class TestMac(TestCase):
             };
         }
         """
-            % cls.admin
+            % cls.admin.public_key_hash()
         )
 
         ptz_storage = mac.compile_storage(ligo_storage)
@@ -76,15 +84,22 @@ class TestMac(TestCase):
 
     @classmethod
     def orig_receiver(cls, receiver):
-        return receiver.originate_async(cls.util)
+        return receiver.originate_async(cls.util, balance=100000000)
 
     @classmethod
-    def orig_implicit(cls):
-        key = Key.generate()
-        address = key.public_key_hash()
-        op = cls.sandbox.reveal(address).fill().sign().inject()
-        return (op, key)
+    def transfer_init_funds(cls):
+        op3 = cls.util.transfer_async(cls.mike.public_key_hash(), 100000000)
+        op4 = cls.util.transfer_async(cls.kyle.public_key_hash(), 100000000)
+        cls.util.wait_for_ops(op3, op4)
 
     def test_dummy(self):
         self.assertIsNotNone(self.alice)
+
+    def test_kyle_balance(self):
+        bal1 = self.sandbox.account(self.kyle.public_key_hash())["balance"]
+        print(f"kyle={bal1}")
+
+    def test_alice_balance(self):
+        bal2 = self.sandbox.account(self.alice.address)["balance"]
+        print(f"alice={bal2}")
 

@@ -7,7 +7,7 @@
 
 type receiver =
   | Multi_token_receiver of multi_token_receiver
-  | Foo of unit
+  | Default of unit
 
 (*
   This receiver implementation is WIP and may result in locked tokens.
