@@ -555,10 +555,16 @@
                       DIP { DROP } } } ;
              DIP { DROP 2 } ;
              DUP ;
+             CDR ;
+             DIP { DUP } ;
+             SWAP ;
              CAR ;
-             DIP { DIP 2 { DUP } ; DIG 2 } ;
+             DIP { DUP ;
+                   CAR ;
+                   DIP { DUP ; CDR ; DIP { DIP 3 { DUP } ; DIG 3 ; CDR ; CDR } ; PAIR } ;
+                   PAIR } ;
              PAIR ;
-             DIP { DROP 2 } }
+             DIP { DROP 3 } }
            { DIP { DUP } ;
              SWAP ;
              CAR ;

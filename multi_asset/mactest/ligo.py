@@ -206,11 +206,6 @@ class PtzUtils:
 
         op_data = op[0] if isinstance(op, tuple) else op
         op_hash = op_data["hash"]
-        # op_source = op_data["contents"][0]["source"]
-        # source = self.client.key.public_key_hash()
-        # assert (
-        #     source == op_source
-        # ), f"operation from different source. Expected '{source}' actual '{op_source}'"
 
         blocks = self.client.shell.blocks[-self.block_depth :]
         try:

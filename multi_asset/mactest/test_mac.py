@@ -11,7 +11,7 @@ root_dir = Path(__file__).parent.parent
 ligo_env = LigoEnv(root_dir / "impl", root_dir / "out")
 
 
-class TestMac(TestCase):
+class TestMacSetUp(TestCase):
     @classmethod
     def setUpClass(cls):
         cls.sandbox = flextesa_sandbox
@@ -23,32 +23,34 @@ class TestMac(TestCase):
         cls.mike = Key.generate(export=False)
         cls.kyle = Key.generate(export=False)
 
-        # cls.transfer_init_funds()
+        cls.transfer_init_funds()
 
     @classmethod
     def orig_contracts(cls):
         print("loading ligo contracts...")
-        mac = ligo_env.contract_from_file("multi_asset.mligo", "multi_asset_main")
-        receiver = ligo_env.contract_from_file(
+        cls.ligo_mac = ligo_env.contract_from_file(
+            "multi_asset.mligo", "multi_asset_main"
+        )
+        cls.ligo_receiver = ligo_env.contract_from_file(
             "multi_token_receiver.mligo", "receiver_stub"
         )
-        inspector = ligo_env.contract_from_file("inspector.mligo", "main")
+        cls.ligo_inspector = ligo_env.contract_from_file("inspector.mligo", "main")
 
         print("originating contracts...")
-        alice_op = cls.orig_receiver(receiver)
-        bob_op = cls.orig_receiver(receiver)
-        inspector_op = cls.orig_inspector(inspector)
-        mac_op = cls.orig_mac(mac)
+        mac_op = cls.orig_mac(cls.ligo_mac)
+        alice_op = cls.orig_receiver(cls.ligo_receiver)
+        bob_op = cls.orig_receiver(cls.ligo_receiver)
+        inspector_op = cls.orig_inspector(cls.ligo_inspector)
 
         print("waiting for contracts origination to complete...")
         contract_ids = cls.util.wait_for_contracts(
-            alice_op, bob_op, inspector_op, mac_op
+            mac_op, alice_op, bob_op, inspector_op
         )
         contracts = [cls.sandbox.contract(id) for id in contract_ids]
-        (cls.alice, cls.bob, cls.inspector, cls.mac) = contracts
+        (cls.mac, cls.alice, cls.bob, cls.inspector) = contracts
 
     @classmethod
-    def orig_mac(cls, mac):
+    def orig_mac(cls, ligo_mac):
 
         ligo_storage = (
             """
@@ -73,18 +75,18 @@ class TestMac(TestCase):
             % cls.admin.public_key_hash()
         )
 
-        ptz_storage = mac.compile_storage(ligo_storage)
-        return mac.originate_async(cls.util, ptz_storage)
+        ptz_storage = ligo_mac.compile_storage(ligo_storage)
+        return ligo_mac.originate_async(cls.util, ptz_storage)
 
     @classmethod
-    def orig_inspector(cls, inspector):
+    def orig_inspector(cls, ligo_inspector):
         ligo_storage = "Empty unit"
-        ptz_storage = inspector.compile_storage(ligo_storage)
-        return inspector.originate_async(cls.util, ptz_storage)
+        ptz_storage = ligo_inspector.compile_storage(ligo_storage)
+        return ligo_inspector.originate_async(cls.util, ptz_storage)
 
     @classmethod
-    def orig_receiver(cls, receiver):
-        return receiver.originate_async(cls.util, balance=100000000)
+    def orig_receiver(cls, ligo_receiver):
+        return ligo_receiver.originate_async(cls.util, balance=100000000)
 
     @classmethod
     def transfer_init_funds(cls):
@@ -92,6 +94,59 @@ class TestMac(TestCase):
         op4 = cls.util.transfer_async(cls.kyle.public_key_hash(), 100000000)
         cls.util.wait_for_ops(op3, op4)
 
+    @classmethod
+    def create_token(self, id, name):
+        op = (
+            self.mac.create_token(token_id=id, descriptor=name)
+            .operation_group.sign()
+            .inject()
+        )
+        self.util.wait_for_ops(op)
+
+    @classmethod
+    def pause_mac(cls, paused: bool):
+        call = cls.mac.pause(True)
+        call.parameters["value"]["prim"] = str(paused)
+        op = call.inject()
+        cls.util.wait_for_ops(op)
+
+    def inspect_balance(self, address, token_id):
+
+        # ligo_param = """ Query {
+        #     mac = ("%s" : address);
+        #     token_id = %dn;
+        #     owner = ("%s" : address);
+        # }""" % (
+        #     self.mac.address,
+        #     token_id,
+        #     address,
+        # )
+        # param = self.ligo_inspector.compile_parameter(ligo_param)
+        op = self.inspector.query(
+            mac=self.mac.address, token_id=token_id, owner=address
+        ).inject()
+        self.util.wait_for_ops(op)
+        return self.inspector.storage()
+
+
+class TestMintBurn(TestMacSetUp):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.create_token(1, "TK1")
+        # needed to check balances which is guarded
+        cls.pause_mac(False)
+
+    def test_mint_burn_to_receiver(self):
+        mint_op = self.mac.mint_tokens(
+            owner=self.alice.address, batch=[{"amount": 10, "token_id": 1}], data="00",
+        ).inject()
+        self.util.wait_for_ops(mint_op)
+        # b = self.inspect_balance(self.alice.address, 1)
+        # print(b)
+
+
+class TestBalances(TestMacSetUp):
     def test_dummy(self):
         self.assertIsNotNone(self.alice)
 
@@ -102,4 +157,3 @@ class TestMac(TestCase):
     def test_alice_balance(self):
         bal2 = self.sandbox.account(self.alice.address)["balance"]
         print(f"alice={bal2}")
-
