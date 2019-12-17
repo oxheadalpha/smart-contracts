@@ -23,7 +23,7 @@ class TestMac(TestCase):
         cls.mike = Key.generate(export=False)
         cls.kyle = Key.generate(export=False)
 
-        cls.transfer_init_funds()
+        # cls.transfer_init_funds()
 
     @classmethod
     def orig_contracts(cls):
@@ -38,14 +38,14 @@ class TestMac(TestCase):
         alice_op = cls.orig_receiver(receiver)
         bob_op = cls.orig_receiver(receiver)
         inspector_op = cls.orig_inspector(inspector)
-        # mac_op = cls.orig_mac(mac)
+        mac_op = cls.orig_mac(mac)
 
         print("waiting for contracts origination to complete...")
         contract_ids = cls.util.wait_for_contracts(
-            alice_op, bob_op, inspector_op  # , mac_op
+            alice_op, bob_op, inspector_op, mac_op
         )
         contracts = [cls.sandbox.contract(id) for id in contract_ids]
-        (cls.alice, cls.bob, cls.inspector) = contracts  # cls.mac,
+        (cls.alice, cls.bob, cls.inspector, cls.mac) = contracts
 
     @classmethod
     def orig_mac(cls, mac):
