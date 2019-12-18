@@ -7,7 +7,7 @@ setup(
     version="1.0",
     description="Multi Asset Contract Tests",
     packages=["mactest"],
-    install_requires=["pytezos"],
+    install_requires=["pytezos", "crypto"],
     include_package_data=True,
 )
 

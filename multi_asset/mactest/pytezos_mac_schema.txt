@@ -14,9 +14,9 @@ $schema:
 
 $transfer:
 	{
-	  "batch": [ $batch_item , ... ],
+	  "batch": [ $batch_item , ... ],'
 	  "data": $bytes,
-	  "from_": $address,
+	  "from_": $address, 
 	  "to_": $address
 	}
 

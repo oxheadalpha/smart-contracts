@@ -3,3 +3,4 @@ include multi_token_interface.mligo
 include impl/*.mligo
 include mactest/start-sandbox.sh
 include mactest/kill-sandbox.sh
+include mactest/pytezos_mac_schema.txt
