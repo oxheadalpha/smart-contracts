@@ -16,12 +16,12 @@ class TestMacSetUp(TestCase):
     def setUpClass(cls):
         cls.sandbox = flextesa_sandbox
         cls.util = PtzUtils(flextesa_sandbox, block_time=8)
-        cls.admin = cls.sandbox.key
+        cls.admin_key = cls.sandbox.key
 
         cls.orig_contracts()
 
-        cls.mike = Key.generate(export=False)
-        cls.kyle = Key.generate(export=False)
+        cls.mike_key = Key.generate(export=False)
+        cls.kyle_key = Key.generate(export=False)
 
         cls.transfer_init_funds()
 
@@ -47,7 +47,7 @@ class TestMacSetUp(TestCase):
             mac_op, alice_op, bob_op, inspector_op
         )
         contracts = [cls.sandbox.contract(id) for id in contract_ids]
-        (cls.mac, cls.alice, cls.bob, cls.inspector) = contracts
+        (cls.mac, cls.alice_receiver, cls.bob_receiver, cls.inspector) = contracts
 
     @classmethod
     def orig_mac(cls, ligo_mac):
@@ -72,7 +72,7 @@ class TestMacSetUp(TestCase):
             };
         }
         """
-            % cls.admin.public_key_hash()
+            % cls.admin_key.public_key_hash()
         )
 
         ptz_storage = ligo_mac.compile_storage(ligo_storage)
@@ -90,17 +90,13 @@ class TestMacSetUp(TestCase):
 
     @classmethod
     def transfer_init_funds(cls):
-        op3 = cls.util.transfer_async(cls.mike.public_key_hash(), 100000000)
-        op4 = cls.util.transfer_async(cls.kyle.public_key_hash(), 100000000)
+        op3 = cls.util.transfer_async(cls.mike_key.public_key_hash(), 100000000)
+        op4 = cls.util.transfer_async(cls.kyle_key.public_key_hash(), 100000000)
         cls.util.wait_for_ops(op3, op4)
 
     @classmethod
     def create_token(self, id, name):
-        op = (
-            self.mac.create_token(token_id=id, descriptor=name)
-            .operation_group.sign()
-            .inject()
-        )
+        op = self.mac.create_token(token_id=id, descriptor=name).inject()
         self.util.wait_for_ops(op)
 
     @classmethod
@@ -109,21 +105,18 @@ class TestMacSetUp(TestCase):
         op = call.inject()
         cls.util.wait_for_ops(op)
 
-    def inspect_balance(self, address, token_id):
-        # op = self.inspector.query(
-        #     mac=self.mac.address, token_id=token_id, owner=address
-        # ).inject()
-        # from pytezos.operation.result import OperationResult
-
-        from pytezos.operation.group import OperationResult
-        og = self.inspector.query(
-            mac=self.mac.address, token_id=token_id, owner=address
-        ).operation_group
-        og.contents[0]["gas_limit"] = "800000"
-        af = og.autofill()
-        op = af.sign().inject()
+    def assertBalance(self, owner_address, token_id, expected_balance, msg=None):
+        op = self.inspector.query(
+            mac=self.mac.address, token_id=token_id, owner=owner_address
+        ).inject()
         self.util.wait_for_ops(op)
-        return self.inspector.storage()["state"]
+        b = self.inspector.storage()["state"]
+        print(b)
+        self.assertEqual(
+            {"balance": expected_balance, "token_id": token_id, "owner": owner_address},
+            b,
+            msg,
+        )
 
 
 class TestMintBurn(TestMacSetUp):
@@ -137,12 +130,12 @@ class TestMintBurn(TestMacSetUp):
         cls.pause_mac(False)
 
     def test_mint_burn_to_receiver(self):
-        self.mint_burn(self.alice.address)
+        self.mint_burn(self.alice_receiver.address)
 
     def test_mint_burn_implicit(self):
-        op = self.mac.add_implicit_owners([self.mike.public_key_hash()]).inject()
+        op = self.mac.add_implicit_owners([self.mike_key.public_key_hash()]).inject()
         self.util.wait_for_ops(op)
-        self.mint_burn(self.mike.public_key_hash())
+        self.mint_burn(self.mike_key.public_key_hash())
 
     def mint_burn(self, owner_address):
         print("minting")
@@ -150,24 +143,70 @@ class TestMintBurn(TestMacSetUp):
             owner=owner_address, batch=[{"amount": 10, "token_id": 1}], data="00"
         ).inject()
         self.util.wait_for_ops(mint_op)
-        print("inspecting")
-        b_m = self.inspect_balance(owner_address, 1)
-        print(b_m)
-        self.assertEqual({
-            "balance": 10,
-            "token_id": 1,
-            "owner": owner_address
-        }, b_m, "wrong mint balance")
+        self.assertBalance(owner_address, 1, 10, "invalid mint balance")
 
         print("burning")
         burn_op = self.mac.burn_tokens(
             owner=owner_address, batch=[{"amount": 3, "token_id": 1}]
         ).inject()
         self.util.wait_for_ops(burn_op)
-        b_b = self.inspect_balance(owner_address, 1)
-        print(b_b)
-        self.assertEqual({
-            "balance": 7,
-            "token_id": 1,
-            "owner": owner_address
-        }, b_b, "wrong mint balance")
+
+        self.assertBalance(owner_address, 1, 7, "invalid balance after burn")
+
+
+class TestOperator(TestMacSetUp):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.pause_mac(False)
+
+    def test_add_operator(self):
+
+        op_add = self.alice_receiver.add_operator(
+            mac=self.mac.address, operator=self.admin_key.public_key_hash()
+        ).inject()
+        self.util.wait_for_ops(op_add)
+
+        op_check = self.inspector.assert_is_operator(
+            mac=self.mac.address,
+            request={
+                "owner": self.alice_receiver.address,
+                "operator": self.admin_key.public_key_hash(),
+            },
+        ).inject()
+
+        self.util.wait_for_ops(op_check)
+
+
+class TestTransfer(TestMacSetUp):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        print("creating token TK1")
+        cls.create_token(1, "TK1")
+        print("unpausing")
+        cls.pause_mac(False)
+
+    def test_transfer_to_receiver(self):
+        mint_op = self.mac.mint_tokens(
+            owner=self.alice_receiver.address,
+            batch=[{"amount": 10, "token_id": 1}],
+            data="00",
+        ).inject()
+        self.util.wait_for_ops(mint_op)
+
+        op_op = self.alice_receiver.add_operator(
+            mac=self.mac.address, operator=self.admin_key.public_key_hash()
+        ).inject()
+        self.util.wait_for_ops(op_op)
+
+        op_tx = self.mac.transfer(
+            from_=self.alice_receiver.address,
+            to_=self.bob_receiver.address,
+            batch=[{"token_id": 1, "amount": 3}],
+            data="00",
+        ).inject()
+        self.util.wait_for_ops(op_tx)
+
+        self.assertBalance(self.bob_receiver.address, 1, 3, "invalid recipient balance")
+        self.assertBalance(self.alice_receiver.address, 1, 7, "invalid source balance")

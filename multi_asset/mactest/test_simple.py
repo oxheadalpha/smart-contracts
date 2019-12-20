@@ -1,5 +1,5 @@
 from pathlib import Path
-from unittest import TestCase
+from unittest import skip, TestCase
 
 from mactest.ligo import LigoEnv, LigoContract, PtzUtils, flextesa_sandbox
 
@@ -8,6 +8,7 @@ root_dir = Path(__file__).parent.parent
 ligo_env = LigoEnv(root_dir / "impl", root_dir / "out")
 
 
+@skip
 class TestSimple(TestCase):
     @classmethod
     def setUpClass(cls):

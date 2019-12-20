@@ -7,6 +7,9 @@ from time import sleep
 from pytezos import pytezos, ContractInterface, Key
 from pytezos.operation.result import OperationResult
 from pytezos.rpc.errors import RpcError
+from pytezos.operation import fees
+
+fees.hard_gas_limit_per_operation = 800000
 
 
 class LigoEnv:

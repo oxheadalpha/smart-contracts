@@ -764,14 +764,10 @@
                       COMPARE ;
                       EQ ;
                       IF { UNIT }
-                         { DIP { DUP } ;
-                           SWAP ;
-                           CDR ;
-                           SENDER ;
+                         { DUP ;
+                           DIP { DIP { DUP } ; SWAP ; CDR } ;
                            GET ;
-                           IF_NONE
-                             { PUSH bool False }
-                             { DIP { DUP } ; SWAP ; DIP { DUP } ; MEM ; DIP { DROP } } ;
+                           IF_NONE { PUSH bool False } { DUP ; SENDER ; MEM ; DIP { DROP } } ;
                            IF { UNIT }
                               { PUSH string "operator not approved to transfer tokens" ; FAILWITH } } ;
                       DIP { DROP 2 ; DUP } ;

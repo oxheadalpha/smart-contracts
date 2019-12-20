@@ -216,14 +216,14 @@ let approved_transfer_from (from_ : address) (operators : operators) : unit =
   if sender = from_
   then unit
   else 
-    let ops = Map.find_opt sender operators in
+    let ops = Map.find_opt from_ operators in
     let is_op = match ops with
       | None -> false
-      | Some o -> Set.mem from_ o 
+      | Some o -> Set.mem sender o 
     in
     if is_op
     then unit
-    else failwith ("operator not approved to transfer tokens")
+    else failwith "operator not approved to transfer tokens"
     
 
 type multi_token_storage = {

@@ -16,10 +16,16 @@ type query_param = {
   owner : address;
 }
 
+type assert_is_operator_param = {
+  mac : address;
+  request : is_operator_request
+}
 
 type param =
   | Query of query_param
   | Response of (balance_request * nat) list
+  | Assert_is_operator of assert_is_operator_param
+  | Is_operator_response of (is_operator_request * bool)
   | Default of unit
 
 let main (p : param) ( s : storage) : (operation list) * (state option) =
@@ -53,5 +59,21 @@ let main (p : param) ( s : storage) : (operation list) * (state option) =
       | [] -> (failwith "invalid response" : state)
     in
     ([] : operation list), State new_s
+
+  | Assert_is_operator p ->
+    let mac : is_operator_param contract = Operation.get_entrypoint "%is_operator" p.mac in
+    let callback : (is_operator_request * bool) contract =
+      Operation.get_entrypoint "%is_operator_response" Current.self_address in
+    let pp = {
+      is_operator_request = p.request;
+      is_operator_view = callback;
+    } in
+    let op = Operation.transaction pp 0mutez mac in
+    [op], s
+
+  | Is_operator_response r -> let u = if r.1
+    then unit
+    else failwith "not an operator response" in
+    ([] : operation list), s
 
   | Default u -> ([] : operation list), s
