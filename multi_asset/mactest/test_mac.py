@@ -137,43 +137,37 @@ class TestMintBurn(TestMacSetUp):
         cls.pause_mac(False)
 
     def test_mint_burn_to_receiver(self):
+        self.mint_burn(self.alice.address)
+
+    def test_mint_burn_implicit(self):
+        op = self.mac.add_implicit_owners([self.mike.public_key_hash()]).inject()
+        self.util.wait_for_ops(op)
+        self.mint_burn(self.mike.public_key_hash())
+
+    def mint_burn(self, owner_address):
         print("minting")
         mint_op = self.mac.mint_tokens(
-            owner=self.alice.address, batch=[{"amount": 10, "token_id": 1}], data="00"
+            owner=owner_address, batch=[{"amount": 10, "token_id": 1}], data="00"
         ).inject()
         self.util.wait_for_ops(mint_op)
         print("inspecting")
-        b_m = self.inspect_balance(self.alice.address, 1)
+        b_m = self.inspect_balance(owner_address, 1)
         print(b_m)
         self.assertEqual({
             "balance": 10,
             "token_id": 1,
-            "owner": self.alice.address
+            "owner": owner_address
         }, b_m, "wrong mint balance")
 
         print("burning")
         burn_op = self.mac.burn_tokens(
-            owner=self.alice.address, batch=[{"amount": 3, "token_id": 1}]
+            owner=owner_address, batch=[{"amount": 3, "token_id": 1}]
         ).inject()
         self.util.wait_for_ops(burn_op)
-        b_b = self.inspect_balance(self.alice.address, 1)
+        b_b = self.inspect_balance(owner_address, 1)
         print(b_b)
         self.assertEqual({
             "balance": 7,
             "token_id": 1,
-            "owner": self.alice.address
+            "owner": owner_address
         }, b_b, "wrong mint balance")
-
-
-
-class TestBalances(TestMacSetUp):
-    def test_dummy(self):
-        self.assertIsNotNone(self.alice)
-
-    def test_kyle_balance(self):
-        bal1 = self.sandbox.account(self.kyle.public_key_hash())["balance"]
-        print(f"kyle={bal1}")
-
-    def test_alice_balance(self):
-        bal2 = self.sandbox.account(self.alice.address)["balance"]
-        print(f"alice={bal2}")
