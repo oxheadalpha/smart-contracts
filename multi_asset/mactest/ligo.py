@@ -14,8 +14,13 @@ class LigoEnv:
         self.src_dir = Path(src_dir)
         self.out_dir = Path(out_dir)
 
-    def contract_from_file(self, file_name, main_func):
-        tz_file_name = Path(file_name).with_suffix(".tz")
+    def contract_from_file(self, file_name, main_func, tz_file_name=None):
+        if tz_file_name:
+            tz_file_name = Path(tz_file_name)
+            if tz_file_name.suffix != ".tz":
+                tz_file_name = tz_file_name.with_suffix(".tz")
+        else:
+            tz_file_name = Path(file_name).with_suffix(".tz")
         return LigoContract(
             self.src_dir / file_name, self.out_dir / tz_file_name, main_func
         )
@@ -138,13 +143,13 @@ class LigoContract:
 
 
 class PtzUtils:
-    def __init__(self, client, wait_time=60, block_depth=5, num_blocks_wait=2):
+    def __init__(self, client, block_time=60, block_depth=5, num_blocks_wait=2):
         """
         :param client: PyTezosClient
         :param block_time: block baking time in seconds
         """
         self.client = client
-        self.wait_time = wait_time
+        self.block_time = block_time
         self.block_depth = block_depth
         self.num_blocks_wait = num_blocks_wait
 
@@ -154,7 +159,7 @@ class PtzUtils:
         )
         return PtzUtils(
             new_client,
-            wait_time=self.wait_time,
+            block_time=self.block_time,
             block_depth=self.block_depth,
             num_blocks_wait=self.num_blocks_wait,
         )
@@ -172,7 +177,10 @@ class PtzUtils:
             if len(ops) == len(res):
                 return res
             print(f"{len(res)} out of {len(ops)} operations are completed")
-            self.client.shell.wait_next_block(block_time=self.wait_time)
+            try:
+                self.client.shell.wait_next_block(block_time=self.block_time)
+            except AssertionError:
+                print("block waiting timed out")
 
         raise TimeoutError("waiting for operations")
 
@@ -212,6 +220,8 @@ class PtzUtils:
             res = blocks.find_operation(op_hash)
             if not OperationResult.is_applied(res):
                 raise RpcError.from_errors(OperationResult.errors(res)) from op_hash
+            for r in OperationResult.iter_results(res):
+                print(f"operation consumed gas: {r['consumed_gas']}")
             return res
         except StopIteration:
             # not found
@@ -224,15 +234,17 @@ class PtzUtils:
 
     # quick and dirty polling of the node to increase contract counter
     def wait_for_contract_counter(self, cnt):
-        poll_time_sec = 0.0
-        while poll_time_sec < self.wait_time * 2:
+        poll_time_sec = 0
+        while poll_time_sec < self.block_time * self.num_blocks_wait:
             counter = self.contract_counter()
             if counter == cnt:
                 print(f"waited for counter update for {poll_time_sec}sec")
                 return
             sleep(1)
             poll_time_sec += 1
-        raise TimeoutError("waiting for contract counter")
+        raise TimeoutError(
+            f"waiting for contract counter {cnt}. Actual counter {counter}"
+        )
 
 
 flextesa_sandbox = pytezos.using(

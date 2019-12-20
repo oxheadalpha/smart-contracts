@@ -15,7 +15,7 @@ class TestMacSetUp(TestCase):
     @classmethod
     def setUpClass(cls):
         cls.sandbox = flextesa_sandbox
-        cls.util = PtzUtils(flextesa_sandbox, wait_time=10)
+        cls.util = PtzUtils(flextesa_sandbox, block_time=8)
         cls.admin = cls.sandbox.key
 
         cls.orig_contracts()
@@ -105,45 +105,51 @@ class TestMacSetUp(TestCase):
 
     @classmethod
     def pause_mac(cls, paused: bool):
-        call = cls.mac.pause(True)
-        call.parameters["value"]["prim"] = str(paused)
+        call = cls.mac.pause(paused)
         op = call.inject()
         cls.util.wait_for_ops(op)
 
     def inspect_balance(self, address, token_id):
+        # op = self.inspector.query(
+        #     mac=self.mac.address, token_id=token_id, owner=address
+        # ).inject()
+        # from pytezos.operation.result import OperationResult
 
-        # ligo_param = """ Query {
-        #     mac = ("%s" : address);
-        #     token_id = %dn;
-        #     owner = ("%s" : address);
-        # }""" % (
-        #     self.mac.address,
-        #     token_id,
-        #     address,
-        # )
-        # param = self.ligo_inspector.compile_parameter(ligo_param)
-        op = self.inspector.query(
+        from pytezos.operation.group import OperationResult
+        og = self.inspector.query(
             mac=self.mac.address, token_id=token_id, owner=address
-        ).inject()
+        ).operation_group
+        og.contents[0]["gas_limit"] = "800000"
+        af = og.autofill()
+        op = af.sign().inject()
         self.util.wait_for_ops(op)
-        return self.inspector.storage()
+        return self.inspector.storage()["state"]
 
 
 class TestMintBurn(TestMacSetUp):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
+        print("creating token TK1")
         cls.create_token(1, "TK1")
         # needed to check balances which is guarded
+        print("unpausing")
         cls.pause_mac(False)
 
     def test_mint_burn_to_receiver(self):
+        print("minting")
         mint_op = self.mac.mint_tokens(
             owner=self.alice.address, batch=[{"amount": 10, "token_id": 1}], data="00",
         ).inject()
         self.util.wait_for_ops(mint_op)
-        # b = self.inspect_balance(self.alice.address, 1)
-        # print(b)
+        print("inspecting")
+        b = self.inspect_balance(self.alice.address, 1)
+        print(b)
+        self.assertEqual({
+            "balance": 10,
+            "token_id": 1,
+            "owner": self.alice.address
+        }, b, "wrong mint balance")
 
 
 class TestBalances(TestMacSetUp):

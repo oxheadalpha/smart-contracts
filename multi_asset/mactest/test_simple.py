@@ -12,7 +12,7 @@ class TestSimple(TestCase):
     @classmethod
     def setUpClass(cls):
         cls.sandbox = flextesa_sandbox
-        cls.util = PtzUtils(flextesa_sandbox, wait_time=10)
+        cls.util = PtzUtils(flextesa_sandbox, block_time=8)
         cls.inspector = ligo_env.contract_from_file("inspector.mligo", "main")
 
     def test_response(self):
