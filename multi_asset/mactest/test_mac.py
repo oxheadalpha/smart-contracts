@@ -182,31 +182,32 @@ class TestTransfer(TestMacSetUp):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        print("creating token TK1")
-        cls.create_token(1, "TK1")
-        print("unpausing")
         cls.pause_mac(False)
 
     def test_transfer_to_receiver(self):
-        mint_op = self.mac.mint_tokens(
-            owner=self.alice_receiver.address,
-            batch=[{"amount": 10, "token_id": 1}],
-            data="00",
-        ).inject()
-        self.util.wait_for_ops(mint_op)
+        self.create_token(1, "TK1")
 
         op_op = self.alice_receiver.add_operator(
             mac=self.mac.address, operator=self.admin_key.public_key_hash()
         ).inject()
         self.util.wait_for_ops(op_op)
 
+        self.transfer(1, self.alice_receiver.address, self.bob_receiver.address)
+
+    def transfer(self, token_id, from_address, to_address):
+
+        mint_op = self.mac.mint_tokens(
+            owner=from_address, batch=[{"amount": 10, "token_id": 1}], data="00",
+        ).inject()
+        self.util.wait_for_ops(mint_op)
+
         op_tx = self.mac.transfer(
-            from_=self.alice_receiver.address,
-            to_=self.bob_receiver.address,
+            from_=from_address,
+            to_=to_address,
             batch=[{"token_id": 1, "amount": 3}],
             data="00",
         ).inject()
         self.util.wait_for_ops(op_tx)
 
-        self.assertBalance(self.bob_receiver.address, 1, 3, "invalid recipient balance")
-        self.assertBalance(self.alice_receiver.address, 1, 7, "invalid source balance")
+        self.assertBalance(to_address, 1, 3, "invalid recipient balance")
+        self.assertBalance(from_address, 1, 7, "invalid source balance")

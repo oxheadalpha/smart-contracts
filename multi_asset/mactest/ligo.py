@@ -210,8 +210,8 @@ class PtzUtils:
             return f"operation consumed gas: {gs[0]:,}"
         else:
             total = sum(gs)
-            intertnal_ops_gas = [f"{g:,}" for g in gs]
-            return f"operation consumed gas: {total:,} {intertnal_ops_gas}"
+            internal_ops_gas = [f"{g:,}" for g in gs]
+            return f"operation consumed gas: {total:,} {internal_ops_gas}"
 
 
 flextesa_sandbox = pytezos.using(
