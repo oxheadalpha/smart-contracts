@@ -116,33 +116,22 @@ class LigoContract:
         Originates contract on blockchain.
         :param util: PtzUtils wrapping pytezos client connected to Tezos RPC
         :param storage: initial storage python object
-        :return: originated contract id
+        :return: originated contract ContractInterface
         """
 
-        op = self.originate_async(util, storage, balance)
-        contract_id = util.wait_for_contracts(op)[0]
-
-        return contract_id
-
-    def originate_async(self, util, storage=None, balance=0):
-        """
-        Originates contract on blockchain.
-        :param util: PtzUtils wrapping pytezos client connected to Tezos RPC
-        :param storage: initial storage python object
-        :return: operation descriptor returned by inject()
-        """
         c = self.get_contract()
         script = c.contract.script(storage=storage)
-        counter = util.contract_counter()
         op = (
             util.client.origination(script=script, balance=balance)
             .autofill()
             .sign()
             .inject()
         )
-        util.wait_for_contract_counter(counter + 1)
-
-        return op
+        op_r = util.wait_for_ops(op)[0]
+        contract_id = op_r["contents"][0]["metadata"]["operation_result"][
+            "originated_contracts"
+        ][0]
+        return util.client.contract(contract_id)
 
 
 class PtzUtils:
@@ -187,26 +176,9 @@ class PtzUtils:
 
         raise TimeoutError("waiting for operations")
 
-    def wait_for_contracts(self, *ops):
-        """
-        Waits for specified contracts to be originated successfully.
-        :param *ops: list of operation descriptors returned by inject()
-        :return: corresponding list of contract ids
-        """
-        res = self.wait_for_ops(*ops)
-
-        def get_contract_id(op):
-            return op["contents"][0]["metadata"]["operation_result"][
-                "originated_contracts"
-            ][0]
-
-        return [get_contract_id(op) for op in res]
-
-    def transfer_async(self, to_address, amount):
-        count = self.contract_counter()
+    def transfer(self, to_address, amount):
         op = self.client.transaction(to_address, amount).autofill().sign().inject()
-        self.wait_for_contract_counter(count + 1)
-        return op
+        self.wait_for_ops(op)
 
     def _check_op(self, op):
         """
@@ -229,25 +201,6 @@ class PtzUtils:
         except StopIteration:
             # not found
             return None
-
-    def contract_counter(self):
-        source = self.client.key.public_key_hash()
-        counter = self.client.shell.contracts[source].count()
-        return next(counter)
-
-    # quick and dirty polling of the node to increase contract counter
-    def wait_for_contract_counter(self, cnt):
-        poll_time_sec = 0
-        while poll_time_sec < self.block_time * self.num_blocks_wait:
-            counter = self.contract_counter()
-            if counter == cnt:
-                print(f"waited for counter update for {poll_time_sec}sec")
-                return
-            sleep(1)
-            poll_time_sec += 1
-        raise TimeoutError(
-            f"waiting for contract counter {cnt}. Actual counter {counter}"
-        )
 
 
 flextesa_sandbox = pytezos.using(

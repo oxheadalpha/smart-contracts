@@ -47,8 +47,7 @@ class TestSimple(TestCase):
 
     def test_response_sandbox(self):
         init_storage = self.inspector.compile_storage("Empty unit")
-        inspector_id = self.inspector.originate(self.util, init_storage)
-        ci = self.sandbox.contract(inspector_id)
+        ci = self.inspector.originate(self.util, init_storage)
 
         param = self.inspector.compile_parameter(
             """

@@ -37,17 +37,18 @@ class TestMacSetUp(TestCase):
         cls.ligo_inspector = ligo_env.contract_from_file("inspector.mligo", "main")
 
         print("originating contracts...")
-        mac_op = cls.orig_mac(cls.ligo_mac)
-        alice_op = cls.orig_receiver(cls.ligo_receiver)
-        bob_op = cls.orig_receiver(cls.ligo_receiver)
-        inspector_op = cls.orig_inspector(cls.ligo_inspector)
+        cls.mac = cls.orig_mac(cls.ligo_mac)
+        cls.alice_receiver = cls.orig_receiver(cls.ligo_receiver)
+        cls.bob_receiver = cls.orig_receiver(cls.ligo_receiver)
+        cls.inspector = cls.orig_inspector(cls.ligo_inspector)
 
-        print("waiting for contracts origination to complete...")
-        contract_ids = cls.util.wait_for_contracts(
-            mac_op, alice_op, bob_op, inspector_op
-        )
-        contracts = [cls.sandbox.contract(id) for id in contract_ids]
-        (cls.mac, cls.alice_receiver, cls.bob_receiver, cls.inspector) = contracts
+        # print("waiting for contracts origination to complete...")
+        # (
+        #     cls.mac,
+        #     cls.alice_receiver,
+        #     cls.bob_receiver,
+        #     cls.inspector,
+        # ) = cls.util.wait_for_contracts(mac_op, alice_op, bob_op, inspector_op)
 
     @classmethod
     def orig_mac(cls, ligo_mac):
@@ -76,23 +77,22 @@ class TestMacSetUp(TestCase):
         )
 
         ptz_storage = ligo_mac.compile_storage(ligo_storage)
-        return ligo_mac.originate_async(cls.util, ptz_storage)
+        return ligo_mac.originate(cls.util, ptz_storage)
 
     @classmethod
     def orig_inspector(cls, ligo_inspector):
         ligo_storage = "Empty unit"
         ptz_storage = ligo_inspector.compile_storage(ligo_storage)
-        return ligo_inspector.originate_async(cls.util, ptz_storage)
+        return ligo_inspector.originate(cls.util, ptz_storage)
 
     @classmethod
     def orig_receiver(cls, ligo_receiver):
-        return ligo_receiver.originate_async(cls.util, balance=100000000)
+        return ligo_receiver.originate(cls.util, balance=100000000)
 
     @classmethod
     def transfer_init_funds(cls):
-        op3 = cls.util.transfer_async(cls.mike_key.public_key_hash(), 100000000)
-        op4 = cls.util.transfer_async(cls.kyle_key.public_key_hash(), 100000000)
-        cls.util.wait_for_ops(op3, op4)
+        cls.util.transfer(cls.mike_key.public_key_hash(), 100000000)
+        cls.util.transfer(cls.kyle_key.public_key_hash(), 100000000)
 
     @classmethod
     def create_token(self, id, name):
