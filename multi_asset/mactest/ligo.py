@@ -168,7 +168,6 @@ class PtzUtils:
             res = [op_res for op_res in chr if op_res]
             if len(ops) == len(res):
                 return res
-            print(f"{len(res)} out of {len(ops)} operations are completed")
             try:
                 self.client.shell.wait_next_block(block_time=self.block_time)
             except AssertionError:
@@ -195,12 +194,24 @@ class PtzUtils:
             res = blocks.find_operation(op_hash)
             if not OperationResult.is_applied(res):
                 raise RpcError.from_errors(OperationResult.errors(res)) from op_hash
-            for r in OperationResult.iter_results(res):
-                print(f"operation consumed gas: {r['consumed_gas']}")
+            print(self.pformat_consumed_gas(res))
             return res
         except StopIteration:
             # not found
             return None
+
+    def get_consumed_gas(self, op_res):
+        gs = (r["consumed_gas"] for r in OperationResult.iter_results(op_res))
+        return [int(g) for g in gs]
+
+    def pformat_consumed_gas(self, op_res):
+        gs = self.get_consumed_gas(op_res)
+        if len(gs) == 1:
+            return f"operation consumed gas: {gs[0]:,}"
+        else:
+            total = sum(gs)
+            intertnal_ops_gas = [f"{g:,}" for g in gs]
+            return f"operation consumed gas: {total:,} {intertnal_ops_gas}"
 
 
 flextesa_sandbox = pytezos.using(
