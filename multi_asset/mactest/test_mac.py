@@ -186,15 +186,15 @@ class TestOperator(TestMacSetUp):
         #     self.util.wait_for_ops(op_add)
         #     print("operator added")
 
-        op_check = self.inspector.assert_is_operator(
-            mac=self.mac.address,
-            request={
-                "owner": self.mike_key.public_key_hash(),
-                "operator": self.admin_key.public_key_hash(),
-            },
-        ).inject()
+        # op_check = self.inspector.assert_is_operator(
+        #     mac=self.mac.address,
+        #     request={
+        #         "owner": self.mike_key.public_key_hash(),
+        #         "operator": self.admin_key.public_key_hash(),
+        #     },
+        # ).inject()
 
-        self.util.wait_for_ops(op_check)
+        # self.util.wait_for_ops(op_check)
 
 
 class TestTransfer(TestMacSetUp):
