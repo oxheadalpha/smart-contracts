@@ -22,49 +22,7 @@
 #include "../multi_token_interface.mligo"
 
 (*  owner -> operator set *)
-type operators = (address, address set) big_map
-
-
-let add_operator (operator : address) (operators : operators) : operators =
-  let new_operators =
-    match Map.find_opt sender operators with
-    | Some(ops) -> Set.add operator ops
-    | None      ->
-        (* 
-          Check that sender implements `multi_token_receiver` interface.
-          If not, `get_entrypoint` will fail
-        *)
-        let receiver : multi_token_receiver contract = 
-          Operation.get_entrypoint "%multi_token_receiver" sender in
-        Set.literal [operator]
-  in
-  Map.update sender (Some new_operators) operators
-
-let remove_operator (operator : address) (operators : operators) : operators =
-  let new_operators_opt =
-    match Map.find_opt sender operators with
-    | Some(ops) -> 
-        let ops = Set.remove operator ops in
-        if Set.size ops = 0n
-        then (None : address set option)
-        else Some(ops)
-    | None      -> (None : address set option)
-  in
-  Map.update sender new_operators_opt operators
-  
-let is_operator
-    (param : is_operator_param) (operators : operators) : operation = 
-  let req = param.is_operator_request in
-  let operators = Map.find_opt req.owner operators in
-  let result = 
-    match operators with
-    | None      -> false
-    | Some ops  -> Set.mem req.operator ops
-  in
-  Operation.transaction 
-    (req, result) 0mutez param.is_operator_view
-   
-
+type operators = (address, address set) big_map  
 
 let max_tokens = 4294967295n  (* 2^32-1 *)
 let owner_offset = 4294967296n  (* 2^32 *)
@@ -90,6 +48,62 @@ type owner_result = {
   owner : owner_entry;
   owners : owner_lookup;
 }
+
+type multi_token_storage = {
+  operators : operators;
+  balance_storage: balance_storage;
+}
+
+(*
+  validates if address can be token owner
+*)
+let validate_owner (a : address) (owners : (address, owner_entry) big_map) : unit =
+  let owner = Map.find_opt a owners in
+  match owner with
+  | None    -> 
+    (* 
+      Check that sender implements `multi_token_receiver` interface.
+      If not, `get_entrypoint` will fail
+    *)
+    let receiver : multi_token_receiver contract = 
+      Operation.get_entrypoint "%multi_token_receiver" a in
+    unit
+  | Some o -> unit (* already known owner *)
+
+let add_operator (operator : address) (s : multi_token_storage) : operators =
+  let new_operators =
+    match Map.find_opt sender s.operators with
+    | Some(ops) -> Set.add operator ops
+    | None      ->
+        let u = validate_owner sender s.balance_storage.owners.owners in
+        Set.literal [operator]
+  in
+  Map.update sender (Some new_operators) s.operators
+
+let remove_operator (operator : address) (operators : operators) : operators =
+  let new_operators_opt =
+    match Map.find_opt sender operators with
+    | Some(ops) -> 
+        let ops = Set.remove operator ops in
+        if Set.size ops = 0n
+        then (None : address set option)
+        else Some(ops)
+    | None      -> (None : address set option)
+  in
+  Map.update sender new_operators_opt operators
+  
+let is_operator
+    (param : is_operator_param) (operators : operators) : operation = 
+  let req = param.is_operator_request in
+  let operators = Map.find_opt req.owner operators in
+  let result = 
+    match operators with
+    | None      -> false
+    | Some ops  -> Set.mem req.operator ops
+  in
+  Operation.transaction 
+    (req, result) 0mutez param.is_operator_view
+ 
 
 (* return updated storage and newly added owner id *)
 
@@ -224,12 +238,6 @@ let approved_transfer_from (from_ : address) (operators : operators) : unit =
     if is_op
     then unit
     else failwith "operator not approved to transfer tokens"
-    
-
-type multi_token_storage = {
-  operators : operators;
-  balance_storage: balance_storage;
-}
 
 let multi_token_main
     (param : multi_token) (s : multi_token_storage) : (operation  list) * multi_token_storage =
@@ -248,7 +256,7 @@ let multi_token_main
       ([op], s)
 
   | Add_operator o ->
-      let new_operators = add_operator o s.operators in
+      let new_operators = add_operator o s in
       let new_s = {
         operators = new_operators;
         balance_storage = s.balance_storage;
