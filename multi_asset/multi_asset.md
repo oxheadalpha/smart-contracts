@@ -49,9 +49,9 @@ two interfaces: `multi_token` and `multi_token_receiver`.
 **Smart contracts implementing multi-asset standard protocol MUST implement all
 of the entry points in the `multi_token` interface.**
 
-**All smart contracts which can be a target destination for the token transfers
-MUST implement all of the entry points in the `multi_token_receiver` interface or
-be whitelisted implicit accounts.**
+**All addresses which can be a target destination for the token transfers
+MUST be contracts which implement all of the entry points in the `multi_token_receiver`
+interface or be whitelisted implicit accounts.**
 
 ### `multi_token` entry points
 
@@ -297,7 +297,8 @@ be performed for ALL targets either by checking against implicit accounts white
 list or by invoking `multi_token_receiver`.
 
 4. Ordering requirements for batch transfers is relaxed. Since Tezos smart contracts
-are referentially transparent, batch order MUST be preserved only for invocation
+are referentially transparent and do not allow calls to other contracts from the
+executing contract, batch order MUST be preserved only for invocation
 of `On_multi_tokens_received` entry point of `multi_token_receiver` interface.
 5. Tezos multi-asset contract implements only batch entry points. Original ERC-1155
 has both single and batch entry points. The motivation was gas use optimization:
