@@ -169,25 +169,32 @@ class TestOperator(TestMacSetUp):
 
         self.util.wait_for_ops(op_check)
 
-    # def test_add_operator_to_implicit(self):
+        # def test_add_operator_to_implicit(self):
+        #     op_add = (
+        #         self.sandbox.transaction(
+        #             destination=self.mac.address,
+        #             source=self.mike_key.public_key_hash(),
+        #             parameters={
+        #                 "entrypoint": "add_operator",
+        #                 "value": {"string": self.admin_key.public_key_hash()},
+        #             },
+        #         )
+        #         .autofill()
+        #         .sign()
+        #         .inject()
+        #     )
+        #     self.util.wait_for_ops(op_add)
+        #     print("operator added")
 
-    #     sandbox = self.sandbox.using(key=self.mike_key)
-    #     print(f"mike account = {sandbox.account()}")
-    #     print(f"mike account = {self.sandbox.account(self.mike_key.public_key_hash())}")
-    #     print(f"admin account = {self.sandbox.account()}")
-    #     mac = sandbox.contract(self.mac.address)
-    #     op_add = mac.add_operator(self.admin_key.public_key_hash()).inject()
-    #     self.util.wait_for_ops(op_add)
+        op_check = self.inspector.assert_is_operator(
+            mac=self.mac.address,
+            request={
+                "owner": self.mike_key.public_key_hash(),
+                "operator": self.admin_key.public_key_hash(),
+            },
+        ).inject()
 
-    #     op_check = self.inspector.assert_is_operator(
-    #         mac=self.mac.address,
-    #         request={
-    #             "owner": self.mike_key.public_key_hash(),
-    #             "operator": self.admin_key.public_key_hash(),
-    #         },
-    #     ).inject()
-
-    #     self.util.wait_for_ops(op_check)
+        self.util.wait_for_ops(op_check)
 
 
 class TestTransfer(TestMacSetUp):
