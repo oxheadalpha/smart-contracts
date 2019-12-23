@@ -172,7 +172,7 @@ let balance_of
     let bal = get_balance_req r s in
     (r, bal) 
   in
-  let requests_2_bals = List.map to_balance param.balance_request in
+  let requests_2_bals = List.map to_balance param.balance_requests in
   Operation.transaction requests_2_bals 0mutez param.balance_view
 
 let transfer_balance

@@ -12,7 +12,7 @@
         (or %assets
            (or (or (address %add_operator)
                    (pair %balance_of
-                      (list %balance_request (pair (address %owner) (nat %token_id)))
+                      (list %balance_requests (pair (address %owner) (nat %token_id)))
                       (contract %balance_view (list (pair (pair (address %owner) (nat %token_id)) nat)))))
                (or (pair %is_operator
                       (pair %is_operator_request (address %operator) (address %owner))

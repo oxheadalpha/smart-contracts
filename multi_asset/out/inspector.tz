@@ -82,7 +82,7 @@
                      CAR ;
                      CAR ;
                      CONTRACT %balance_of
-                       (pair (list %balance_request (pair (address %owner) (nat %token_id)))
+                       (pair (list %balance_requests (pair (address %owner) (nat %token_id)))
                              (contract %balance_view (list (pair (pair (address %owner) (nat %token_id)) nat)))) ;
                      IF_NONE
                        { PUSH string "bad address for get_entrypoint (%balance_of)" ; FAILWITH }

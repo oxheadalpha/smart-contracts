@@ -37,7 +37,7 @@ let main (p : param) ( s : storage) : (operation list) * (state option) =
       token_id = q.token_id;
     } in
     let bp : balance_of_param = {
-      balance_request = [ br ];
+      balance_requests = [ br ];
       balance_view =
         (Operation.get_entrypoint "%response" Current.self_address :
           ((balance_request * nat) list) contract);
