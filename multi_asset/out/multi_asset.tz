@@ -128,7 +128,7 @@
              GT ;
              IF { PUSH string "provided token ID is out of allowed range" ; FAILWITH }
                 { DUP ;
-                  DIP { DIP { DUP } ; SWAP ; CAR ; PUSH nat 4294967296 ; ADD } ;
+                  DIP { DIP { DUP } ; SWAP ; CAR ; PUSH nat 4294967296 ; SWAP ; MUL } ;
                   ADD } ;
              DIP { DROP 2 } } ;
          LAMBDA

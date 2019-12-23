@@ -42,14 +42,6 @@ class TestMacSetUp(TestCase):
         cls.bob_receiver = cls.orig_receiver(cls.ligo_receiver)
         cls.inspector = cls.orig_inspector(cls.ligo_inspector)
 
-        # print("waiting for contracts origination to complete...")
-        # (
-        #     cls.mac,
-        #     cls.alice_receiver,
-        #     cls.bob_receiver,
-        #     cls.inspector,
-        # ) = cls.util.wait_for_contracts(mac_op, alice_op, bob_op, inspector_op)
-
     @classmethod
     def orig_mac(cls, ligo_mac):
 
@@ -160,7 +152,7 @@ class TestOperator(TestMacSetUp):
         super().setUpClass()
         cls.pause_mac(False)
 
-    def test_add_operator(self):
+    def test_add_operator_to_receiver(self):
 
         op_add = self.alice_receiver.add_operator(
             mac=self.mac.address, operator=self.admin_key.public_key_hash()
@@ -177,6 +169,26 @@ class TestOperator(TestMacSetUp):
 
         self.util.wait_for_ops(op_check)
 
+    # def test_add_operator_to_implicit(self):
+
+    #     sandbox = self.sandbox.using(key=self.mike_key)
+    #     print(f"mike account = {sandbox.account()}")
+    #     print(f"mike account = {self.sandbox.account(self.mike_key.public_key_hash())}")
+    #     print(f"admin account = {self.sandbox.account()}")
+    #     mac = sandbox.contract(self.mac.address)
+    #     op_add = mac.add_operator(self.admin_key.public_key_hash()).inject()
+    #     self.util.wait_for_ops(op_add)
+
+    #     op_check = self.inspector.assert_is_operator(
+    #         mac=self.mac.address,
+    #         request={
+    #             "owner": self.mike_key.public_key_hash(),
+    #             "operator": self.admin_key.public_key_hash(),
+    #         },
+    #     ).inject()
+
+    #     self.util.wait_for_ops(op_check)
+
 
 class TestTransfer(TestMacSetUp):
     @classmethod
@@ -184,30 +196,44 @@ class TestTransfer(TestMacSetUp):
         super().setUpClass()
         cls.pause_mac(False)
 
+        op_op = cls.alice_receiver.add_operator(
+            mac=cls.mac.address, operator=cls.admin_key.public_key_hash()
+        ).inject()
+        cls.util.wait_for_ops(op_op)
+
     def test_transfer_to_receiver(self):
         self.create_token(1, "TK1")
 
-        op_op = self.alice_receiver.add_operator(
-            mac=self.mac.address, operator=self.admin_key.public_key_hash()
-        ).inject()
-        self.util.wait_for_ops(op_op)
-
         self.transfer(1, self.alice_receiver.address, self.bob_receiver.address)
+
+    def test_transfer_to_implicit(self):
+        self.create_token(2, "TK2")
+
+        op = self.mac.add_implicit_owners([self.mike_key.public_key_hash()]).inject()
+        self.util.wait_for_ops(op)
+
+        self.transfer(2, self.alice_receiver.address, self.mike_key.public_key_hash())
 
     def transfer(self, token_id, from_address, to_address):
 
         mint_op = self.mac.mint_tokens(
-            owner=from_address, batch=[{"amount": 10, "token_id": 1}], data="00",
+            owner=from_address, batch=[{"amount": 10, "token_id": token_id}], data="00",
         ).inject()
         self.util.wait_for_ops(mint_op)
+
+        print(f"==after mint {token_id}")
+        print(f"storage= {self.mac.storage()['assets']}")
 
         op_tx = self.mac.transfer(
             from_=from_address,
             to_=to_address,
-            batch=[{"token_id": 1, "amount": 3}],
+            batch=[{"token_id": token_id, "amount": 3}],
             data="00",
         ).inject()
         self.util.wait_for_ops(op_tx)
 
-        self.assertBalance(to_address, 1, 3, "invalid recipient balance")
-        self.assertBalance(from_address, 1, 7, "invalid source balance")
+        print(f"==after transfer {token_id}")
+        print(f"storage= {self.mac.storage()['assets']}")
+
+        self.assertBalance(to_address, token_id, 3, "invalid recipient balance")
+        self.assertBalance(from_address, token_id, 7, "invalid source balance")
