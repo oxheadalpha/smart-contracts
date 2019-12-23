@@ -221,9 +221,6 @@ class TestTransfer(TestMacSetUp):
         ).inject()
         self.util.wait_for_ops(mint_op)
 
-        print(f"==after mint {token_id}")
-        print(f"storage= {self.mac.storage()['assets']}")
-
         op_tx = self.mac.transfer(
             from_=from_address,
             to_=to_address,
@@ -231,9 +228,6 @@ class TestTransfer(TestMacSetUp):
             data="00",
         ).inject()
         self.util.wait_for_ops(op_tx)
-
-        print(f"==after transfer {token_id}")
-        print(f"storage= {self.mac.storage()['assets']}")
 
         self.assertBalance(to_address, token_id, 3, "invalid recipient balance")
         self.assertBalance(from_address, token_id, 7, "invalid source balance")
