@@ -7,7 +7,7 @@ setup(
     version="1.0",
     description="Multi Asset Contract Tests",
     packages=["tezos_mac_tests"],
-    install_requires=["pytezos", "crypto"],
+    install_requires=["pysodium", "secp256k1", "fastecdsa", "pytezos", "crypto"],
     include_package_data=True,
 )
 

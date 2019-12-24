@@ -80,13 +80,13 @@ source tezos_mac_tests_env/bin/activate
 
 ### Install `tezos_mac_tests` Python module
 
-You can use
+```
+git clone https://github.com/tqtezos/smart-contracts.git
+cd smart-contracts/multi_asset
+pip install -e .
+```
 
-`pip3 install -e .`
-
-command from `multi_asset` folder if you already have all source code.
-
-Alternatively, you can install it from Github:
+Alternatively, you can install it directly from Github:
 
 `pip3 install -e "git+https://github.com/tqtezos/smart-contracts.git#subdirectory=multi_asset&egg=tezos_mac_tests"`
 
@@ -95,6 +95,10 @@ It will install Pytezos dependencies as well.
 ### Start Tezos Sandbox
 
 `start-sandbox.sh`
+
+Alternative command:
+
+`docker run --rm --name flextesa-sandbox --detach -p 20000:20000 registry.gitlab.com/tezos/flextesa:image-babylonbox-run babylonbox start`
 
 When running for the first time, it will download sandbox docker image.
 It may take a few seconds until sandbox is bootstrapped.
