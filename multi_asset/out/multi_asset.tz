@@ -12,7 +12,7 @@
         (or %assets
            (or (or (address %add_operator)
                    (pair %balance_of
-                      (list %balance_request (pair (address %owner) (nat %token_id)))
+                      (list %balance_requests (pair (address %owner) (nat %token_id)))
                       (contract %balance_view (list (pair (pair (address %owner) (nat %token_id)) nat)))))
                (or (pair %is_operator
                       (pair %is_operator_request (address %operator) (address %owner))
@@ -128,7 +128,7 @@
              GT ;
              IF { PUSH string "provided token ID is out of allowed range" ; FAILWITH }
                 { DUP ;
-                  DIP { DIP { DUP } ; SWAP ; CAR ; PUSH nat 4294967296 ; ADD } ;
+                  DIP { DIP { DUP } ; SWAP ; CAR ; PUSH nat 4294967296 ; SWAP ; MUL } ;
                   ADD } ;
              DIP { DROP 2 } } ;
          LAMBDA
@@ -204,41 +204,14 @@
                                          PAIR ;
                                          DIP { DIP { DUP } ; SWAP } ;
                                          PAIR ;
-                                         DUP ;
-                                         CAR ;
-                                         DIP { DUP } ;
-                                         SWAP ;
-                                         CDR ;
-                                         DIP { DIP 14 { DUP } ; DIG 14 } ;
+                                         DIP { DIP 17 { DUP } ; DIG 17 } ;
                                          EXEC ;
-                                         DUP ;
-                                         DIP { DIP { DUP } ; SWAP ; CDR } ;
-                                         GET ;
-                                         IF_NONE
-                                           { DUP ;
-                                             PUSH bool True ;
-                                             SWAP ;
-                                             PAIR ;
-                                             DIP { DIP { DUP } ; SWAP } ;
-                                             PAIR ;
-                                             DIP { DIP 20 { DUP } ; DIG 20 } ;
-                                             EXEC ;
-                                             DUP ;
-                                             CDR ;
-                                             DIP { DROP } }
-                                           { DUP ;
-                                             CDR ;
-                                             IF { DIP 7 { DUP } ; DIG 7 ; CDR }
-                                                { PUSH string "originated owner with the same address already exists" ;
-                                                  FAILWITH } ;
-                                             DIP { DROP } } ;
-                                         DIP { DROP 3 } ;
                                          DUP ;
                                          CDR ;
                                          DIP { DROP } }
                                        { DUP ;
                                          CDR ;
-                                         IF { DIP 4 { DUP } ; DIG 4 ; CDR }
+                                         IF { DIP 2 { DUP } ; DIG 2 }
                                             { PUSH string "originated owner with the same address already exists" ;
                                               FAILWITH } ;
                                          DIP { DROP } } ;
@@ -582,10 +555,16 @@
                       DIP { DROP } } } ;
              DIP { DROP 2 } ;
              DUP ;
+             CDR ;
+             DIP { DUP } ;
+             SWAP ;
              CAR ;
-             DIP { DIP 2 { DUP } ; DIG 2 } ;
+             DIP { DUP ;
+                   CAR ;
+                   DIP { DUP ; CDR ; DIP { DIP 3 { DUP } ; DIG 3 ; CDR ; CDR } ; PAIR } ;
+                   PAIR } ;
              PAIR ;
-             DIP { DROP 2 } }
+             DIP { DROP 3 } }
            { DIP { DUP } ;
              SWAP ;
              CAR ;
@@ -606,7 +585,7 @@
                         { DUP ;
                           IF_LEFT
                             { DUP ;
-                              DIP { DIP 3 { DUP } ; DIG 3 ; CDR } ;
+                              DIP { DIP 3 { DUP } ; DIG 3 } ;
                               PAIR ;
                               DUP ;
                               CAR ;
@@ -614,17 +593,34 @@
                               SWAP ;
                               CDR ;
                               DUP ;
+                              CDR ;
                               SENDER ;
                               GET ;
                               IF_NONE
-                                { SENDER ;
-                                  CONTRACT %multi_token_receiver
-                                    (pair (pair (list %batch (pair (nat %amount) (nat %token_id))) (bytes %data))
-                                          (pair (option %from_ address) (address %operator))) ;
+                                { DUP ;
+                                  CAR ;
+                                  CDR ;
+                                  CDR ;
+                                  SENDER ;
+                                  PAIR ;
+                                  DUP ;
+                                  CAR ;
+                                  DUP ;
+                                  DIP { DIP { DUP } ; SWAP ; CDR } ;
+                                  GET ;
                                   IF_NONE
-                                    { PUSH string "bad address for get_entrypoint (%multi_token_receiver)" ;
-                                      FAILWITH }
-                                    {} ;
+                                    { DUP ;
+                                      CONTRACT %multi_token_receiver
+                                        (pair (pair (list %batch (pair (nat %amount) (nat %token_id))) (bytes %data))
+                                              (pair (option %from_ address) (address %operator))) ;
+                                      IF_NONE
+                                        { PUSH string "bad address for get_entrypoint (%multi_token_receiver)" ;
+                                          FAILWITH }
+                                        {} ;
+                                      DROP ;
+                                      UNIT }
+                                    { DROP ; UNIT } ;
+                                  DIP { DROP 2 } ;
                                   DIP 2 { DUP } ;
                                   DIG 2 ;
                                   DIP { EMPTY_SET address ; PUSH bool True } ;
@@ -637,7 +633,7 @@
                                   DIP { DROP } } ;
                               DUP ;
                               SOME ;
-                              DIP { DIP { DUP } ; SWAP } ;
+                              DIP { DIP { DUP } ; SWAP ; CDR } ;
                               SENDER ;
                               UPDATE ;
                               DIP { DROP 4 } ;
@@ -785,14 +781,10 @@
                       COMPARE ;
                       EQ ;
                       IF { UNIT }
-                         { DIP { DUP } ;
-                           SWAP ;
-                           CDR ;
-                           SENDER ;
+                         { DUP ;
+                           DIP { DIP { DUP } ; SWAP ; CDR } ;
                            GET ;
-                           IF_NONE
-                             { PUSH bool False }
-                             { DIP { DUP } ; SWAP ; DIP { DUP } ; MEM ; DIP { DROP } } ;
+                           IF_NONE { PUSH bool False } { DUP ; SENDER ; MEM ; DIP { DROP } } ;
                            IF { UNIT }
                               { PUSH string "operator not approved to transfer tokens" ; FAILWITH } } ;
                       DIP { DROP 2 ; DUP } ;

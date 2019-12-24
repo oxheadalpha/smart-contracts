@@ -7,7 +7,7 @@ type transfer_param = {
   (* Source address *)
   from_ : address;
   (* 
-    Target address. Target smart contract must implement entry points from
+    Target address. Target smart contract MUST implement entry points from
     `multi_token_receiver` interface or be a whitelisted implicit account.
   *)
   to_ : address;
@@ -26,7 +26,7 @@ type balance_request = {
 }
 
 type balance_of_param = {
-  balance_request : balance_request list;
+  balance_requests : balance_request list;
   balance_view : ((balance_request * nat) list) contract;
 }
 
@@ -44,12 +44,12 @@ type multi_token =
   (*
     Transfers specified `amount`(s) of `token_id`(s) from the `from_` address to
     the `to_` address (with safety call).
-    Caller must be approved to manage the tokens being transferred out of the
+    Caller MUST be approved to manage the tokens being transferred out of the
     `from_` account (see "Approval" section of the standard).
     MUST revert if any of the balance(s) of the holder for token(s) is lower
     than the respective amount(s) in amounts to be sent to the recipient.
     If `to_` contract does not implement `multi_token_receiver` interface or
-    is not a whitelisted implicit account, the transaction must fail.
+    is not a whitelisted implicit account, the transaction MUST fail.
     MUST call `On_multi_tokens_received` hook defined by `multi_token_receiver`
     on `to_` and act appropriately (see "Safe Transfer Rules" section of the
     standard).

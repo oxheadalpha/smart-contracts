@@ -30,7 +30,7 @@ let storage : multi_asset_storage = {
       balance_storage = {
         owners = {
           owner_count = 0n;
-          owners = (Big_map.empty : (address, nat) big_map);
+          owners = (Big_map.empty : (address, owner_entry) big_map);
         };
         balances = (Big_map.empty : (nat, nat) big_map);
       }

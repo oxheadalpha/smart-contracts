@@ -168,7 +168,7 @@ let get_implicit_address (hash : key_hash) : address =
 let add_implicit_owners
     (owner_hashes : key_hash list) (s : balance_storage): balance_storage =
 
-  let add_owner = fun (l : owner_lookup) (h : key_hash) -> 
+  let add_impl_owner = fun (l : owner_lookup) (h : key_hash) ->
     let owner = get_implicit_address h in
     let entry = Map.find_opt owner l.owners in
     match entry with
@@ -177,11 +177,11 @@ let add_implicit_owners
       r.owners
     | Some o_e ->
       if o_e.is_implicit
-      then s.owners
-      else (failwith "originated owner with the same address already exists" : owner_lookup)
+      then l
+      else (failwith "originated owner with the same address already exists" : owner_lookup) 
     in
 
-let new_lookup = List.fold add_owner owner_hashes s.owners in
+let new_lookup = List.fold add_impl_owner owner_hashes s.owners in
 {
   owners = new_lookup;
   balances = s.balances;

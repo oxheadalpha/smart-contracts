@@ -36,10 +36,10 @@ let multi_asset_main
         admin = new_ctx.admin_storage;
         assets = {
           operators = s.assets.operators;
-          balances = new_ctx.balance_storage;
+          balance_storage = new_ctx.balance_storage;
         };
       } in 
-      (ops_ctx.0, s)
+      (ops_ctx.0, new_s)
 
   | Assets p -> 
       if s.admin.paused

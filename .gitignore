@@ -3,3 +3,9 @@
 node_modules
 .DS_Store
 *.code-workspace
+.vscode
+.idea
+.venv
+**/__pycache__
+**/*.pyc
+**/*.egg-info

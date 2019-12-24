@@ -5,9 +5,15 @@
 
 #include "../multi_token_interface.mligo"
 
+type receiver_add_operator_param = {
+  mac : address;
+  operator : address;
+}
+
 type receiver =
   | Multi_token_receiver of multi_token_receiver
-  | Foo of unit
+  | Add_operator of receiver_add_operator_param
+  | Default of unit
 
 (*
   This receiver implementation is WIP and may result in locked tokens.
@@ -18,5 +24,11 @@ type receiver =
   LIGO support for multi entry points
 *)
 let receiver_stub (p : receiver) (s : unit) : (operation list) * unit =
-  (([] : operation list), unit)
+  match p with
+  | Multi_token_receiver r -> (([] : operation list), unit)
+  | Add_operator p ->
+    let mac : address contract = Operation.get_entrypoint "%add_operator" p.mac in
+    let op = Operation.transaction p.operator 0mutez mac in
+    [op], unit
+  | Default u -> (([] : operation list), unit)
   

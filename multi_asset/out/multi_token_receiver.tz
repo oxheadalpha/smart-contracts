@@ -1,7 +1,35 @@
 { parameter
-    (or (unit %foo)
+    (or (or (pair %add_operator (address %mac) (address %operator)) (unit %default))
         (pair %multi_token_receiver
            (pair (list %batch (pair (nat %amount) (nat %token_id))) (bytes %data))
            (pair (option %from_ address) (address %operator)))) ;
   storage unit ;
-  code { UNIT ; NIL operation ; PAIR ; DIP { DROP } } }
+  code { DUP ;
+         CAR ;
+         IF_LEFT
+           { DUP ;
+             IF_LEFT
+               { DUP ;
+                 DUP ;
+                 CAR ;
+                 CONTRACT %add_operator address ;
+                 IF_NONE
+                   { PUSH string "bad address for get_entrypoint (%add_operator)" ; FAILWITH }
+                   {} ;
+                 DIP { DUP } ;
+                 SWAP ;
+                 CDR ;
+                 DIP { DUP ; PUSH mutez 0 } ;
+                 TRANSFER_TOKENS ;
+                 DUP ;
+                 NIL operation ;
+                 SWAP ;
+                 CONS ;
+                 UNIT ;
+                 SWAP ;
+                 PAIR ;
+                 DIP { DROP 4 } }
+               { UNIT ; NIL operation ; PAIR ; DIP { DROP } } ;
+             DIP { DROP } }
+           { UNIT ; NIL operation ; PAIR ; DIP { DROP } } ;
+         DIP { DROP } } }
