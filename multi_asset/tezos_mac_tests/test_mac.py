@@ -4,7 +4,7 @@ from unittest import TestCase
 
 from pytezos import Key
 
-from mactest.ligo import LigoEnv, LigoContract, PtzUtils, flextesa_sandbox
+from tezos_mac_tests.ligo import LigoEnv, LigoContract, PtzUtils, flextesa_sandbox
 
 
 root_dir = Path(__file__).parent.parent
