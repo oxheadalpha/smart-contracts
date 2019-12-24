@@ -39,9 +39,13 @@ See [Pytezos requirements](https://github.com/baking-bad/pytezos#requirements).
 
 #### Linux
 
+Use apt or your favourite package manager:
+
 `$ sudo apt install libsodium-dev libsecp256k1-dev libgmp-dev`
 
 #### MacOS
+
+Use homebrew:
 
 ```
 $ brew tap cuber/homebrew-libsecp256k1
