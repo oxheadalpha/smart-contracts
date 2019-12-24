@@ -98,7 +98,7 @@ It will install Pytezos dependencies as well.
 
 ### Start Tezos Sandbox
 
-`start-sandbox.sh`
+`tezos_mac_tests/start-sandbox.sh`
 
 Alternative command:
 
