@@ -66,6 +66,17 @@ type multi_token =
   | Remove_operator of address
   (* Queries the approval status of an operator for a given owner. *)
   | Is_operator of is_operator_param
+  (*
+    Adds implicit account to the white list to be able to receive tokens
+  *)
+  | Add_implicit_owners of key_hash list
+  (*
+    Removes implicit account from the white list. Not whitelisted implicit accounts
+    cannot receive tokens. All existing account token balances if any, will remain
+    unchanged. It is still possible to transfer tokens from not whitelisted
+    implicit account
+  *)
+  | Remove_implicit_owners of key_hash list
 
 type on_multi_tokens_received_param = {
   operator : address;     (* The address which initiated the transfer (i. e. sender) *)

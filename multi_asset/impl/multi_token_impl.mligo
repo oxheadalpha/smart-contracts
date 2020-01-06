@@ -240,6 +240,56 @@ let approved_transfer_from (from_ : address) (operators : operators) : unit =
     then unit
     else failwith "operator not approved to transfer tokens"
 
+let get_implicit_address (hash : key_hash) : address =
+  let c : unit contract = Current.implicit_account hash in
+  Current.address c
+
+let add_implicit_owners
+    (owner_hashes : key_hash list) (s : balance_storage): balance_storage =
+
+  let add_impl_owner = fun (l : owner_lookup) (h : key_hash) ->
+    let owner = get_implicit_address h in
+    let entry = Map.find_opt owner l.owners in
+    match entry with
+    | None -> 
+      let r = add_owner owner true l in
+      r.owners
+    | Some o_e ->
+      if o_e.is_implicit
+      then l
+      else (failwith "originated owner with the same address already exists" : owner_lookup) 
+    in
+
+  let new_lookup = List.fold add_impl_owner owner_hashes s.owners in
+  {
+    owners = new_lookup;
+    balances = s.balances;
+  }
+
+let remove_implicit_owners
+    (owner_hashes : key_hash list) (s : balance_storage): balance_storage =
+  
+  let remove_owner = fun (l : owner_lookup) (h : key_hash) ->
+    let owner = get_implicit_address h in
+    let entry = Map.find_opt owner l.owners in
+    match entry with
+    | None -> l
+    | Some o_e ->
+      if not o_e.is_implicit
+      then (failwith "trying to remove non-implicit account" : owner_lookup)
+      else
+        {
+          owner_count = s.owners.owner_count;
+          owners = Map.remove owner s.owners.owners;
+        } 
+    in
+
+  let new_lookup = List.fold remove_owner owner_hashes s.owners in
+  {
+    owners = new_lookup;
+    balances = s.balances;
+  }
+
 let multi_token_main
     (param : multi_token) (s : multi_token_storage) : (operation  list) * multi_token_storage =
   match param with
@@ -275,3 +325,19 @@ let multi_token_main
   | Is_operator p  ->
       let op = is_operator p s.operators in
       ([op], s)
+
+  | Add_implicit_owners hashes ->
+      let new_bals = add_implicit_owners hashes s.balance_storage in
+      let new_s = {
+        operators = s.operators;
+        balance_storage = new_bals;
+      } in
+      (([] : operation list), new_s)
+
+  | Remove_implicit_owners hashes ->
+      let new_bals = remove_implicit_owners hashes s.balance_storage in
+      let new_s = {
+        operators = s.operators;
+        balance_storage = new_bals;
+      } in
+      (([] : operation list), new_s)
