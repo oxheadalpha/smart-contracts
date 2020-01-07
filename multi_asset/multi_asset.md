@@ -193,7 +193,7 @@ and balance.
 #### Approval
 
 The entry points `Add_operator`/`Remove_operator` allow an operator to manage
-one’s entire set of tokens on behalf of the approver. To approve management of a
+one’s entire set of tokens on behalf of the owner. To approve management of a
 subset of token IDs, an interface such as
 [ERC-1761 Scoped Approval Interface](https://eips.ethereum.org/EIPS/eip-1761)
 is suggested. The counterpart `Is_operator` provides introspection into
