@@ -51,7 +51,6 @@ class TestMacSetUp(TestCase):
             admin = {
               admin = ("%s" : address);
               paused = true;
-              tokens = (Big_map.empty : (nat, string) big_map);
             };
             assets = {
               operators = (Big_map.empty : (address, address set) big_map);
@@ -63,6 +62,7 @@ class TestMacSetUp(TestCase):
                 balances = (Big_map.empty : (nat, nat) big_map);
               }
             };
+            tokens = (Big_map.empty : (nat, string) big_map);
         }
         """
             % cls.admin_key.public_key_hash()
