@@ -17,8 +17,11 @@ and mix multiple fungible or non-fungible token types within a single contract.
 
 ## Multi-asset contract overview
 
-**Token type** is a specific token represented by its ID. Non-fungible tokens can
-be represented as ID ranges. **Owner** - Tezos address which can hold tokens.
+**Token type** - a specific token represented by its ID. Non-fungible tokens can
+be represented as ID ranges.
+
+**Owner** - Tezos address which can hold tokens.
+
 **Operator** - Tezos address which initiates token transfer operation.
 **Operator** MUST be approved to manage all tokens held by the owner to make a
 transfer from the owner account.
