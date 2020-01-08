@@ -11,7 +11,7 @@ contract interfaces defined in
 [LIGO](https://ligolang.org/), smart-contract language for Tezos
 * [`impl`](impl/) folder - reference implementation of the multi-asset contract,
 test helper contracts and code.
-* [`out`](out/) folder - multi-assert contract and helper contract compiled into
+* [`out`](out/) folder - multi-asset contract and helper contract compiled into
 Michelson
 * [`tezos_mac_tests`](tezos_mac_tests/) folder - Python multi_asset contract tests
 implemented with
