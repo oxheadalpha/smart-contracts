@@ -37,11 +37,17 @@ type burn_tokens_param = {
   batch : tx list;
 }
 
+type token_info_param = {
+  token_id : nat;
+  token_info_view : (nat * token_info) contract;
+}
+
 (* `token_manager` entry points *)
 type token_manager =
   | Create_token of create_token_param
   | Mint_tokens of mint_tokens_param
   | Burn_tokens of burn_tokens_param
+  | Token_info of token_info_param
 
 (* token_id -> descriptor *)
 type token_storage = (nat, token_info) big_map
@@ -179,6 +185,12 @@ let burn_tokens (param : burn_tokens_param) (ctx : token_manager_context)
     tokens = new_tokens;
   }
 
+let get_token_info (param : token_info_param) (tokens : token_storage) : operation =
+  let ti_opt : token_info option = Map.find_opt param.token_id tokens in
+  match ti_opt with
+  | None -> (failwith "token does not exists" : operation)
+  | Some ti -> Operation.transaction (param.token_id, ti) 0mutez param.token_info_view
+
 let token_manager (param : token_manager) (ctx : token_manager_context)
     : (operation list) * token_manager_context =
   match param with
@@ -196,3 +208,7 @@ let token_manager (param : token_manager) (ctx : token_manager_context)
   | Burn_tokens param ->
       let new_ctx = burn_tokens param ctx in
       (([] : operation list), new_ctx)
+
+  | Token_info param ->
+    let op = get_token_info param ctx.tokens in
+    ([op], ctx)
