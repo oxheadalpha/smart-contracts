@@ -1,5 +1,3 @@
-
-
 (*
   One of the possible implementations of token management API which can create
   new fungible tokens, mint and burn them.
@@ -16,9 +14,16 @@
 
 #include "multi_token_impl.mligo"
 
+type token_info = {
+  symbol : string;
+  uri: string;
+  total_supply : nat;
+}
+
 type create_token_param = {
   token_id : nat;
-  descriptor : string;
+  symbol : string;
+  uri : string;
 }
 
 type mint_tokens_param = {
@@ -39,7 +44,7 @@ type token_manager =
   | Burn_tokens of burn_tokens_param
 
 (* token_id -> descriptor *)
-type token_storage = (nat, string) big_map
+type token_storage = (nat, token_info) big_map
 
 type token_manager_context = {
   tokens : token_storage;
@@ -49,13 +54,52 @@ type token_manager_context = {
 
 let create_token 
     (param : create_token_param) (tokens: token_storage) : token_storage =
-  let token : string option = Map.find_opt param.token_id tokens in
-  match token with
-  | Some d -> (failwith "token already exists" : token_storage)
-  | None -> Map.add param.token_id param.descriptor tokens
+  let token_info = Map.find_opt param.token_id tokens in
+  match token_info with
+  | Some ti -> (failwith "token already exists" : token_storage)
+  | None ->
+      let ti = {
+        symbol = param.symbol;
+        uri = param.uri;
+        total_supply = 0n;
+      } in
+      Map.add param.token_id ti tokens
    
+let update_token_supply_mint (ts : tx list) (tokens: token_storage)
+    : token_storage =
 
-let token_exists (token_id : nat) (tokens : token_storage) : unit =
+  let update = fun (tokens: token_storage) (t : tx) ->
+    let ti = Map.find t.token_id tokens in
+    let new_ti = {
+      symbol = ti.symbol;
+      uri = ti.uri;
+      total_supply = ti.total_supply + t.amount;
+    } in
+    Map.update t.token_id (Some new_ti) tokens
+  in
+
+  List.fold update ts tokens
+
+let update_token_supply_burn (ts : tx list) (tokens: token_storage)
+    : token_storage =
+
+  let update = fun (tokens: token_storage) (t : tx) ->
+    let ti = Map.find t.token_id tokens in
+    let supply = match Michelson.is_nat(ti.total_supply - t.amount) with
+    | Some s -> s
+    | None -> (failwith "total token supply is less than 0" : nat)
+    in
+    let new_ti = {
+      symbol = ti.symbol;
+      uri = ti.uri;
+      total_supply = supply;
+    } in
+    Map.update t.token_id (Some new_ti) tokens
+  in
+
+  List.fold update ts tokens
+
+let fail_if_token_does_not_exists (token_id : nat) (tokens : token_storage) : unit =
   let d = Map.find_opt token_id tokens in
   match d with  
   | None ->   failwith("token does not exist")
@@ -66,7 +110,7 @@ let mint_tokens_impl
     (b : balances) : balances =
 
   let make_transfer = fun (bals: balances) (t: tx) ->
-    let u : unit = token_exists t.token_id tokens in
+    let u : unit = fail_if_token_does_not_exists t.token_id tokens in
     let to_key  = make_balance_key_impl owner_id t.token_id in
     let old_bal = get_balance to_key bals in
     Map.update to_key (Some(old_bal + t.amount)) bals in
@@ -88,21 +132,26 @@ let mint_safe_check (param : mint_tokens_param) (is_owner_implicit : bool) : ope
     let op = Operation.transaction (On_multi_tokens_received p) 0mutez receiver in
     [op] 
 
-let mint_tokens 
-    (param : mint_tokens_param) (tokens : token_storage) 
-    (b : balance_storage) : (operation list) * balance_storage =
-  let owner = ensure_owner_id param.owner b.owners in
+let mint_tokens (param : mint_tokens_param) (ctx : token_manager_context) 
+    : (operation list) * token_manager_context =
+  let owner = ensure_owner_id param.owner ctx.balances.owners in
   let ops = mint_safe_check param owner.owner.is_implicit in
-  let new_bals = mint_tokens_impl param owner.owner.id tokens b.balances in
-  let new_s = {
+  let new_b = mint_tokens_impl param owner.owner.id ctx.tokens ctx.balances.balances in
+  let new_bals = {
     owners = owner.owners;
+    balances = new_b;
+  } in
+  let new_tokens = update_token_supply_mint param.batch ctx.tokens in
+  let new_ctx = {
     balances = new_bals;
+    tokens = new_tokens;
   } in 
-  (ops, new_s)
+  (ops, new_ctx)
 
-let burn_tokens
-    (param : burn_tokens_param) (s : balance_storage): balance_storage =
-  let owner_id = get_owner_id param.owner s.owners in
+
+let burn_tokens (param : burn_tokens_param) (ctx : token_manager_context)
+    : token_manager_context =
+  let owner_id = get_owner_id param.owner ctx.balances.owners in
 
   let make_burn = fun (bals : balances) (t : tx) ->
     let from_key = make_balance_key_impl owner_id t.token_id in
@@ -119,11 +168,16 @@ let burn_tokens
         else Map.update from_key (Some new_bal) bals
     in
 
-  let new_bals = List.fold make_burn param.batch s.balances in
+  let new_b = List.fold make_burn param.batch ctx.balances.balances in
+  let new_bals = {
+    owners = ctx.balances.owners;
+    balances = new_b;
+  } in
+  let new_tokens = update_token_supply_burn param.batch ctx.tokens in
   {
-    owners = s.owners;
     balances = new_bals;
-  } 
+    tokens = new_tokens;
+  }
 
 let token_manager (param : token_manager) (ctx : token_manager_context)
     : (operation list) * token_manager_context =
@@ -137,18 +191,8 @@ let token_manager (param : token_manager) (ctx : token_manager_context)
       } in
       (([]: operation list), new_ctx)
 
-  | Mint_tokens param -> 
-      let ops_new_bals  = mint_tokens param ctx.tokens ctx.balances in
-      let new_ctx = {
-        tokens = ctx.tokens;
-        balances = ops_new_bals.1;
-      } in
-      (ops_new_bals.0, new_ctx)
+  | Mint_tokens param -> mint_tokens param ctx
 
   | Burn_tokens param ->
-      let new_bals = burn_tokens param ctx.balances in
-      let new_ctx = {
-        tokens = ctx.tokens;
-        balances = new_bals;
-      } in
+      let new_ctx = burn_tokens param ctx in
       (([] : operation list), new_ctx)

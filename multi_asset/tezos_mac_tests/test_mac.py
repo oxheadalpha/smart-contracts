@@ -62,7 +62,7 @@ class TestMacSetUp(TestCase):
                 balances = (Big_map.empty : (nat, nat) big_map);
               }
             };
-            tokens = (Big_map.empty : (nat, string) big_map);
+            tokens = (Big_map.empty : token_storage);
         }
         """
             % cls.admin_key.public_key_hash()
@@ -87,8 +87,10 @@ class TestMacSetUp(TestCase):
         cls.util.transfer(cls.kyle_key.public_key_hash(), 100000000)
 
     @classmethod
-    def create_token(self, id, name):
-        op = self.mac.create_token(token_id=id, descriptor=name).inject()
+    def create_token(self, id, symbol):
+        op = self.mac.create_token(
+            token_id=id, symbol=symbol, uri="dummy.token.tz"
+        ).inject()
         self.util.wait_for_ops(op)
 
     @classmethod
