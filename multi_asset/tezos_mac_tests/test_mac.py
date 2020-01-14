@@ -2,7 +2,7 @@ from pathlib import Path
 from decimal import *
 from unittest import TestCase
 
-from pytezos import Key
+from pytezos import Key, pytezos
 
 from tezos_mac_tests.ligo import LigoEnv, LigoContract, PtzUtils, flextesa_sandbox
 
@@ -15,7 +15,9 @@ class TestMacSetUp(TestCase):
     @classmethod
     def setUpClass(cls):
         cls.sandbox = flextesa_sandbox
-        cls.util = PtzUtils(flextesa_sandbox, block_time=8)
+        cls.util = PtzUtils(cls.sandbox, block_time=8)
+        # cls.sandbox = pytezos
+        # cls.util = PtzUtils(cls.sandbox, block_time=60, num_blocks_wait=4)
         cls.admin_key = cls.sandbox.key
 
         cls.orig_contracts()
@@ -23,7 +25,8 @@ class TestMacSetUp(TestCase):
         cls.mike_key = Key.generate(export=False)
         cls.kyle_key = Key.generate(export=False)
 
-        cls.transfer_init_funds()
+        # cls.transfer_init_funds()
+        print("test setup completed")
 
     @classmethod
     def orig_contracts(cls):
@@ -38,8 +41,11 @@ class TestMacSetUp(TestCase):
 
         print("originating contracts...")
         cls.mac = cls.orig_mac(cls.ligo_mac)
+        print(f"MAC address {cls.mac.address}")
         cls.alice_receiver = cls.orig_receiver(cls.ligo_receiver)
+        print(f"Alice address {cls.alice_receiver.address}")
         cls.bob_receiver = cls.orig_receiver(cls.ligo_receiver)
+        print(f"Bob address {cls.bob_receiver.address}")
         cls.inspector = cls.orig_inspector(cls.ligo_inspector)
 
     @classmethod
@@ -209,6 +215,7 @@ class TestTransfer(TestMacSetUp):
             mac=cls.mac.address, operator=cls.admin_key.public_key_hash()
         ).inject()
         cls.util.wait_for_ops(op_op)
+        print("transfer test setup completed")
 
     def test_transfer_to_receiver(self):
         self.create_token(1, "TK1")
