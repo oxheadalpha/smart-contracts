@@ -19,10 +19,7 @@
   aggregate data (like list all token types held by the owner).
 *)
 
-#include "../multi_token_interface.mligo"
-
-(*  owner -> operator set *)
-type operators = (address, address set) big_map  
+#include "../fa2_hook.mligo"
 
 let max_tokens = 4294967295n  (* 2^32-1 *)
 let owner_offset = 4294967296n  (* 2^32 *)
@@ -30,14 +27,11 @@ let owner_offset = 4294967296n  (* 2^32 *)
 
 (* owner_token_id -> balance *)
 type balances = (nat, nat) big_map
-type owner_entry = {
-  id : nat;
-  is_implicit : bool;
-}
+
 type owner_lookup = {
   owner_count : nat;
-  (* owner_address -> (id * is_implicit) *)
-  owners: (address, owner_entry) big_map
+  (* owner_address -> id *)
+  owners: (address, nat) big_map
 }
 
 type balance_storage = {
@@ -46,82 +40,25 @@ type balance_storage = {
 }
 
 type owner_result = {
-  owner : owner_entry;
+  owner_id : nat;
   owners : owner_lookup;
 }
 
 type multi_token_storage = {
-  operators : operators;
+  hook : set_hook_param option;
   balance_storage: balance_storage;
 }
-
-(*
-  validates if address can be token owner
-*)
-let validate_owner (a : address) (owners : (address, owner_entry) big_map) : unit =
-  let owner = Map.find_opt a owners in
-  match owner with
-  | None    -> 
-    (* 
-      Check that sender implements `multi_token_receiver` interface.
-      If not, `get_entrypoint` will fail
-    *)
-    let receiver : multi_token_receiver contract = 
-      Operation.get_entrypoint "%multi_token_receiver" a in
-    unit
-  | Some o -> unit (* already known owner *)
-
-let add_operator (operator : address) (s : multi_token_storage) : operators =
-  let new_operators =
-    match Map.find_opt sender s.operators with
-    | Some(ops) -> Set.add operator ops
-    | None      ->
-        let u = validate_owner sender s.balance_storage.owners.owners in
-        Set.literal [operator]
-  in
-  Map.update sender (Some new_operators) s.operators
-
-let remove_operator (operator : address) (operators : operators) : operators =
-  let new_operators_opt =
-    match Map.find_opt sender operators with
-    | Some(ops) -> 
-        let ops = Set.remove operator ops in
-        if Set.size ops = 0n
-        then (None : address set option)
-        else Some(ops)
-    | None      -> (None : address set option)
-  in
-  Map.update sender new_operators_opt operators
-  
-let is_operator
-    (param : is_operator_param) (operators : operators) : operation = 
-  let req = param.is_operator_request in
-  let operators = Map.find_opt req.owner operators in
-  let result = 
-    match operators with
-    | None      -> false
-    | Some ops  -> Set.mem req.operator ops
-  in
-  Operation.transaction 
-    (req, result) 0mutez param.is_operator_view
  
-
 (* return updated storage and newly added owner id *)
-
-let add_owner (owner : address) (is_implicit : bool) (s : owner_lookup) : owner_result =
+let add_owner (owner : address) (s : owner_lookup) : owner_result =
   let owner_id  = s.owner_count + 1n in
-  let entry = {
-    id = owner_id;
-    is_implicit = is_implicit;
+  let os = Big_map.add owner owner_id s.owners in
+  let new_s = { 
+    owner_count = owner_id;
+    owners = os;
   } in
-  let os = Map.add owner entry s.owners in
-  let new_s = 
-    { 
-      owner_count = owner_id;
-      owners = os;
-    } in
   {
-    owner = entry;
+    owner_id = owner_id;
     owners = new_s;
   }
 
@@ -129,18 +66,17 @@ let add_owner (owner : address) (is_implicit : bool) (s : owner_lookup) : owner_
   gets existing owner id. If owner does not have one, creates a new id and adds
   it to an owner_lookup 
 *)
-
 let ensure_owner_id (owner : address) (s : owner_lookup) : owner_result =
   let owner_id = Map.find_opt owner s.owners in
   match owner_id with
-  | Some entry -> { owner = entry; owners = s; }
-  | None    -> add_owner owner false s
+  | Some id -> { owner_id = id; owners = s; }
+  | None    -> add_owner owner s
 
 let get_owner_id (owner: address) (s: owner_lookup) : nat =
-  let owner = Map.find_opt owner s.owners in
-  match owner with
+  let owner_id = Map.find_opt owner s.owners in
+  match owner_id with
   | None    -> (failwith("No such owner") : nat)
-  | Some o -> o.id
+  | Some id -> id
 
 let make_balance_key_impl (owner_id : nat) (token_id : nat) : nat =
   if token_id > max_tokens
@@ -151,11 +87,6 @@ let make_balance_key (owner : address) (token_id : nat) (s : owner_lookup) : nat
   let owner_id = get_owner_id owner s in
   make_balance_key_impl owner_id token_id
 
-type owner_key_result = {
-  key : nat;
-  owners: owner_lookup;
-}
-
 let get_balance (key : nat) (b : balances) : nat =
   let bal : nat option = Map.find_opt key b in
   match bal with
@@ -163,17 +94,26 @@ let get_balance (key : nat) (b : balances) : nat =
   | Some b  -> b
 
 let get_balance_req (r : balance_request) (s : balance_storage) : nat =
-  let balance_key = make_balance_key r.owner r.token_id s.owners in
-  get_balance balance_key s.balances
+  match r.token_id with
+  | Single u -> (failwith "Multi token_id is expected" : nat)
+  | Multi id ->
+    let balance_key = make_balance_key r.owner id s.owners in
+    get_balance balance_key s.balances
 
 let balance_of 
     (param : balance_of_param) (s : balance_storage) : operation =
   let to_balance = fun (r: balance_request) ->
     let bal = get_balance_req r s in
-    (r, bal) 
+    let br : balance_response = {
+      request = r;
+      balance = bal;
+    } in
+    br
   in
-  let requests_2_bals = List.map to_balance param.balance_requests in
-  Operation.transaction requests_2_bals 0mutez param.balance_view
+  let responses = List.map to_balance param.balance_requests in
+  Operation.transaction responses 0mutez param.balance_view
+
+(* reviewed above *)
 
 let transfer_balance
     (from_key : nat) (to_key : nat) (amt : nat) (s : balances) : balances = 
@@ -192,152 +132,78 @@ let transfer_balance
     let s2 = Map.update to_key (Some tbal) s1 in
     s2
 
-let transfer_safe_check
-    (param : transfer_param) (to_is_implicit : bool) : operation list =
-  if to_is_implicit
-  then ([] : operation list)
-  else
-    let receiver : multi_token_receiver contract = 
-      Operation.get_entrypoint "%multi_token_receiver" param.to_ in
-    let p : on_multi_tokens_received_param = {
-        operator = sender;
-        from_ = Some param.from_;
-        batch = param.batch;
-        data = param.data;
-      } in
-    let op = Operation.transaction (On_multi_tokens_received p) 0mutez receiver in
-    [op] 
-
-let transfer 
-    (param : transfer_param) (s : balance_storage) : (operation  list) * balance_store =
-  let to_o = ensure_owner_id param.to_ s.owners in
-  let ops = transfer_safe_check param to_o.owner.is_implicit in
-
-  let from_id = get_owner_id param.from_ s.owners in
-  let make_transfer = fun (bals: balances) (t: tx) ->
-    let from_key  = make_balance_key_impl from_id t.token_id in
-    let to_key  = make_balance_key_impl to_o.owner.id t.token_id in
-    transfer_balance from_key to_key t.amount bals in 
-
-  let new_balances = List.fold make_transfer param.batch s.balances  in
-  let new_store: balance_storage = {
-    owners = to_o.owners;
-    balances = new_balances;
-  } in
-  
-  (ops, new_store) 
-
-let approved_transfer_from (from_ : address) (operators : operators) : unit =
-  if sender = from_
-  then unit
-  else 
-    let ops = Map.find_opt from_ operators in
-    let is_op = match ops with
-      | None -> false
-      | Some o -> Set.mem sender o 
-    in
-    if is_op
-    then unit
-    else failwith "operator not approved to transfer tokens"
-
-let get_implicit_address (hash : key_hash) : address =
-  let c : unit contract = Current.implicit_account hash in
-  Current.address c
-
-let add_implicit_owners
-    (owner_hashes : key_hash list) (s : balance_storage): balance_storage =
-
-  let add_impl_owner = fun (l : owner_lookup) (h : key_hash) ->
-    let owner = get_implicit_address h in
-    let entry = Map.find_opt owner l.owners in
-    match entry with
-    | None -> 
-      let r = add_owner owner true l in
-      r.owners
-    | Some o_e ->
-      if o_e.is_implicit
-      then l
-      else (failwith "originated owner with the same address already exists" : owner_lookup) 
-    in
-
-  let new_lookup = List.fold add_impl_owner owner_hashes s.owners in
-  {
-    owners = new_lookup;
-    balances = s.balances;
-  }
-
-let remove_implicit_owners
-    (owner_hashes : key_hash list) (s : balance_storage): balance_storage =
-  
-  let remove_owner = fun (l : owner_lookup) (h : key_hash) ->
-    let owner = get_implicit_address h in
-    let entry = Map.find_opt owner l.owners in
-    match entry with
-    | None -> l
-    | Some o_e ->
-      if not o_e.is_implicit
-      then (failwith "trying to remove non-implicit account" : owner_lookup)
-      else
+let permit_transfer(txs : transfer_param) (s : multi_token_storage) : operation =
+  match s.hook with
+  | None -> (failwith "transfer hook is not set" : operation)
+  | Some h ->
+    let htxs : hook_transfer list = 
+    List.map 
+      (fun (tx : transfer) ->
         {
-          owner_count = s.owners.owner_count;
-          owners = Map.remove owner s.owners.owners;
-        } 
+          from_ = Some tx.from_;
+          to_ = Some tx.to_;
+          token_id = tx.token_id;
+          amount = tx.amount;
+        }) 
+      txs in
+    let hp : hook_param = {
+      batch = htxs;
+      operator = Current.sender;
+    } in
+    let hook : hook_param contract = Operation.get_contract h.hook in
+    Operation.transaction hp 0mutez hook
+
+let transfer (param : transfer list) (s : balance_storage) : balance_storage =
+  
+  let make_transfer = fun (bals_tx : balance_storage * transfer) ->
+    let bals, tx = bals_tx in
+    let from_id = get_owner_id tx.from_ bals.owners in
+    let to_o = ensure_owner_id tx.to_ bals.owners in
+    let tid = match tx.token_id with
+    | Single u -> (failwith "Multi token id is expected" : nat)
+    | Multi id -> id
     in
+    let from_key  = make_balance_key_impl from_id tid in
+    let to_key  = make_balance_key_impl to_o.owner_id tid in
+    let new_b = transfer_balance from_key to_key tx.amount bals.balances in
+    let new_s : balance_storage = {
+      owners = to_o.owners;
+      balances = new_b;
+    } in
+    new_s in
 
-  let new_lookup = List.fold remove_owner owner_hashes s.owners in
-  {
-    owners = new_lookup;
-    balances = s.balances;
-  }
+  List.fold make_transfer param s
 
-let multi_token_main
-    (param : multi_token) (s : multi_token_storage) : (operation  list) * multi_token_storage =
+let get_permission_policy (view : ((permission_policy_config list) contract)) 
+    (s : multi_token_storage) : operation =
+   match s.hook with
+    | None -> (failwith "Transfer hook is not set" : operation)
+    | Some h -> Operation.transaction h.config 0mutez view
+
+let fa2_main (param : fa2_entry_points) (s : multi_token_storage)
+    : (operation  list) * multi_token_storage =
   match param with
+
   | Transfer p ->
-      let u : unit = approved_transfer_from p.from_ s.operators in
-      let ops_bstore =transfer p s.balance_storage in
-      let new_s = {
-        operators = s.operators;
-        balance_storage = ops_bstore.1;
-      } in
-      (ops_bstore.0, new_s)
+      let op = permit_transfer p s in
+      let bstore =transfer p s.balance_storage in
+      let new_s = { s with balance_storage = bstore; } in
+      ([op], new_s)
 
   | Balance_of p ->
       let op = balance_of p s.balance_storage in
       ([op], s)
+  
+  | Total_supply p -> (failwith "no token info" : (operation list) * multi_token_storage)
 
-  | Add_operator o ->
-      let new_operators = add_operator o s in
-      let new_s = {
-        operators = new_operators;
-        balance_storage = s.balance_storage;
-      } in
-      (([] : operation list), new_s)
+  | Token_descriptor p -> (failwith "no token info" : (operation list) * multi_token_storage)
 
-  | Remove_operator o ->
-    let new_operators = remove_operator o s.operators in
-    let new_s = {
-      operators = new_operators;
-      balance_storage = s.balance_storage;
-    } in
-    (([] : operation list), new_s)
+  | Get_permissions_policy p ->
+    let op = get_permission_policy p s in
+    ([op], s)
 
-  | Is_operator p  ->
-      let op = is_operator p s.operators in
-      ([op], s)
-
-  | Add_implicit_owners hashes ->
-      let new_bals = add_implicit_owners hashes s.balance_storage in
-      let new_s = {
-        operators = s.operators;
-        balance_storage = new_bals;
-      } in
-      (([] : operation list), new_s)
-
-  | Remove_implicit_owners hashes ->
-      let new_bals = remove_implicit_owners hashes s.balance_storage in
-      let new_s = {
-        operators = s.operators;
-        balance_storage = new_bals;
-      } in
-      (([] : operation list), new_s)
+let multi_token_main (param, s : fa2_with_hook_entry_points * multi_token_storage)
+    : (operation  list) * multi_token_storage =
+  match param with
+  | Set_transfer_hook h -> ([] : operation list), { s with hook = Some h; }
+  | Fa2 fa2 -> fa2_main fa2 s
