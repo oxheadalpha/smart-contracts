@@ -14,48 +14,25 @@
 
 #include "multi_token_impl.mligo"
 
-type token_info = {
-  symbol : string;
-  uri: string;
-  total_supply : nat;
-}
-
 type create_token_param = {
   token_id : nat;
-  symbol : string;
-  uri : string;
+  descriptor : token_descriptor;
 }
 
-type mint_tokens_param = {
+type mint_burn_tx = {
   owner : address;
-  batch : tx list;
-  data : bytes;
+  token_id : token_id;
+  amount : nat;
 }
 
-type burn_tokens_param = {
-  owner : address;
-  batch : tx list;
-}
+type mint_burn_tokens_param = mint_burn_tx list
 
-type token_info_param = {
-  token_id : nat;
-  token_info_view : (nat * token_info) contract;
-}
 
 (* `token_manager` entry points *)
 type token_manager =
   | Create_token of create_token_param
-  | Mint_tokens of mint_tokens_param
-  | Burn_tokens of burn_tokens_param
-  | Token_info of token_info_param
-
-(* token_id -> descriptor *)
-type token_storage = (nat, token_info) big_map
-
-type token_manager_context = {
-  tokens : token_storage;
-  balances : balance_storage;
-}
+  | Mint_tokens of mint_burn_tokens_param
+  | Burn_tokens of mint_burn_tokens_param
 
 
 let create_token 
