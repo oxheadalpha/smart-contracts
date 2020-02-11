@@ -10,7 +10,7 @@
   represented as `nat` (see `owner_lookup`).
 
   If tokens are transferred to a new owner address which does not exist
-  in `owner_loop` yet, new entry withing lookup is created and the owner
+  in `owner_lookup` yet, new entry withing lookup is created and the owner
   is assigned a new `nat` ID. This implementation may change in future,
   if support for white list is needed.
 
@@ -27,6 +27,9 @@ let owner_offset = 4294967296n  (* 2^32 *)
 
 (* owner_token_id -> balance *)
 type balances = (nat, nat) big_map
+
+(* token_id -> descriptor *)
+type token_storage = (nat, token_descriptor) big_map
 
 type owner_lookup = {
   owner_count : nat;
@@ -46,7 +49,8 @@ type owner_result = {
 
 type multi_token_storage = {
   hook : set_hook_param option;
-  balance_storage: balance_storage;
+  balance_storage : balance_storage;
+  token_storage : token_storage;
 }
  
 (* return updated storage and newly added owner id *)
