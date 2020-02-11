@@ -42,150 +42,157 @@ let create_token
   | Some ti -> (failwith "token already exists" : token_storage)
   | None ->
       let ti = {
-        symbol = param.symbol;
-        uri = param.uri;
+        descriptor = param.descriptor;
         total_supply = 0n;
       } in
       Map.add param.token_id ti tokens
+
    
-let update_token_supply_mint (ts : tx list) (tokens: token_storage)
+let update_token_supply_mint (ts : mint_burn_tx list) (tokens: token_storage)
     : token_storage =
 
-  let update = fun (tokens: token_storage) (t : tx) ->
-    let ti = Map.find t.token_id tokens in
-    let new_ti = {
-      symbol = ti.symbol;
-      uri = ti.uri;
-      total_supply = ti.total_supply + t.amount;
-    } in
-    Map.update t.token_id (Some new_ti) tokens
+  let update = fun (tokens_t : token_storage * mint_burn_tx) ->
+    let tokens, t = tokens_t in
+    let tid = get_internal_token_id t.token_id in
+    let ti = Map.find tid tokens in
+    let new_ti = { ti with total_supply = ti.total_supply + t.amount; } in
+    Map.update tid (Some new_ti) tokens
   in
 
   List.fold update ts tokens
 
-let update_token_supply_burn (ts : tx list) (tokens: token_storage)
+let update_token_supply_burn (ts : mint_burn_tx list) (tokens: token_storage)
     : token_storage =
 
-  let update = fun (tokens: token_storage) (t : tx) ->
-    let ti = Map.find t.token_id tokens in
+  let update = fun (tokens_t : token_storage * mint_burn_tx) ->
+    let tokens, t = tokens_t in
+    let tid = get_internal_token_id t.token_id in
+    let ti = Map.find tid tokens in
     let supply = match Michelson.is_nat(ti.total_supply - t.amount) with
     | Some s -> s
     | None -> (failwith "total token supply is less than 0" : nat)
     in
-    let new_ti = {
-      symbol = ti.symbol;
-      uri = ti.uri;
-      total_supply = supply;
-    } in
-    Map.update t.token_id (Some new_ti) tokens
+    let new_ti = { ti with total_supply = supply; } in
+    Map.update tid (Some new_ti) tokens
   in
 
   List.fold update ts tokens
 
+(* not sure if needed anymore *)
 let fail_if_token_does_not_exists (token_id : nat) (tokens : token_storage) : unit =
   let d = Map.find_opt token_id tokens in
   match d with  
   | None ->   failwith("token does not exist")
   | Some d -> unit
 
-let mint_tokens_impl
-    (param : mint_tokens_param) (owner_id : nat) (tokens : token_storage) 
-    (b : balances) : balances =
-
-  let make_transfer = fun (bals: balances) (t: tx) ->
-    let u : unit = fail_if_token_does_not_exists t.token_id tokens in
-    let to_key  = make_balance_key_impl owner_id t.token_id in
-    let old_bal = get_balance to_key bals in
-    Map.update to_key (Some(old_bal + t.amount)) bals in
-
-  List.fold make_transfer param.batch b
-
-let mint_safe_check (param : mint_tokens_param) (is_owner_implicit : bool) : operation list =
-  if is_owner_implicit
-  then ([] : operation list)
-  else
-    let receiver : multi_token_receiver contract =
-      Operation.get_entrypoint "%multi_token_receiver" param.owner in
-    let p : on_multi_tokens_received_param = {
-      operator = sender;
-      from_ = (None : address option);
-      batch = param.batch;
-      data = param.data;
-    } in
-    let op = Operation.transaction (On_multi_tokens_received p) 0mutez receiver in
-    [op] 
-
-let mint_tokens (param : mint_tokens_param) (ctx : token_manager_context) 
-    : (operation list) * token_manager_context =
-  let owner = ensure_owner_id param.owner ctx.balances.owners in
-  let ops = mint_safe_check param owner.owner.is_implicit in
-  let new_b = mint_tokens_impl param owner.owner.id ctx.tokens ctx.balances.balances in
-  let new_bals = {
-    owners = owner.owners;
-    balances = new_b;
-  } in
-  let new_tokens = update_token_supply_mint param.batch ctx.tokens in
-  let new_ctx = {
-    balances = new_bals;
-    tokens = new_tokens;
-  } in 
-  (ops, new_ctx)
-
-
-let burn_tokens (param : burn_tokens_param) (ctx : token_manager_context)
-    : token_manager_context =
-  let owner_id = get_owner_id param.owner ctx.balances.owners in
-
-  let make_burn = fun (bals : balances) (t : tx) ->
-    let from_key = make_balance_key_impl owner_id t.token_id in
-    let old_bal =  
-      match Map.find_opt from_key bals with
-      | Some b  -> b
-      | None    -> 0n
-    in
-    match Michelson.is_nat ( old_bal - t.amount ) with
-    | None -> (failwith("Insufficient funds") : balances)
-    | Some new_bal -> 
-        if new_bal = 0n
-        then Map.remove from_key bals
-        else Map.update from_key (Some new_bal) bals
-    in
-
-  let new_b = List.fold make_burn param.batch ctx.balances.balances in
-  let new_bals = {
-    owners = ctx.balances.owners;
-    balances = new_b;
-  } in
-  let new_tokens = update_token_supply_burn param.batch ctx.tokens in
+let burn_param_to_hook_param (ts : mint_burn_tx list) : hook_param =
+  let batch : hook_transfer list = List.map 
+    (fun (t : mint_burn_tx) -> {
+        from_ = Some t.owner;
+        to_ = (None : address option);
+        token_id = t.token_id;
+        amount = t.amount;
+      })
+    ts in 
   {
-    balances = new_bals;
-    tokens = new_tokens;
+    batch = batch;
+    operator = Current.sender;
   }
 
-let get_token_info (param : token_info_param) (tokens : token_storage) : operation =
-  let ti_opt : token_info option = Map.find_opt param.token_id tokens in
-  match ti_opt with
-  | None -> (failwith "token does not exists" : operation)
-  | Some ti -> Operation.transaction (param.token_id, ti) 0mutez param.token_info_view
+let mint_param_to_hook_param (ts : mint_burn_tx list) : hook_param =
+  let batch : hook_transfer list = List.map 
+    (fun (t : mint_burn_tx) -> 
+      {
+        to_ = Some t.owner;
+        from_ = (None : address option);
+        token_id = t.token_id;
+        amount = t.amount;
+      })
+    ts in 
+  {
+    batch = batch;
+    operator = Current.sender;
+  }
 
-let token_manager (param : token_manager) (ctx : token_manager_context)
-    : (operation list) * token_manager_context =
+let  mint_update_balances (txs : mint_burn_tx list)  (b : balance_storage) : balance_storage =
+  let mint = fun (b_tx : balance_storage * mint_burn_tx) ->
+    let b, tx = b_tx in
+    inc_balance tx.owner tx.token_id tx.amount b in
+
+  List.fold mint txs b
+
+let mint_update_total_supply (txs : mint_burn_tx list) (tokens : token_storage) : token_storage =
+  let update = fun (tk_tx : token_storage * mint_burn_tx) ->
+    let tokens, tx = tk_tx in
+    let tid = get_internal_token_id tx.token_id in
+    let tio = Big_map.find_opt tid tokens in
+    match tio with
+    | None -> (failwith "token id not found" : token_storage)
+    | Some ti ->
+      let new_s = ti.total_supply + tx.amount in
+      let new_ti = { ti with total_supply = new_s } in
+      Big_map.update tid (Some new_ti) tokens in
+
+  List.fold update txs tokens
+
+let mint_tokens (param : mint_burn_tokens_param) (s : multi_token_storage) 
+    : (operation list) * multi_token_storage =
+    let hp = mint_param_to_hook_param param in
+    let op = permit_transfer hp s in
+    let new_bal = mint_update_balances param s.balance_storage in
+    let new_tokens = mint_update_total_supply param s.token_storage in
+    let new_s = { s with
+      balance_storage = new_bal;
+      token_storage = new_tokens;
+    } in
+    ([op], new_s)
+
+let burn_update_balances(txs : mint_burn_tx list)  (b : balance_storage) : balance_storage =
+  let burn = fun (b_tx : balance_storage * mint_burn_tx) ->
+    let b, tx = b_tx in
+    dec_balance tx.owner tx.token_id tx.amount b in
+
+  List.fold burn txs b
+
+let burn_update_total_supply (txs : mint_burn_tx list) (tokens : token_storage) : token_storage =
+  let update = fun (tk_tx : token_storage * mint_burn_tx) ->
+    let tokens, tx = tk_tx in
+    let tid = get_internal_token_id tx.token_id in
+    let tio = Big_map.find_opt tid tokens in
+    match tio with
+    | None -> (failwith "token id not found" : token_storage)
+    | Some ti ->
+      let new_s = (match Michelson.is_nat (ti.total_supply - tx.amount) with
+      | None -> (failwith "total supply is less than zero" : nat)
+      | Some s -> s)
+      in
+      let new_ti = { ti with total_supply = new_s } in
+      Big_map.update tid (Some new_ti) tokens in
+
+  List.fold update txs tokens
+
+let burn_tokens (param : mint_burn_tokens_param) (s : multi_token_storage) 
+    : (operation list) * multi_token_storage =
+    let hp = burn_param_to_hook_param param in
+    let op = permit_transfer hp s in
+    let new_bal = burn_update_balances param s.balance_storage in
+    let new_tokens = burn_update_total_supply param s.token_storage in
+    let new_s = { s with
+      balance_storage = new_bal;
+      token_storage = new_tokens;
+    } in
+    ([op], new_s)
+
+let token_manager (param, s : token_manager * multi_token_storage)
+    : (operation list) * multi_token_storage =
   match param with
 
   | Create_token param ->
-      let new_tokens = create_token param ctx.tokens in
-      let new_ctx = {
-        tokens = new_tokens;
-        balances = ctx.balances;
-      } in
-      (([]: operation list), new_ctx)
+      let new_tokens = create_token param s.token_storage in
+      let new_s = { s with token_storage = new_tokens } in
+      (([]: operation list), new_s)
 
-  | Mint_tokens param -> mint_tokens param ctx
+  | Mint_tokens param -> mint_tokens param s
 
-  | Burn_tokens param ->
-      let new_ctx = burn_tokens param ctx in
-      (([] : operation list), new_ctx)
+  | Burn_tokens param -> burn_tokens param s
 
-  | Token_info param ->
-    let op = get_token_info param ctx.tokens in
-    ([op], ctx)

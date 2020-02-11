@@ -86,6 +86,11 @@ let get_owner_id (owner: address) (s: owner_lookup) : nat =
   | None    -> (failwith("No such owner") : nat)
   | Some id -> id
 
+let get_internal_token_id (tid : token_id) : nat =
+  match tid with
+  | Single u -> (failwith "Multi token_id is expected" : nat)
+  | Multi id -> id
+
 let make_balance_key_impl (owner_id : nat) (token_id : nat) : nat =
   if token_id > max_tokens
   then (failwith("provided token ID is out of allowed range") : nat)
@@ -102,11 +107,9 @@ let get_balance (key : nat) (b : balances) : nat =
   | Some b  -> b
 
 let get_balance_req (r : balance_request) (s : balance_storage) : nat =
-  match r.token_id with
-  | Single u -> (failwith "Multi token_id is expected" : nat)
-  | Multi id ->
-    let balance_key = make_balance_key r.owner id s.owners in
-    get_balance balance_key s.balances
+  let id = get_internal_token_id r.token_id in
+  let balance_key = make_balance_key r.owner id s.owners in
+  get_balance balance_key s.balances
 
 let balance_of 
     (param : balance_of_param) (s : balance_storage) : operation =
@@ -123,28 +126,35 @@ let balance_of
 
 (* reviewed above *)
 
-let transfer_balance
-    (from_key : nat) (to_key : nat) (amt : nat) (s : balances) : balances = 
-  let from_bal = get_balance from_key s in
-  match Michelson.is_nat ( from_bal - amt ) with
+let inc_balance (owner : address) (token_id : token_id) (amt : nat) (b : balance_storage) : balance_storage =
+  let tid = get_internal_token_id token_id in
+  let oid_o = ensure_owner_id owner b.owners in
+  let key = make_balance_key_impl oid_o.owner_id tid in
+  let bal = get_balance key b.balances in
+  let updated_bal = bal + amt in
+  let new_bals = Big_map.update key (Some updated_bal) b.balances in
+  {
+    balances = new_bals;
+    owners = oid_o.owners;
+  }
+
+let dec_balance (owner : address) (token_id : token_id) (amt : nat) (b : balance_storage) : balance_storage =
+  let tid = get_internal_token_id token_id in
+  let owner_id = get_owner_id owner b.owners in
+  let key = make_balance_key_impl owner_id tid in
+  let bal = get_balance key b.balances in
+  let new_bals = match Michelson.is_nat (bal - amt) with
   | None -> (failwith ("Insufficient balance") : balances)
-  | Some fbal ->
-    let s1 = 
-      if fbal = 0n 
-      then Map.remove from_key s
-      else Map.update from_key (Some fbal) s 
-    in
+  | Some new_bal ->
+    if new_bal = 0n
+    then Map.remove key b.balances
+    else Map.update key (Some new_bal) b.balances
+  in
+  { b with balances = new_bals }
 
-    let to_bal = get_balance to_key s1 in
-    let tbal = to_bal + amt in
-    let s2 = Map.update to_key (Some tbal) s1 in
-    s2
 
-let permit_transfer(txs : transfer_param) (s : multi_token_storage) : operation =
-  match s.hook with
-  | None -> (failwith "transfer hook is not set" : operation)
-  | Some h ->
-    let htxs : hook_transfer list = 
+let transfer_param_to_hook_param (txs : transfer_param) : hook_param =
+  let batch : hook_transfer list = 
     List.map 
       (fun (tx : transfer) ->
         {
@@ -154,32 +164,26 @@ let permit_transfer(txs : transfer_param) (s : multi_token_storage) : operation 
           amount = tx.amount;
         }) 
       txs in
-    let hp : hook_param = {
-      batch = htxs;
+    {
+      batch = batch;
       operator = Current.sender;
-    } in
+    } 
+
+let permit_transfer(hp : hook_param) (s : multi_token_storage) : operation =
+  match s.hook with
+  | None -> (failwith "transfer hook is not set" : operation)
+  | Some h ->
     let hook : hook_param contract = Operation.get_contract h.hook in
     Operation.transaction hp 0mutez hook
 
 let transfer (param : transfer list) (s : balance_storage) : balance_storage =
   
   let make_transfer = fun (bals_tx : balance_storage * transfer) ->
-    let bals, tx = bals_tx in
-    let from_id = get_owner_id tx.from_ bals.owners in
-    let to_o = ensure_owner_id tx.to_ bals.owners in
-    let tid = match tx.token_id with
-    | Single u -> (failwith "Multi token id is expected" : nat)
-    | Multi id -> id
-    in
-    let from_key  = make_balance_key_impl from_id tid in
-    let to_key  = make_balance_key_impl to_o.owner_id tid in
-    let new_b = transfer_balance from_key to_key tx.amount bals.balances in
-    let new_s : balance_storage = {
-      owners = to_o.owners;
-      balances = new_b;
-    } in
-    new_s in
-
+    let b, tx = bals_tx in
+    let b1 = dec_balance tx.from_ tx.token_id tx.amount b in
+    let b2 = inc_balance tx.to_ tx.token_id tx.amount b1 in
+    b2 in
+    
   List.fold make_transfer param s
 
 let get_permission_policy (view : ((permission_policy_config list) contract)) 
@@ -188,21 +192,20 @@ let get_permission_policy (view : ((permission_policy_config list) contract))
     | None -> (failwith "Transfer hook is not set" : operation)
     | Some h -> Operation.transaction h.config 0mutez view
 
-let find_token_info (id : token_id) (tokens : token_storage) : token_info =
-  match id with
-  | Single u -> (failwith "Milti token id is expected" : token_info)
-  | Multi id ->
-    let ti = Big_map.find_opt id tokens in
-    (match ti with
-    | None -> (failwith "token id not found" : token_info)
-    | Some i -> i)
+let find_token_info (tid : token_id) (tokens : token_storage) : token_info =
+  let id = get_internal_token_id tid in
+  let ti = Big_map.find_opt id tokens in
+  match ti with
+  | None -> (failwith "token id not found" : token_info)
+  | Some i -> i
 
 let fa2_main (param : fa2_entry_points) (s : multi_token_storage)
     : (operation  list) * multi_token_storage =
   match param with
 
   | Transfer p ->
-      let op = permit_transfer p s in
+      let hp = transfer_param_to_hook_param p in
+      let op = permit_transfer hp s in
       let bstore =transfer p s.balance_storage in
       let new_s = { s with balance_storage = bstore; } in
       ([op], new_s)
