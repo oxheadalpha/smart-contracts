@@ -43,7 +43,7 @@ type total_supply_response = {
 }
 
 type total_supply_param = {
-  total_supply_requests : token_id list;
+  token_ids : token_id list;
   total_supply_view : (total_supply_response list) contract;
 }
 

@@ -28,8 +28,12 @@ let owner_offset = 4294967296n  (* 2^32 *)
 (* owner_token_id -> balance *)
 type balances = (nat, nat) big_map
 
+type token_info = {
+  descriptor : token_descriptor;
+  total_supply : nat;
+}
 (* token_id -> descriptor *)
-type token_storage = (nat, token_descriptor) big_map
+type token_storage = (nat, token_info) big_map
 
 type owner_lookup = {
   owner_count : nat;
@@ -184,6 +188,15 @@ let get_permission_policy (view : ((permission_policy_config list) contract))
     | None -> (failwith "Transfer hook is not set" : operation)
     | Some h -> Operation.transaction h.config 0mutez view
 
+let find_token_info (id : token_id) (tokens : token_storage) : token_info =
+  match id with
+  | Single u -> (failwith "Milti token id is expected" : token_info)
+  | Multi id ->
+    let ti = Big_map.find_opt id tokens in
+    (match ti with
+    | None -> (failwith "token id not found" : token_info)
+    | Some i -> i)
+
 let fa2_main (param : fa2_entry_points) (s : multi_token_storage)
     : (operation  list) * multi_token_storage =
   match param with
@@ -198,9 +211,34 @@ let fa2_main (param : fa2_entry_points) (s : multi_token_storage)
       let op = balance_of p s.balance_storage in
       ([op], s)
   
-  | Total_supply p -> (failwith "no token info" : (operation list) * multi_token_storage)
+  | Total_supply p -> 
+    let get_response = fun(tid : token_id) ->
+        let ti  = find_token_info tid s.token_storage in
+        let sr : total_supply_response = {
+          token_id = tid;
+          supply = ti.total_supply;
+        } in
+        sr
+    in
 
-  | Token_descriptor p -> (failwith "no token info" : (operation list) * multi_token_storage)
+    let responses = List.map get_response p.token_ids in
+    let op = Operation.transaction responses 0mutez p.total_supply_view in
+    ([op], s)
+
+  | Token_descriptor p -> 
+    let get_response = fun(tid : token_id) ->
+        let ti  = find_token_info tid s.token_storage in
+        let dr : token_descriptor_response = {
+          token_id = tid;
+          descriptor = ti.descriptor;
+        } in
+        dr
+    in
+
+    let responses = List.map get_response p.token_ids in
+    let op = Operation.transaction responses 0mutez p.token_descriptor_view in
+    ([op], s)
+      
 
   | Get_permissions_policy p ->
     let op = get_permission_policy p s in
