@@ -31,8 +31,7 @@ let pause (paused : bool) (s: simple_admin_storage) : simple_admin_storage =
     paused = paused;
   }
 
-let simple_admin 
-    (param : simple_admin) (s : simple_admin_storage)
+let simple_admin (param, s : simple_admin *simple_admin_storage)
     : (operation list) * simple_admin_storage =
   if sender <> s.admin
   then 

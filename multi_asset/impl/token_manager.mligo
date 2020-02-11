@@ -78,13 +78,6 @@ let update_token_supply_burn (ts : mint_burn_tx list) (tokens: token_storage)
 
   List.fold update ts tokens
 
-(* not sure if needed anymore *)
-let fail_if_token_does_not_exists (token_id : nat) (tokens : token_storage) : unit =
-  let d = Map.find_opt token_id tokens in
-  match d with  
-  | None ->   failwith("token does not exist")
-  | Some d -> unit
-
 let burn_param_to_hook_param (ts : mint_burn_tx list) : hook_param =
   let batch : hook_transfer list = List.map 
     (fun (t : mint_burn_tx) -> {

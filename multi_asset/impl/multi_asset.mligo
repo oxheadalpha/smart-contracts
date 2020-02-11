@@ -16,11 +16,10 @@
 type multi_asset_storage = {
   admin : simple_admin_storage;
   assets : multi_token_storage;
-  tokens : token_storage;
 }
 
 type multi_asset_param =
-  | Assets of multi_token
+  | Assets of fa2_with_hook_entry_points
   | Admin of simple_admin
   | Tokens of token_manager
 
@@ -35,46 +34,26 @@ let fail_if_paused (a : simple_admin_storage) : unit =
   else unit
 
 let multi_asset_main 
-    (param : multi_asset_param) (s : multi_asset_storage)
+    (param, s : multi_asset_param * multi_asset_storage)
     : (operation list) * multi_asset_storage =
   match param with
   | Admin p ->
       let u = fail_if_not_admin s.admin in  
-
-      let ops_admin = simple_admin p s.admin in
-      let new_s = {
-        admin = ops_admin.1;
-        assets = s.assets;
-        tokens = s.tokens;
-      } in
-      (ops_admin.0, new_s)
+      let ops, admin = simple_admin (p, s.admin) in
+      let new_s = { s with admin = admin; } in
+      (ops, new_s)
 
   | Tokens p ->
       let u1 = fail_if_not_admin s.admin in
-
-      let ctx = {
-        tokens = s.tokens;
-        balances = s.assets.balance_storage;
-      } in
-      let ops_ctx = token_manager p ctx in 
-      let new_ctx = ops_ctx.1 in
-      let new_s = {
-        admin = s.admin;
-        assets = {
-          operators = s.assets.operators;
-          balance_storage = new_ctx.balances;
-        };
-        tokens = new_ctx.tokens;
+      let ops, assets = token_manager (p, s.assets) in 
+      let new_s = { s with
+        assets = assets
       } in 
-      (ops_ctx.0, new_s)
+      (ops, new_s)
 
   | Assets p -> 
       let u2 = fail_if_paused s.admin in
         
-      let ops_assets = multi_token_main p s.assets in
-      let new_s = {
-        admin = s.admin;
-        assets = ops_assets.1;
-        tokens = s.tokens;
-      } in
-      (ops_assets.0, new_s)
+      let ops, assets = multi_token_main (p, s.assets) in
+      let new_s = { s with assets = assets } in
+      (ops, new_s)
