@@ -111,20 +111,16 @@ let get_balance_req (r : balance_request) (s : balance_storage) : nat =
   let balance_key = make_balance_key r.owner id s.owners in
   get_balance balance_key s.balances
 
-let balance_of 
-    (param : balance_of_param) (s : balance_storage) : operation =
+
+let balance_of (param, s : balance_of_param * balance_storage) : operation =
   let to_balance = fun (r: balance_request) ->
     let bal = get_balance_req r s in
-    let br : balance_response = {
+    {
       request = r;
       balance = bal;
     } in
-    br
-  in
   let responses = List.map to_balance param.balance_requests in
   Operation.transaction responses 0mutez param.balance_view
-
-(* reviewed above *)
 
 let inc_balance (owner : address) (token_id : token_id) (amt : nat) (b : balance_storage) : balance_storage =
   let tid = get_internal_token_id token_id in
@@ -211,7 +207,7 @@ let fa2_main (param : fa2_entry_points) (s : multi_token_storage)
       ([op], new_s)
 
   | Balance_of p ->
-      let op = balance_of p s.balance_storage in
+      let op = balance_of (p, s.balance_storage) in
       ([op], s)
   
   | Total_supply p -> 
