@@ -174,8 +174,7 @@ let permit_transfer(hp : hook_param) (s : multi_token_storage) : operation =
 
 let transfer (param : transfer list) (s : balance_storage) : balance_storage =
   
-  let make_transfer = fun (bals_tx : balance_storage * transfer) ->
-    let b, tx = bals_tx in
+  let make_transfer = fun (b, tx : balance_storage * transfer) ->
     let b1 = dec_balance tx.from_ tx.token_id tx.amount b in
     let b2 = inc_balance tx.to_ tx.token_id tx.amount b1 in
     b2 in
