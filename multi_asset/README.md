@@ -1,4 +1,4 @@
-# Multi Asset Contract Standard
+# Multi Asset Contract
 
 Specification for Tezos multi-asset contract adapted from the corresponding
 specification for [Ethereum](https://eips.ethereum.org/EIPS/eip-1155).

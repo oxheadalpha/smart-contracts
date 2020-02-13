@@ -25,7 +25,7 @@ be represented as ID ranges.
 **Operator** - Tezos address which initiates token transfer operation.
 
 Transfer permission policy articular implementation is to be implemented as a
-separate plugable contract using transfer hook design pattern as recommended by
+separate pluggable contract using transfer hook design pattern as recommended by
 FA2 standard.
 
 Multi-asset contract supports atomic batch transfer of multiple tokens.
