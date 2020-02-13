@@ -1,5 +1,5 @@
 type token_id =
-  | Single of unit
+  | Single
   | Multi of nat
 
 type transfer = {
