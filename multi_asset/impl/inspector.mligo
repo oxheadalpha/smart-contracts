@@ -1,4 +1,4 @@
-#include "../multi_token_interface.mligo"
+include "../fa2_interface.mligo"
 
 type state = {
   owner : address;
@@ -8,7 +8,7 @@ type state = {
 
 type storage =
   | State of state
-  | Empty of unit
+  | Empty
 
 type query_param = {
   mac : address;
@@ -18,17 +18,17 @@ type query_param = {
 
 type assert_is_operator_param = {
   mac : address;
-  request : is_operator_request
+  request : operator_param;
 }
 
 type param =
   | Query of query_param
-  | Response of (balance_request * nat) list
+  | Response of balance_response list
   | Assert_is_operator of assert_is_operator_param
-  | Is_operator_response of (is_operator_request * bool)
+  | Is_operator_response of is_operator_response list
   | Default of unit
 
-let main (p : param) ( s : storage) : (operation list) * (state option) =
+let main (p, s : param * storage) : (operation list) * (state option) =
   match p with
 
   | Query q ->
