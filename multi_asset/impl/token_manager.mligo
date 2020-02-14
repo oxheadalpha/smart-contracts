@@ -36,7 +36,7 @@ type token_manager =
 
 
 let create_token 
-    (param : create_token_param) (tokens: token_storage) : token_storage =
+    (param, tokens : create_token_param * token_storage) : token_storage =
   let token_info = Map.find_opt param.token_id tokens in
   match token_info with
   | Some ti -> (failwith "token already exists" : token_storage)
@@ -46,35 +46,6 @@ let create_token
         total_supply = 0n;
       } in
       Map.add param.token_id ti tokens
-
-   
-let update_token_supply_mint (ts : mint_burn_tx list) (tokens: token_storage)
-    : token_storage =
-
-  let update = fun (tokens, t : token_storage * mint_burn_tx) ->
-    let tid = get_internal_token_id t.token_id in
-    let ti = Map.find tid tokens in
-    let new_ti = { ti with total_supply = ti.total_supply + t.amount; } in
-    Map.update tid (Some new_ti) tokens
-  in
-
-  List.fold update ts tokens
-
-let update_token_supply_burn (ts : mint_burn_tx list) (tokens: token_storage)
-    : token_storage =
-
-  let update = fun (tokens, t : token_storage * mint_burn_tx) ->
-    let tid = get_internal_token_id t.token_id in
-    let ti = Map.find tid tokens in
-    let supply = match Michelson.is_nat(ti.total_supply - t.amount) with
-    | Some s -> s
-    | None -> (failwith "total token supply is less than 0" : nat)
-    in
-    let new_ti = { ti with total_supply = supply; } in
-    Map.update tid (Some new_ti) tokens
-  in
-
-  List.fold update ts tokens
 
 let burn_param_to_hook_param (ts : mint_burn_tx list) : hook_param =
   let batch : hook_transfer list = List.map 
@@ -105,13 +76,13 @@ let mint_param_to_hook_param (ts : mint_burn_tx list) : hook_param =
     operator = Current.sender;
   }
 
-let  mint_update_balances (txs : mint_burn_tx list)  (b : balance_storage) : balance_storage =
+let  mint_update_balances (txs, b : (mint_burn_tx list) * balance_storage) : balance_storage =
   let mint = fun (b, tx : balance_storage * mint_burn_tx) ->
-    inc_balance tx.owner tx.token_id tx.amount b in
+    inc_balance (tx.owner, tx.token_id, tx.amount, b) in
 
   List.fold mint txs b
 
-let mint_update_total_supply (txs : mint_burn_tx list) (tokens : token_storage) : token_storage =
+let mint_update_total_supply (txs, tokens : (mint_burn_tx list) * token_storage) : token_storage =
   let update = fun (tokens, tx : token_storage * mint_burn_tx) ->
     let tid = get_internal_token_id tx.token_id in
     let tio = Big_map.find_opt tid tokens in
@@ -124,25 +95,25 @@ let mint_update_total_supply (txs : mint_burn_tx list) (tokens : token_storage) 
 
   List.fold update txs tokens
 
-let mint_tokens (param : mint_burn_tokens_param) (s : multi_token_storage) 
+let mint_tokens (param, s : mint_burn_tokens_param * multi_token_storage) 
     : (operation list) * multi_token_storage =
     let hp = mint_param_to_hook_param param in
-    let op = permit_transfer hp s in
-    let new_bal = mint_update_balances param s.balance_storage in
-    let new_tokens = mint_update_total_supply param s.token_storage in
+    let op = permit_transfer (hp, s) in
+    let new_bal = mint_update_balances (param, s.balance_storage) in
+    let new_tokens = mint_update_total_supply (param, s.token_storage) in
     let new_s = { s with
       balance_storage = new_bal;
       token_storage = new_tokens;
     } in
     ([op], new_s)
 
-let burn_update_balances(txs : mint_burn_tx list)  (b : balance_storage) : balance_storage =
+let burn_update_balances(txs, b : (mint_burn_tx list) * balance_storage) : balance_storage =
   let burn = fun (b, tx : balance_storage * mint_burn_tx) ->
-    dec_balance tx.owner tx.token_id tx.amount b in
+    dec_balance (tx.owner, tx.token_id, tx.amount, b) in
 
   List.fold burn txs b
 
-let burn_update_total_supply (txs : mint_burn_tx list) (tokens : token_storage) : token_storage =
+let burn_update_total_supply (txs, tokens : (mint_burn_tx list) * token_storage) : token_storage =
   let update = fun (tokens, tx : token_storage * mint_burn_tx) ->
     let tid = get_internal_token_id tx.token_id in
     let tio = Big_map.find_opt tid tokens in
@@ -158,12 +129,12 @@ let burn_update_total_supply (txs : mint_burn_tx list) (tokens : token_storage) 
 
   List.fold update txs tokens
 
-let burn_tokens (param : mint_burn_tokens_param) (s : multi_token_storage) 
+let burn_tokens (param, s : mint_burn_tokens_param * multi_token_storage) 
     : (operation list) * multi_token_storage =
     let hp = burn_param_to_hook_param param in
-    let op = permit_transfer hp s in
-    let new_bal = burn_update_balances param s.balance_storage in
-    let new_tokens = burn_update_total_supply param s.token_storage in
+    let op = permit_transfer (hp, s) in
+    let new_bal = burn_update_balances (param, s.balance_storage) in
+    let new_tokens = burn_update_total_supply (param, s.token_storage) in
     let new_s = { s with
       balance_storage = new_bal;
       token_storage = new_tokens;
@@ -175,11 +146,11 @@ let token_manager (param, s : token_manager * multi_token_storage)
   match param with
 
   | Create_token param ->
-      let new_tokens = create_token param s.token_storage in
+      let new_tokens = create_token (param, s.token_storage) in
       let new_s = { s with token_storage = new_tokens } in
       (([]: operation list), new_s)
 
-  | Mint_tokens param -> mint_tokens param s
+  | Mint_tokens param -> mint_tokens (param, s)
 
-  | Burn_tokens param -> burn_tokens param s
+  | Burn_tokens param -> burn_tokens (param, s)
 

@@ -58,7 +58,7 @@ type multi_token_storage = {
 }
  
 (* return updated storage and newly added owner id *)
-let add_owner (owner : address) (s : owner_lookup) : owner_result =
+let add_owner (owner, s : address * owner_lookup) : owner_result =
   let owner_id  = s.owner_count + 1n in
   let os = Big_map.add owner owner_id s.owners in
   let new_s = { 
@@ -74,13 +74,13 @@ let add_owner (owner : address) (s : owner_lookup) : owner_result =
   gets existing owner id. If owner does not have one, creates a new id and adds
   it to an owner_lookup 
 *)
-let ensure_owner_id (owner : address) (s : owner_lookup) : owner_result =
+let ensure_owner_id (owner, s : address * owner_lookup) : owner_result =
   let owner_id = Map.find_opt owner s.owners in
   match owner_id with
   | Some id -> { owner_id = id; owners = s; }
-  | None    -> add_owner owner s
+  | None    -> add_owner (owner, s)
 
-let get_owner_id (owner: address) (s: owner_lookup) : nat =
+let get_owner_id (owner, s : address * owner_lookup) : nat =
   let owner_id = Map.find_opt owner s.owners in
   match owner_id with
   | None    -> (failwith("No such owner") : nat)
@@ -91,14 +91,14 @@ let get_internal_token_id (tid : token_id) : nat =
   | Single u -> (failwith "Multi token_id is expected" : nat)
   | Multi id -> id
 
-let make_balance_key_impl (owner_id : nat) (token_id : nat) : nat =
+let make_balance_key_impl (owner_id, token_id : nat * nat) : nat =
   if token_id > max_tokens
   then (failwith("provided token ID is out of allowed range") : nat)
   else token_id + (owner_id * owner_offset)
 
-let make_balance_key (owner : address) (token_id : nat) (s : owner_lookup) : nat =
-  let owner_id = get_owner_id owner s in
-  make_balance_key_impl owner_id token_id
+let make_balance_key (owner,  token_id, s: address * nat * owner_lookup) : nat =
+  let owner_id = get_owner_id (owner, s) in
+  make_balance_key_impl (owner_id, token_id)
 
 let get_balance (key : nat) (b : balances) : nat =
   let bal : nat option = Map.find_opt key b in
@@ -106,15 +106,15 @@ let get_balance (key : nat) (b : balances) : nat =
   | None    -> 0n
   | Some b  -> b
 
-let get_balance_req (r : balance_request) (s : balance_storage) : nat =
+let get_balance_req (r, s : balance_request * balance_storage) : nat =
   let id = get_internal_token_id r.token_id in
-  let balance_key = make_balance_key r.owner id s.owners in
+  let balance_key = make_balance_key (r.owner, id, s.owners) in
   get_balance balance_key s.balances
 
 
 let balance_of (param, s : balance_of_param * balance_storage) : operation =
   let to_balance = fun (r: balance_request) ->
-    let bal = get_balance_req r s in
+    let bal = get_balance_req (r, s) in
     {
       request = r;
       balance = bal;
@@ -122,10 +122,10 @@ let balance_of (param, s : balance_of_param * balance_storage) : operation =
   let responses = List.map to_balance param.balance_requests in
   Operation.transaction responses 0mutez param.balance_view
 
-let inc_balance (owner : address) (token_id : token_id) (amt : nat) (b : balance_storage) : balance_storage =
+let inc_balance (owner, token_id, amt, b : address * token_id * nat * balance_storage) : balance_storage =
   let tid = get_internal_token_id token_id in
-  let oid_o = ensure_owner_id owner b.owners in
-  let key = make_balance_key_impl oid_o.owner_id tid in
+  let oid_o = ensure_owner_id (owner, b.owners) in
+  let key = make_balance_key_impl (oid_o.owner_id, tid) in
   let bal = get_balance key b.balances in
   let updated_bal = bal + amt in
   let new_bals = Big_map.update key (Some updated_bal) b.balances in
@@ -134,10 +134,10 @@ let inc_balance (owner : address) (token_id : token_id) (amt : nat) (b : balance
     owners = oid_o.owners;
   }
 
-let dec_balance (owner : address) (token_id : token_id) (amt : nat) (b : balance_storage) : balance_storage =
+let dec_balance (owner, token_id, amt, b : address * token_id * nat * balance_storage) : balance_storage =
   let tid = get_internal_token_id token_id in
-  let owner_id = get_owner_id owner b.owners in
-  let key = make_balance_key_impl owner_id tid in
+  let owner_id = get_owner_id (owner, b.owners) in
+  let key = make_balance_key_impl (owner_id, tid) in
   let bal = get_balance key b.balances in
   let new_bals = match Michelson.is_nat (bal - amt) with
   | None -> (failwith ("Insufficient balance") : balances)
@@ -165,43 +165,43 @@ let transfer_param_to_hook_param (txs : transfer_param) : hook_param =
       operator = Current.sender;
     } 
 
-let permit_transfer(hp : hook_param) (s : multi_token_storage) : operation =
+let permit_transfer(hp, s : hook_param * multi_token_storage) : operation =
   match s.hook with
   | None -> (failwith "transfer hook is not set" : operation)
   | Some h ->
     let hook : hook_param contract = Operation.get_contract h.hook in
     Operation.transaction hp 0mutez hook
 
-let transfer (param : transfer list) (s : balance_storage) : balance_storage =
+let transfer (param, s : (transfer list) * balance_storage) : balance_storage =
   
   let make_transfer = fun (b, tx : balance_storage * transfer) ->
-    let b1 = dec_balance tx.from_ tx.token_id tx.amount b in
-    let b2 = inc_balance tx.to_ tx.token_id tx.amount b1 in
+    let b1 = dec_balance (tx.from_, tx.token_id, tx.amount, b) in
+    let b2 = inc_balance (tx.to_, tx.token_id, tx.amount, b1) in
     b2 in
     
   List.fold make_transfer param s
 
-let get_permission_policy (view : ((permission_policy_config list) contract)) 
-    (s : multi_token_storage) : operation =
+let get_permission_policy (view, s : 
+    ((permission_policy_config list) contract) * multi_token_storage) : operation =
    match s.hook with
     | None -> (failwith "Transfer hook is not set" : operation)
     | Some h -> Operation.transaction h.config 0mutez view
 
-let find_token_info (tid : token_id) (tokens : token_storage) : token_info =
+let find_token_info (tid, tokens : token_id * token_storage) : token_info =
   let id = get_internal_token_id tid in
   let ti = Big_map.find_opt id tokens in
   match ti with
   | None -> (failwith "token id not found" : token_info)
   | Some i -> i
 
-let fa2_main (param : fa2_entry_points) (s : multi_token_storage)
+let fa2_main (param, s : fa2_entry_points * multi_token_storage)
     : (operation  list) * multi_token_storage =
   match param with
 
   | Transfer p ->
       let hp = transfer_param_to_hook_param p in
-      let op = permit_transfer hp s in
-      let bstore =transfer p s.balance_storage in
+      let op = permit_transfer (hp, s) in
+      let bstore =transfer (p, s.balance_storage) in
       let new_s = { s with balance_storage = bstore; } in
       ([op], new_s)
 
@@ -211,7 +211,7 @@ let fa2_main (param : fa2_entry_points) (s : multi_token_storage)
   
   | Total_supply p -> 
     let get_response = fun(tid : token_id) ->
-        let ti  = find_token_info tid s.token_storage in
+        let ti  = find_token_info (tid, s.token_storage) in
         let sr : total_supply_response = {
           token_id = tid;
           supply = ti.total_supply;
@@ -225,7 +225,7 @@ let fa2_main (param : fa2_entry_points) (s : multi_token_storage)
 
   | Token_descriptor p -> 
     let get_response = fun(tid : token_id) ->
-        let ti  = find_token_info tid s.token_storage in
+        let ti  = find_token_info (tid, s.token_storage) in
         let dr : token_descriptor_response = {
           token_id = tid;
           descriptor = ti.descriptor;
@@ -239,11 +239,11 @@ let fa2_main (param : fa2_entry_points) (s : multi_token_storage)
       
 
   | Get_permissions_policy p ->
-    let op = get_permission_policy p s in
+    let op = get_permission_policy (p, s) in
     ([op], s)
 
 let multi_token_main (param, s : fa2_with_hook_entry_points * multi_token_storage)
     : (operation  list) * multi_token_storage =
   match param with
   | Set_transfer_hook h -> ([] : operation list), { s with hook = Some h; }
-  | Fa2 fa2 -> fa2_main fa2 s
+  | Fa2 fa2 -> fa2_main (fa2, s)
