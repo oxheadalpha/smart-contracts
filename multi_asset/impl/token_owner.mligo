@@ -1,18 +1,18 @@
 (*
-  This is stub implementation of `multi_token_receiver` interface which
-  accepts transfer of any token.
-*)
+A simple token owner which works with FA2 instance which supports operators permission policy
+and can manage its own operators.
+ *)
 
 #include "../fa2_interface.mligo"
 
-type receiver_operator_param = {
+type owner_operator_param = {
   fa2 : address;
   operator : address;
 }
 
-type receiver =
-  | Add_operator of receiver_operator_param
-  | Remove_operator of receiver_operator_param
+type token_owner =
+  | Add_operator of owner_operator_param
+  | Remove_operator of owner_operator_param
   | Continue_config_action of permission_policy_config list
   | Default of unit
 
@@ -73,7 +73,7 @@ let continue_config_op (configs : permission_policy_config list)
     } in
     Operation.transaction (Remove_operators [param]) 0mutez cfg
 
-let main (param, s : receiver * pending_config_action) 
+let main (param, s : token_owner * pending_config_action) 
     : (operation list) * pending_config_action =
   match param with
 
