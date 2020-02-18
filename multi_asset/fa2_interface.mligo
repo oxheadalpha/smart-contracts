@@ -103,47 +103,8 @@ type fa2_operators_config_entry_points =
   | Remove_operators of operator_param list
   | Is_operator of is_operator_param
 
-
-(**
-  Allowance permission policy.
-  Spender is a Tezos address which initiates token transfer operation.
-  Owner is a Tezos address which can hold tokens. Owner can transfer its own tokens.
-  Spender, other than the owner, MUST be approved to withdraw specific tokens held
-  by the owner up to the allowance amount.
-
-  The owner does not need to be approved to transfer its own tokens.
- *)
-
- type allowance_id = {
-  owner : address;
-  token_id : token_id;
-  token_manager : address;
-  spender : address;
- }
-
- type set_allowance_param = {
-  allowance_id : allowance_id;
-  prev_allowance : nat;
-  new_allowance : nat;
- }
-
-type get_allowance_response = {
-  allowance_id : allowance_id;
-  allowance : nat;
-}
-
- type get_allowance_param = {
-   allowance_ids : allowance_id list;
-   view : (get_allowance_response list) contract;
- }
-
- type fa2_allowances_config_entry_points =
-  | Set_allowances of set_allowance_param list
-  | Get_allowances of get_allowance_param
-
-
 (** 
-  Receiver whitelist permission policy.
+  whitelist permission policy.
   Only addresses which are whitelisted can receive tokens. If one or more `to_`
   addresses in FA2 transfer batch are not whitelisted the whole transfer operation
   MUST fail.
