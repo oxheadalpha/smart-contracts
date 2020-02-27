@@ -12,11 +12,11 @@
   less tokens then burn amount.
 *)
 
-#include "multi_token_impl.mligo"
+#include "fa2_multi_token.mligo"
 
 type create_token_param = {
   token_id : nat;
-  descriptor : token_descriptor;
+  metadata : token_metadata;
 }
 
 type mint_burn_tx = {
@@ -42,13 +42,13 @@ let create_token
   | Some ti -> (failwith "token already exists" : token_storage)
   | None ->
       let ti = {
-        descriptor = param.descriptor;
+        metadata = param.metadata;
         total_supply = 0n;
       } in
-      Map.add param.token_id ti tokens
+      Big_map.add param.token_id ti tokens
 
-let burn_param_to_hook_param (ts : mint_burn_tx list) : hook_param =
-  let batch : hook_transfer list = List.map 
+let burn_param_to_hook_param (ts : mint_burn_tx list) : transfer_descriptor_param =
+  let batch : transfer_descriptor list = List.map 
     (fun (t : mint_burn_tx) -> {
         from_ = Some t.owner;
         to_ = (None : address option);
@@ -59,10 +59,11 @@ let burn_param_to_hook_param (ts : mint_burn_tx list) : hook_param =
   {
     batch = batch;
     operator = Current.sender;
+    fa2 = Current.self_address;
   }
 
-let mint_param_to_hook_param (ts : mint_burn_tx list) : hook_param =
-  let batch : hook_transfer list = List.map 
+let mint_param_to_hook_param (ts : mint_burn_tx list) : transfer_descriptor_param =
+  let batch : transfer_descriptor list = List.map 
     (fun (t : mint_burn_tx) -> 
       {
         to_ = Some t.owner;
@@ -74,50 +75,52 @@ let mint_param_to_hook_param (ts : mint_burn_tx list) : hook_param =
   {
     batch = batch;
     operator = Current.sender;
+    fa2 = Current.self_address;
   }
 
-let  mint_update_balances (txs, b : (mint_burn_tx list) * balance_storage) : balance_storage =
-  let mint = fun (b, tx : balance_storage * mint_burn_tx) ->
-    inc_balance (tx.owner, tx.token_id, tx.amount, b) in
+let  mint_update_balances (txs, ledger : (mint_burn_tx list) * ledger) : ledger =
+  let mint = fun (l, tx : ledger * mint_burn_tx) ->
+    inc_balance (tx.owner, tx.token_id, tx.amount, l) in
 
-  List.fold mint txs b
+  List.fold mint txs ledger
 
 let mint_update_total_supply (txs, tokens : (mint_burn_tx list) * token_storage) : token_storage =
   let update = fun (tokens, tx : token_storage * mint_burn_tx) ->
-    let tid = get_internal_token_id tx.token_id in
-    let tio = Big_map.find_opt tid tokens in
-    match tio with
+    let info_opt = Big_map.find_opt tx.token_id tokens in
+    match info_opt with
     | None -> (failwith "token id not found" : token_storage)
     | Some ti ->
       let new_s = ti.total_supply + tx.amount in
       let new_ti = { ti with total_supply = new_s } in
-      Big_map.update tid (Some new_ti) tokens in
+      Big_map.update tx.token_id (Some new_ti) tokens in
 
   List.fold update txs tokens
 
-let mint_tokens (param, s : mint_burn_tokens_param * multi_token_storage) 
+let mint_tokens (param, storage : mint_burn_tokens_param * multi_token_storage) 
     : (operation list) * multi_token_storage =
+    let hook = get_hook storage.hook in
+    let hook_contract = hook.hook unit in
     let hp = mint_param_to_hook_param param in
-    let op = permit_transfer (hp, s) in
-    let new_bal = mint_update_balances (param, s.balance_storage) in
-    let new_tokens = mint_update_total_supply (param, s.token_storage) in
-    let new_s = { s with
-      balance_storage = new_bal;
-      token_storage = new_tokens;
+    let op = Operation.transaction hp 0mutez hook_contract in
+
+    let new_ledger = mint_update_balances (param, storage.ledger) in
+    let new_tokens = mint_update_total_supply (param, storage.tokens) in
+    let new_s = { storage with
+      ledger = new_ledger;
+      tokens = new_tokens;
     } in
     ([op], new_s)
 
-let burn_update_balances(txs, b : (mint_burn_tx list) * balance_storage) : balance_storage =
-  let burn = fun (b, tx : balance_storage * mint_burn_tx) ->
-    dec_balance (tx.owner, tx.token_id, tx.amount, b) in
+let burn_update_balances(txs, ledger : (mint_burn_tx list) * ledger) : ledger =
+  let burn = fun (l, tx : ledger * mint_burn_tx) ->
+    dec_balance (tx.owner, tx.token_id, tx.amount, l) in
 
-  List.fold burn txs b
+  List.fold burn txs ledger
 
 let burn_update_total_supply (txs, tokens : (mint_burn_tx list) * token_storage) : token_storage =
   let update = fun (tokens, tx : token_storage * mint_burn_tx) ->
-    let tid = get_internal_token_id tx.token_id in
-    let tio = Big_map.find_opt tid tokens in
-    match tio with
+    let info_opt = Big_map.find_opt tx.token_id tokens in
+    match info_opt with
     | None -> (failwith "token id not found" : token_storage)
     | Some ti ->
       let new_s = (match Michelson.is_nat (ti.total_supply - tx.amount) with
@@ -125,19 +128,22 @@ let burn_update_total_supply (txs, tokens : (mint_burn_tx list) * token_storage)
       | Some s -> s)
       in
       let new_ti = { ti with total_supply = new_s } in
-      Big_map.update tid (Some new_ti) tokens in
+      Big_map.update tx.token_id (Some new_ti) tokens in
 
   List.fold update txs tokens
 
-let burn_tokens (param, s : mint_burn_tokens_param * multi_token_storage) 
+let burn_tokens (param, storage : mint_burn_tokens_param * multi_token_storage) 
     : (operation list) * multi_token_storage =
+    let hook = get_hook storage.hook in
+    let hcontract = hook.hook unit in
     let hp = burn_param_to_hook_param param in
-    let op = permit_transfer (hp, s) in
-    let new_bal = burn_update_balances (param, s.balance_storage) in
-    let new_tokens = burn_update_total_supply (param, s.token_storage) in
-    let new_s = { s with
-      balance_storage = new_bal;
-      token_storage = new_tokens;
+    let op = Operation.transaction hp 0mutez hcontract in
+
+    let new_ledger = burn_update_balances (param, storage.ledger) in
+    let new_tokens = burn_update_total_supply (param, storage.tokens) in
+    let new_s = { storage with
+      ledger = new_ledger;
+      tokens = new_tokens;
     } in
     ([op], new_s)
 
@@ -146,11 +152,10 @@ let token_manager (param, s : token_manager * multi_token_storage)
   match param with
 
   | Create_token param ->
-      let new_tokens = create_token (param, s.token_storage) in
-      let new_s = { s with token_storage = new_tokens } in
+      let new_tokens = create_token (param, s.tokens) in
+      let new_s = { s with tokens = new_tokens } in
       (([]: operation list), new_s)
 
   | Mint_tokens param -> mint_tokens (param, s)
 
   | Burn_tokens param -> burn_tokens (param, s)
-
