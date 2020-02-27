@@ -82,14 +82,13 @@ let remove_tokens (existing_ts, ts_to_remove : (operator_tokens_entry option) * 
   )
 
 let remove_operator (op, storage : operator_param * operator_storage) : operator_storage =
-  let key = op.owner, op.operator in
-  let new_tokens_opt = match op.tokens with
-  | All_tokens -> (None : operator_tokens_entry option)
+  match op.tokens with
+  | All_tokens -> storage
   | Some_tokens ts_to_remove ->
-      let existing_tokens = Big_map.find_opt key storage in
-      remove_tokens (existing_tokens, ts_to_remove)
-  in
-  Big_map.update key new_tokens_opt storage
+    let key = op.owner, op.operator in
+    let existing_tokens = Big_map.find_opt key storage in
+    let new_tokens_opt = remove_tokens (existing_tokens, ts_to_remove) in
+    Big_map.update key new_tokens_opt storage  
 
 let are_tokens_included (existing_tokens, ts : operator_tokens_entry * operator_tokens) : bool =
   match existing_tokens with
@@ -265,10 +264,11 @@ let fa2_main (param, storage : fa2_entry_points * multi_token_storage)
     : (operation  list) * multi_token_storage =
   match param with
   | Transfer txs -> 
-    let op = permit_transfer (txs, storage) in
+    (* let op = permit_transfer (txs, storage) in
     let new_ledger = transfer (txs, storage.ledger) in
     let new_storage = { storage with ledger = new_ledger; }
-    in [op], new_storage
+    in [op], new_storage *)
+    ([] : operation list), storage
 
   | Balance p -> 
     let op = get_balance (p, storage.ledger) in
