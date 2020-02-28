@@ -12,15 +12,17 @@ type single_token_storage = {
 }
 
 let validate_operator (txs, self, ops_storage 
-    : (transfer list) * self_transfer_policy * operators) : unit =
+    : (transfer_descriptor list) * self_transfer_policy * operators) : unit =
   let can_self_tx = match self with
   | Self_transfer_permitted -> true
   | Self_transfer_denied -> false
   in
   let operator = Current.sender in
   let owners = List.fold
-    (fun (owners, tx : (address set) * transfer) ->
-      Set.add tx.from_ owners
+    (fun (owners, tx : (address set) * transfer_descriptor) ->
+      match tx.from_ with
+      | None -> owners
+      | Some o -> Set.add o owners
     ) txs (Set.empty : address set) in
 
   Set.iter
@@ -40,28 +42,25 @@ let get_hook (storage : set_hook_param option) : set_hook_param =
  | None -> (failwith "transfer hook is not set" : set_hook_param)
  | Some h -> h
 
-let transfers_to_hook_param (txs : transfer list) : hook_param =
-  let batch = 
-    List.map 
-      (fun (tx : transfer) ->
-        if tx.token_id <> 0n
-        then (failwith "Only 0n token_id is accepted" : transfer_descriptor)
-        else {
-          from_ = Some tx.from_;
-          to_ = Some tx.to_;
-          token_id = tx.token_id;
-          amount = tx.amount;
-        }) 
-      txs in
-    {
-      batch = batch;
-      operator = Current.sender;
-      fa2 = Current.self_address;
-    } 
+let transfers_to_descriptors (txs : transfer list) : transfer_descriptor list =
+  List.map 
+    (fun (tx : transfer) ->
+      if tx.token_id <> 0n
+      then (failwith "Only 0n token_id is accepted" : transfer_descriptor)
+      else {
+        from_ = Some tx.from_;
+        to_ = Some tx.to_;
+        token_id = tx.token_id;
+        amount = tx.amount;
+      }) txs 
 
-let permit_transfer (txs, storage : (transfer list) * single_token_storage) : operation =
+let permit_transfer (txs, storage : (transfer_descriptor list) * single_token_storage) : operation =
   let hook = get_hook storage.hook in
-  let hook_param = transfers_to_hook_param txs in
+  let hook_param = {
+    batch = txs;
+    operator = Current.sender;
+    fa2 = Current.self_address;
+  } in
   let u = validate_operator (txs, hook.permissions_descriptor.self, storage.operators) in
   let hook_contract = hook.hook unit in
   Operation.transaction hook_param 0mutez hook_contract
@@ -72,10 +71,10 @@ let get_balance_amt (owner, ledger : address  * ledger) : nat =
   | None -> 0n
   | Some b -> b
 
-let get_balance (p, ledger : balance_param * ledger) : operation =
-  let to_balance = fun (r : balance_request) ->
+let get_balance (p, ledger : balance_of_param * ledger) : operation =
+  let to_balance = fun (r : balance_of_request) ->
     if r.token_id <> 0n
-    then (failwith "Only 0n token_id is accepted" : balance_response)
+    then (failwith "Only 0n token_id is accepted" : balance_of_response)
     else
       let bal = get_balance_amt (r.owner, ledger) in
       { request = r; balance = bal; } 
@@ -84,13 +83,13 @@ let get_balance (p, ledger : balance_param * ledger) : operation =
   Operation.transaction responses 0mutez p.callback
 
 let inc_balance (owner, amt, ledger
-    : address * token_id * nat * ledger) : ledger =
+    : address * nat * ledger) : ledger =
   let bal = get_balance_amt (owner, ledger) in
   let updated_bal = bal + amt in
   Big_map.update owner (Some updated_bal) ledger 
 
 let dec_balance (owner, amt, ledger
-    : address * token_id * nat * ledger) : ledger =
+    : address * nat * ledger) : ledger =
   let bal = get_balance_amt (owner, ledger) in
   match Michelson.is_nat (bal - amt) with
   | None -> (failwith ("Insufficient balance") : ledger)
@@ -99,10 +98,16 @@ let dec_balance (owner, amt, ledger
     then Big_map.remove owner ledger
     else Map.update owner (Some new_bal) ledger
 
-let transfer (txs, ledger : (transfer list) * ledger) : ledger =
-  let make_transfer = fun (l, tx : ledger * transfer) ->
-    let l1 = dec_balance (tx.from_, tx.amount, l) in
-    let l2 = inc_balance (tx.to_, tx.amount, l1) in
+let transfer (txs, ledger : (transfer_descriptor list) * ledger) : ledger =
+  let make_transfer = fun (l, tx : ledger * transfer_descriptor) ->
+    let l1 = match tx.from_ with
+    | None -> l
+    | Some from_ -> dec_balance (from_, tx.amount, l) 
+    in
+    let l2 = match tx.to_ with
+    | None -> l1
+    | Some to_ -> inc_balance (to_, tx.amount, l1)
+    in
     l2 
   in
     
@@ -115,14 +120,14 @@ let validate_operator_tokens (tokens : operator_tokens) : unit =
     if Set.size ts <> 1n
     then failwith "Only 0n token_id is accepted"
     else 
-      (if Set.mem 0n
+      (if Set.mem 0n ts
       then unit
       else failwith "Only 0n token_id is accepted")
 
 let validate_token_ids (tokens : token_id list) : unit =
   match tokens with
   | tid :: tail -> 
-    if tail.size <> 0n
+    if List.size tail <> 0n
     then failwith "Only 0n token_id is accepted"
     else 
     (if tid = 0n
@@ -151,12 +156,13 @@ let fa2_main (param, storage : fa2_entry_points * single_token_storage)
     : (operation  list) * single_token_storage =
   match param with
   | Transfer txs -> 
-    let op = permit_transfer (txs, storage) in
-    let new_ledger = transfer (txs, storage.ledger) in
+    let tx_descriptors = transfers_to_descriptors txs in
+    let op = permit_transfer (tx_descriptors, storage) in
+    let new_ledger = transfer (tx_descriptors, storage.ledger) in
     let new_storage = { storage with ledger = new_ledger; }
     in [op], new_storage
 
-  | Balance p -> 
+  | Balance_of p -> 
     let op = get_balance (p, storage.ledger) in
     [op], storage
 
