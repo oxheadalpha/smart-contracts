@@ -7,19 +7,19 @@ type transfer = {
   amount : nat;
 }
 
-type balance_request = {
+type balance_of_request = {
   owner : address;
   token_id : token_id;  
 }
 
-type balance_response = {
-  request : balance_request;
+type balance_of_response = {
+  request : balance_of_request;
   balance : nat;
 }
 
-type balance_param = {
-  requests : balance_request list;
-  callback : (balance_response list) contract;
+type balance_of_param = {
+  requests : balance_of_request list;
+  callback : (balance_of_response list) contract;
 }
 
 type total_supply_response = {
@@ -99,7 +99,7 @@ type permissions_descriptor = {
 
 type fa2_entry_points =
   | Transfer of transfer list
-  | Balance of balance_param
+  | Balance_of of balance_of_param
   | Total_supply of total_supply_param
   | Token_metadata of token_metadata_param
   | Permissions_descriptor of permissions_descriptor contract

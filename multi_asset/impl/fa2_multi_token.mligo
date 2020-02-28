@@ -231,8 +231,8 @@ let transfer (txs, ledger : (transfer list) * ledger) : ledger =
     
   List.fold make_transfer txs ledger
 
-let get_balance (p, ledger : balance_param * ledger) : operation =
-  let to_balance = fun (r : balance_request) ->
+let get_balance (p, ledger : balance_of_param * ledger) : operation =
+  let to_balance = fun (r : balance_of_request) ->
     let key = r.owner, r.token_id in
     let bal = get_balance_amt (key, ledger) in
     { request = r; balance = bal; } 
@@ -270,7 +270,7 @@ let fa2_main (param, storage : fa2_entry_points * multi_token_storage)
     in [op], new_storage *)
     ([] : operation list), storage
 
-  | Balance p -> 
+  | Balance_of p -> 
     let op = get_balance (p, storage.ledger) in
     [op], storage
 
