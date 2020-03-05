@@ -60,7 +60,7 @@ let get_total_supply_change (txs : mint_burn_tx list) : nat =
   List.fold (fun (total, tx : nat * mint_burn_tx) -> total + tx.amount) txs 0n
 
 let mint_tokens (txs, storage : mint_burn_tokens_param * single_token_storage) 
-    : (operation list) * multi_token_storage =
+    : (operation list) * single_token_storage =
     let hook = get_hook storage.hook in
     let hook_contract = hook.hook unit in
     let hp = mint_param_to_hook_param txs in

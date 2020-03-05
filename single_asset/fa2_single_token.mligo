@@ -206,5 +206,3 @@ let single_token_main (param, s : fa2_with_hook_entry_points * single_token_stor
   match param with
   | Set_transfer_hook h -> ([] : operation list), { s with hook = Some h; }
   | Fa2 fa2 -> fa2_main (fa2, s)
-
-let test(p: unit) = unit

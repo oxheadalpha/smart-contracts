@@ -38,13 +38,15 @@ let single_asset_main
     : (operation list) * single_asset_storage =
   match param with
   | Admin p ->
-      let u = fail_if_not_admin s.admin in  
-      let ops, admin = simple_admin (p, s.admin) in
-      let new_s = { s with admin = admin; } in
-      (ops, new_s)
+    let u = fail_if_not_admin s.admin in 
+
+    let ops, admin = simple_admin (p, s.admin) in
+    let new_s = { s with admin = admin; } in
+    (ops, new_s)
 
   | Tokens p ->
       let u1 = fail_if_not_admin s.admin in
+
       let ops, assets = token_manager (p, s.assets) in 
       let new_s = { s with assets = assets; } in 
       (ops, new_s)
