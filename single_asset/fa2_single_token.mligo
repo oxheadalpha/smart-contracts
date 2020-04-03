@@ -1,14 +1,14 @@
-#include "fa2_hook.mligo"
+#include "fa2_interface.mligo"
 
 type ledger = (address, nat) big_map
 type operators = ((address * address), bool) big_map
 
 type single_token_storage = {
-  hook : set_hook_param option;
   ledger : ledger;
   operators : operators;
   metadata : token_metadata;
   total_supply : nat;
+  permissions_descriptor : permissions_descriptor;
 }
 
 let validate_operator (txs, self, ops_storage 
@@ -37,11 +37,6 @@ let validate_operator (txs, self, ops_storage
         | Some o -> unit
     ) owners
 
-let get_hook (storage : set_hook_param option) : set_hook_param =
- match storage with
- | None -> (failwith "transfer hook is not set" : set_hook_param)
- | Some h -> h
-
 let transfers_to_descriptors (txs : transfer list) : transfer_descriptor list =
   List.map 
     (fun (tx : transfer) ->
@@ -54,16 +49,6 @@ let transfers_to_descriptors (txs : transfer list) : transfer_descriptor list =
         amount = tx.amount;
       }) txs 
 
-let permit_transfer (txs, storage : (transfer_descriptor list) * single_token_storage) : operation =
-  let hook = get_hook storage.hook in
-  let hook_param = {
-    batch = txs;
-    operator = Current.sender;
-    fa2 = Current.self_address;
-  } in
-  let u = validate_operator (txs, hook.permissions_descriptor.self, storage.operators) in
-  let hook_contract = hook.hook unit in
-  Operation.transaction hook_param 0mutez hook_contract
 
 let get_balance_amt (owner, ledger : address  * ledger) : nat =
   let bal_opt = Big_map.find_opt owner ledger in
@@ -157,10 +142,10 @@ let fa2_main (param, storage : fa2_entry_points * single_token_storage)
   match param with
   | Transfer txs -> 
     let tx_descriptors = transfers_to_descriptors txs in
-    let op = permit_transfer (tx_descriptors, storage) in
+    let u = validate_operator (tx_descriptors, storage.permissions_descriptor.self, storage.operators) in
     let new_ledger = transfer (tx_descriptors, storage.ledger) in
     let new_storage = { storage with ledger = new_ledger; }
-    in [op], new_storage
+    in ([] : operation list), new_storage
 
   | Balance_of p -> 
     let op = get_balance (p, storage.ledger) in
@@ -168,20 +153,17 @@ let fa2_main (param, storage : fa2_entry_points * single_token_storage)
 
   | Total_supply p ->
     let u = validate_token_ids p.token_ids in
-    let hook = get_hook storage.hook in
     let response = { token_id = 0n; total_supply = storage.total_supply; } in
     let op = Operation.transaction [response] 0mutez p.callback in
     [op], storage
 
   | Token_metadata p ->
     let u = validate_token_ids p.token_ids in
-    let hook = get_hook storage.hook in
     let op = Operation.transaction [storage.metadata] 0mutez p.callback in
     [op], storage
 
   | Permissions_descriptor callback ->
-    let hook = get_hook storage.hook in
-    let op = Operation.transaction hook.permissions_descriptor 0mutez callback in
+    let op = Operation.transaction storage.permissions_descriptor 0mutez callback in
     [op], storage
 
   | Update_operators updates ->
@@ -201,8 +183,3 @@ let fa2_main (param, storage : fa2_entry_points * single_token_storage)
     let op = Operation.transaction resp 0mutez p.callback in
     [op], storage
 
-let single_token_main (param, s : fa2_with_hook_entry_points * single_token_storage)
-    : (operation  list) * single_token_storage =
-  match param with
-  | Set_transfer_hook h -> ([] : operation list), { s with hook = Some h; }
-  | Fa2 fa2 -> fa2_main (fa2, s)

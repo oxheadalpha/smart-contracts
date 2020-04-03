@@ -19,7 +19,7 @@ type single_asset_storage = {
 }
 
 type single_asset_param =
-  | Assets of fa2_with_hook_entry_points
+  | Assets of fa2_entry_points
   | Admin of simple_admin
   | Tokens of token_manager
 
@@ -54,6 +54,33 @@ let single_asset_main
   | Assets p -> 
       let u2 = fail_if_paused s.admin in
         
-      let ops, assets = single_token_main (p, s.assets) in
+      let ops, assets = fa2_main (p, s.assets) in
       let new_s = { s with assets = assets; } in
       (ops, new_s)
+
+
+let store : single_asset_storage = {
+            admin = {
+              admin = ("tz1YPSCGWXwBdTncK2aCctSZAXWvGsGwVJqU" : address);
+              paused = true;
+            };
+            assets = {
+                ledger = (Big_map.empty : (address, nat) big_map);
+                operators = (Big_map.empty : ((address * address), bool) big_map);
+                metadata = {
+                    token_id = 0n;
+                    symbol = "TK1";
+                    name = "Test Token";
+                    decimals = 0n;
+                    extras = (Map.empty : (string, string) map);
+                };
+                total_supply = 0n;
+                permissions_descriptor = {
+                  self = Self_transfer_permitted;
+                  operator = Operator_transfer_permitted;
+                  sender = Owner_no_op;
+                  receiver = Owner_no_op;
+                  custom = (None : custom_permission_policy option);
+                };
+            };
+        }

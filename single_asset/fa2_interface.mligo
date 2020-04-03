@@ -66,7 +66,7 @@ type is_operator_response = {
 
 type is_operator_param = {
   operator : operator_param;
-  callback : (is_operator_response) contract;
+  callback : is_operator_response contract;
 }
 
 (* permission policy definition *)

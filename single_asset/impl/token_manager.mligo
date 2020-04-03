@@ -61,27 +61,19 @@ let get_total_supply_change (txs : mint_burn_tx list) : nat =
 
 let mint_tokens (txs, storage : mint_burn_tokens_param * single_token_storage) 
     : (operation list) * single_token_storage =
-    let hook = get_hook storage.hook in
-    let hook_contract = hook.hook unit in
     let hp = mint_param_to_hook_param txs in
-    let op = Operation.transaction hp 0mutez hook_contract in
-
     let new_ledger = transfer (hp.batch, storage.ledger) in
     let supply_change = get_total_supply_change txs in
     let new_s = { storage with
       ledger = new_ledger;
       total_supply = storage.total_supply + supply_change;
     } in
-    ([op], new_s)
+    ([] : operation list), new_s
 
     
 let burn_tokens (txs, storage : mint_burn_tokens_param * single_token_storage) 
     : (operation list) * single_token_storage =
-    let hook = get_hook storage.hook in
-    let hcontract = hook.hook unit in
     let hp = burn_param_to_hook_param txs in
-    let op = Operation.transaction hp 0mutez hcontract in
-
     let new_ledger = transfer (hp.batch, storage.ledger) in
     let supply_change = get_total_supply_change txs in
     let new_supply_opt = Michelson.is_nat (storage.total_supply - supply_change) in
@@ -93,7 +85,7 @@ let burn_tokens (txs, storage : mint_burn_tokens_param * single_token_storage)
       ledger = new_ledger;
       total_supply = new_supply;
     } in
-    ([op], new_s)
+    ([] : operation list), new_s
 
 let token_manager (param, s : token_manager * single_token_storage)
     : (operation list) * single_token_storage =
