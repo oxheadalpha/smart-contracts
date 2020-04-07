@@ -9,8 +9,9 @@ contract interfaces defined in
 [LIGO](https://ligolang.org/), smart-contract language for Tezos
 * [`impl`](impl/) folder - reference implementation of the multi-asset contract,
 test helper contracts and code.
-* [`out`](out/) folder - multi-assert contract and helper contract compiled into
+* [`out`](out/) folder - multi-asset contract and helper contract compiled into
 Michelson
+<!-- OOC why is the output checked in the repo? -->
 * [`tezos_mac_tests`](tezos_mac_tests/) folder - Python multi_asset contract tests
 implemented with
 [Pytezos](https://github.com/baking-bad/pytezos) and
@@ -58,14 +59,16 @@ $ brew install libsodium libsecp256k1 gmp
 Tests are configured to run on [Flextesa sandbox](https://assets.tqtezos.com/sandbox-quickstart).
 There are two helper scripts in `tezos_mac_tests` module:
 
-* [`start-sandbox.sh`](tezos_mac_tests/start-sandbox.sh) - starts Flextesa sandbox
+* [`start-sandbox.sh`](./tezos_fa2_single_tests/start-sandbox.sh) - starts Flextesa sandbox
 from the docker image
-* [`kill-sandbox.sh`](tezos_mac_tests/kill-sandbox.sh) - kills running Flextesa
+* [`kill-sandbox.sh`](./tezos_fa2_single_tests/kill-sandbox.sh) - kills running Flextesa
 sandbox docker container
 
 ## Installation and Running The Tests
 
 ### Install dependencies
+
+<!-- Aren't those redundant with the above? -->
 
 #### LIGO 
 
@@ -101,7 +104,7 @@ It will install Pytezos dependencies as well.
 
 ### Start Tezos Sandbox
 
-`tezos_mac_tests/start-sandbox.sh`
+`./tezos_fa2_single_tests/start-sandbox.sh`
 
 Alternative command:
 
