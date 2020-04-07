@@ -35,7 +35,7 @@ let fail_if_paused (a : simple_admin_storage) : unit =
 
 let single_asset_main 
     (param, s : single_asset_param * single_asset_storage)
-    : (operation list) * single_asset_storage =
+  : (operation list) * single_asset_storage =
   match param with
   | Admin p ->
     let u = fail_if_not_admin s.admin in 
@@ -45,19 +45,20 @@ let single_asset_main
     (ops, new_s)
 
   | Tokens p ->
-      let u1 = fail_if_not_admin s.admin in
+    let u1 = fail_if_not_admin s.admin in
 
-      let ops, assets = token_manager (p, s.assets) in 
-      let new_s = { s with assets = assets; } in 
-      (ops, new_s)
+    let ops, assets = token_manager (p, s.assets) in 
+    let new_s = { s with assets = assets; } in 
+    (ops, new_s)
 
   | Assets p -> 
-      let u2 = fail_if_paused s.admin in
-        
-      let ops, assets = fa2_main (p, s.assets) in
-      let new_s = { s with assets = assets; } in
-      (ops, new_s)
+    let u2 = fail_if_paused s.admin in
 
+    let ops, assets = fa2_main (p, s.assets) in
+    let new_s = { s with assets = assets; } in
+    (ops, new_s)
+(* ⬑ weird indentation. Even if ocamlformat does not work for mligo,
+   it seems I can use ocp-indent on this (that's how i did the above change) *)
 
 let store : single_asset_storage = {
             admin = {
