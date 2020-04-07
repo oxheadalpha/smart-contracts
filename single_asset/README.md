@@ -4,16 +4,14 @@ Implementation of the FA2 token contract (TZIP-12) for a single asset.
 
 ## Project Structure
 
-* [`multi_token_interface.mligo`](multi_token_interface.mligo) - multi-asset
-contract interfaces defined in
-[LIGO](https://ligolang.org/), smart-contract language for Tezos
-* [`impl`](impl/) folder - reference implementation of the multi-asset contract,
+* [`fa2_interface.mligo`](fa2_interface.mligo) - FA2 contract interfaces defined
+in [LIGO](https://ligolang.org/), smart-contract language for Tezos
+* [`impl`](impl/) folder - reference implementation of the single-asset FA2 contract,
 test helper contracts and code.
-* [`out`](out/) folder - multi-asset contract and helper contract compiled into
-Michelson
-<!-- OOC why is the output checked in the repo? -->
-* [`tezos_mac_tests`](tezos_mac_tests/) folder - Python multi_asset contract tests
-implemented with
+* [`out`](out/) folder - single-asset FA2 contract and helper contract compiled
+into Michelson
+* [`tezos_fa2_single_tests`](tezos_fa2_single_tests/) folder - Python single asset
+FA2  contract tests implemented with
 [Pytezos](https://github.com/baking-bad/pytezos) and
 [unittest](https://docs.python.org/3/library/unittest.html).
 
@@ -59,8 +57,8 @@ $ brew install libsodium libsecp256k1 gmp
 Tests are configured to run on [Flextesa sandbox](https://assets.tqtezos.com/sandbox-quickstart).
 There are two helper scripts in `tezos_mac_tests` module:
 
-* [`start-sandbox.sh`](./tezos_fa2_single_tests/start-sandbox.sh) - starts Flextesa sandbox
-from the docker image
+* [`start-sandbox.sh`](./tezos_fa2_single_tests/start-sandbox.sh) - starts Flextesa
+sandbox from the docker image
 * [`kill-sandbox.sh`](./tezos_fa2_single_tests/kill-sandbox.sh) - kills running Flextesa
 sandbox docker container
 
@@ -68,9 +66,7 @@ sandbox docker container
 
 ### Install dependencies
 
-<!-- Aren't those redundant with the above? -->
-
-#### LIGO 
+#### LIGO
 
 `curl https://gitlab.com/ligolang/ligo/raw/dev/scripts/installer.sh | bash -s "next"`
 
