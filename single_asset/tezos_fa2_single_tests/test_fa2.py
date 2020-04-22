@@ -4,7 +4,12 @@ from unittest import TestCase
 
 from pytezos import Key, pytezos
 
-from tezos_mac_tests.ligo import LigoEnv, LigoContract, PtzUtils, flextesa_sandbox
+from tezos_fa2_single_tests.ligo import (
+    LigoEnv,
+    LigoContract,
+    PtzUtils,
+    flextesa_sandbox,
+)
 
 
 root_dir = Path(__file__).parent.parent
@@ -13,7 +18,7 @@ ligo_env = LigoEnv(root_dir / "impl", root_dir / "out")
 
 class TestFa2SetUp(TestCase):
     def setUp(self):
-        self.util = PtzUtils(flextesa_sandbox, block_time=5)
+        self.util = PtzUtils(flextesa_sandbox)
         # self.util = PtzUtils(pytezos)
 
         self.admin_key = self.util.client.key

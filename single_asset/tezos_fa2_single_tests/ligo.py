@@ -150,7 +150,7 @@ def pformat_consumed_gas(op_res):
 
 
 class PtzUtils:
-    def __init__(self, client, block_time=60, block_depth=5, num_blocks_wait=3):
+    def __init__(self, client, block_depth=5, num_blocks_wait=3):
         """
         :param client: PyTezosClient
         :param block_time: block baking time in seconds
@@ -158,7 +158,9 @@ class PtzUtils:
         :param num_blocks_wait number of backed blocks to retry wait until failing with timeout
         """
         self.client = client
-        self.block_time = block_time
+        self.block_time = int(
+            client.shell.block.context.constants()["time_between_blocks"][0]
+        )
         self.block_depth = block_depth
         self.num_blocks_wait = num_blocks_wait
 
@@ -168,7 +170,6 @@ class PtzUtils:
         )
         return PtzUtils(
             new_client,
-            block_time=self.block_time,
             block_depth=self.block_depth,
             num_blocks_wait=self.num_blocks_wait,
         )
