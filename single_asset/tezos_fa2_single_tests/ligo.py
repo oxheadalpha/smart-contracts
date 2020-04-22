@@ -135,10 +135,12 @@ class LigoContract:
 
 
 class PtzUtils:
-    def __init__(self, client, block_time=60, block_depth=5, num_blocks_wait=2):
+    def __init__(self, client, block_time=60, block_depth=5, num_blocks_wait=3):
         """
         :param client: PyTezosClient
         :param block_time: block baking time in seconds
+        :param block_depth number of recent blocks to test when checking for operation status
+        :param num_blocks_wait number of backed blocks to retry wait until failing with timeout
         """
         self.client = client
         self.block_time = block_time
@@ -218,4 +220,3 @@ flextesa_sandbox = pytezos.using(
     shell="http://localhost:20000",
     key=Key.from_encoded_key("edsk3RFgDiCt7tWB2oe96w1eRw72iYiiqZPLu9nnEY23MYRp2d8Kkx"),
 )
-

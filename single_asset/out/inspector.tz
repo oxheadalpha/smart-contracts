@@ -17,7 +17,6 @@
     (or (unit %empty)
         (pair %state (nat %balance) (pair %request (address %owner) (nat %token_id)))) ;
   code { DUP ;
-         DUP ;
          CDR ;
          DIP { DUP } ;
          SWAP ;
@@ -28,7 +27,6 @@
                { DUP ;
                  IF_LEFT
                    { DUP ;
-                     DUP ;
                      CAR ;
                      CONTRACT %is_operator
                        (pair (contract %callback
@@ -62,9 +60,9 @@
                      NIL operation ;
                      SWAP ;
                      CONS ;
-                     DIP { DIP 7 { DUP } ; DIG 7 } ;
+                     DIP { DIP 6 { DUP } ; DIG 6 } ;
                      PAIR ;
-                     DIP { DROP 5 } }
+                     DIP { DROP 4 } }
                    { DIP 3 { DUP } ; DIG 3 ; NIL operation ; PAIR ; DIP { DROP } } ;
                  DIP { DROP } }
                { DUP ;
@@ -77,8 +75,7 @@
                      NIL operation ;
                      PAIR ;
                      DIP { DROP 2 } }
-                   { DUP ;
-                     SELF ;
+                   { SELF ;
                      ADDRESS ;
                      CONTRACT %response
                        (list (pair (nat %balance) (pair %request (address %owner) (nat %token_id)))) ;
@@ -112,9 +109,9 @@
                      NIL operation ;
                      SWAP ;
                      CONS ;
-                     DIP { DIP 7 { DUP } ; DIG 7 } ;
+                     DIP { DIP 6 { DUP } ; DIG 6 } ;
                      PAIR ;
-                     DIP { DROP 5 } } ;
+                     DIP { DROP 4 } } ;
                  DIP { DROP } } ;
              DIP { DROP } }
            { DUP ;
@@ -126,5 +123,5 @@
              NIL operation ;
              PAIR ;
              DIP { DROP 2 } } ;
-         DIP { DROP 3 } } }
+         DIP { DROP 2 } } }
 

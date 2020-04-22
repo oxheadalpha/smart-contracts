@@ -12,44 +12,39 @@ ligo_env = LigoEnv(root_dir / "impl", root_dir / "out")
 
 
 class TestFa2SetUp(TestCase):
-    @classmethod
-    def setUpClass(cls):
-        cls.sandbox = flextesa_sandbox
-        cls.util = PtzUtils(cls.sandbox, block_time=8)
-        # cls.sandbox = pytezos
-        # cls.util = PtzUtils(cls.sandbox, block_time=60, num_blocks_wait=4)
-        cls.admin_key = cls.sandbox.key
+    def setUp(self):
+        self.util = PtzUtils(flextesa_sandbox, block_time=5)
+        # self.util = PtzUtils(pytezos)
 
-        cls.orig_contracts()
+        self.admin_key = self.util.client.key
 
-        cls.mike_key = Key.generate(export=False)
-        cls.kyle_key = Key.generate(export=False)
+        self.orig_contracts()
 
-        # cls.transfer_init_funds()
+        self.mike_key = Key.generate(export=False)
+        self.kyle_key = Key.generate(export=False)
+
+        # self.transfer_init_funds()
         print("test setup completed")
 
-    @classmethod
-    def orig_contracts(cls):
+    def orig_contracts(self):
         print("loading ligo contracts...")
-        cls.ligo_fa2 = ligo_env.contract_from_file(
+        ligo_fa2 = ligo_env.contract_from_file(
             "fa2_single_asset.mligo", "single_asset_main"
         )
-        cls.ligo_hook = ligo_env.contract_from_file("fa2_default_hook.mligo", "main")
-        cls.ligo_receiver = ligo_env.contract_from_file("token_owner.mligo", "main")
-        cls.ligo_inspector = ligo_env.contract_from_file("inspector.mligo", "main")
+        ligo_receiver = ligo_env.contract_from_file("token_owner.mligo", "main")
+        ligo_inspector = ligo_env.contract_from_file("inspector.mligo", "main")
 
         print("originating contracts...")
-        cls.fa2 = cls.orig_fa2(cls.ligo_fa2)
-        print(f"FA2 address {cls.fa2.address}")
+        self.fa2 = self.orig_fa2(ligo_fa2)
+        print(f"FA2 address {self.fa2.address}")
 
-        cls.alice_receiver = cls.orig_receiver(cls.ligo_receiver)
-        print(f"Alice address {cls.alice_receiver.address}")
-        cls.bob_receiver = cls.orig_receiver(cls.ligo_receiver)
-        print(f"Bob address {cls.bob_receiver.address}")
-        cls.inspector = cls.orig_inspector(cls.ligo_inspector)
+        self.alice_receiver = self.orig_receiver(ligo_receiver)
+        print(f"Alice address {self.alice_receiver.address}")
+        self.bob_receiver = self.orig_receiver(ligo_receiver)
+        print(f"Bob address {self.bob_receiver.address}")
+        self.inspector = self.orig_inspector(ligo_inspector)
 
-    @classmethod
-    def orig_fa2(cls, ligo_fa2):
+    def orig_fa2(self, ligo_fa2):
 
         ligo_storage = (
             """
@@ -79,32 +74,27 @@ class TestFa2SetUp(TestCase):
             };
         }
         """
-            % cls.admin_key.public_key_hash()
+            % self.admin_key.public_key_hash()
         )
 
         ptz_storage = ligo_fa2.compile_storage(ligo_storage)
-        return ligo_fa2.originate(cls.util, ptz_storage)
+        return ligo_fa2.originate(self.util, ptz_storage)
 
-    @classmethod
-    def orig_inspector(cls, ligo_inspector):
+    def orig_inspector(self, ligo_inspector):
         ligo_storage = "Empty unit"
         ptz_storage = ligo_inspector.compile_storage(ligo_storage)
-        return ligo_inspector.originate(cls.util, ptz_storage)
+        return ligo_inspector.originate(self.util, ptz_storage)
 
-    @classmethod
-    def orig_receiver(cls, ligo_receiver):
-        return ligo_receiver.originate(cls.util, balance=100000000)
+    def orig_receiver(self, ligo_receiver):
+        return ligo_receiver.originate(self.util, balance=100000000)
 
-    @classmethod
-    def transfer_init_funds(cls):
-        cls.util.transfer(cls.mike_key.public_key_hash(), 100000000)
-        cls.util.transfer(cls.kyle_key.public_key_hash(), 100000000)
+    def transfer_init_funds(self):
+        self.util.transfer(self.mike_key.public_key_hash(), 100000000)
+        self.util.transfer(self.kyle_key.public_key_hash(), 100000000)
 
-    @classmethod
-    def pause_fa2(cls, paused: bool):
-        call = cls.fa2.pause(paused)
-        op = call.inject()
-        cls.util.wait_for_ops(op)
+    def pause_fa2(self, paused: bool):
+        op = self.fa2.pause(paused).inject()
+        self.util.wait_for_ops(op)
 
     def assertBalance(self, owner_address, expected_balance, msg=None):
         op = self.inspector.query(fa2=self.fa2.address, owner=owner_address).inject()
@@ -128,11 +118,10 @@ class TestFa2SetUp(TestCase):
 
 
 class TestMintBurn(TestFa2SetUp):
-    @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
+    def setUp(self):
+        super().setUp()
         print("unpausing")
-        cls.pause_fa2(False)
+        self.pause_fa2(False)
 
     def test_mint_burn_to_receiver(self):
         self.mint_burn(self.alice_receiver.address)
@@ -156,10 +145,9 @@ class TestMintBurn(TestFa2SetUp):
 
 
 class TestOperator(TestFa2SetUp):
-    @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
-        cls.pause_fa2(False)
+    def setUp(self):
+        super().setUp()
+        self.pause_fa2(False)
 
     def test_add_operator_to_receiver(self):
 
@@ -181,15 +169,14 @@ class TestOperator(TestFa2SetUp):
 
 
 class TestTransfer(TestFa2SetUp):
-    @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
-        cls.pause_fa2(False)
+    def setUp(self):
+        super().setUp()
+        self.pause_fa2(False)
 
-        op_op = cls.alice_receiver.owner_add_operator(
-            fa2=cls.fa2.address, operator=cls.admin_key.public_key_hash()
+        op_op = self.alice_receiver.owner_add_operator(
+            fa2=self.fa2.address, operator=self.admin_key.public_key_hash()
         ).inject()
-        cls.util.wait_for_ops(op_op)
+        self.util.wait_for_ops(op_op)
         print("transfer test setup completed")
 
     def test_transfer_to_receiver(self):

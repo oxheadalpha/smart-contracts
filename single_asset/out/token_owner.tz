@@ -9,7 +9,6 @@
              IF_LEFT
                { UNIT ; NIL operation ; PAIR ; DIP { DROP } }
                { DUP ;
-                 DUP ;
                  CDR ;
                  DIP { SELF ; ADDRESS } ;
                  PAIR ;
@@ -50,10 +49,9 @@
                  UNIT ;
                  SWAP ;
                  PAIR ;
-                 DIP { DROP 5 } } ;
+                 DIP { DROP 4 } } ;
              DIP { DROP } }
            { DUP ;
-             DUP ;
              CDR ;
              DIP { SELF ; ADDRESS } ;
              PAIR ;
@@ -95,6 +93,6 @@
              UNIT ;
              SWAP ;
              PAIR ;
-             DIP { DROP 5 } } ;
+             DIP { DROP 4 } } ;
          DIP { DROP } } }
 
