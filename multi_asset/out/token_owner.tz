@@ -1,0 +1,200 @@
+{ parameter
+    (or (or (pair %add_operator (address %fa2) (address %operator))
+            (list %continue_config_action
+               (or (or (address %allowances_config)
+                       (pair %custom_config (address %entrypoint) (string %tag)))
+                   (or (address %operators_config) (address %whitelist_config)))))
+        (or (unit %default) (pair %remove_operator (address %fa2) (address %operator)))) ;
+  storage
+    (or (or (unit %nothing_pending) (address %pending_add_operator))
+        (address %pending_remove_operator)) ;
+  code { LAMBDA
+           address
+           (lambda address operation)
+           { DUP ;
+             PUSH (lambda (pair address address) operation)
+                  { {} ;
+                    { { DUP ; CAR ; SWAP ; CDR } ; DIP { {} } } ;
+                    {} ;
+                    { { { { { DIP { DUP } ; SWAP } ; DIP { {} } } ;
+                          PUSH string "%get_permissions_policy" } ;
+                        { DROP ;
+                          CONTRACT %get_permissions_policy
+                            (contract
+                               (list (or (or (address %allowances_config)
+                                             (pair %custom_config (address %entrypoint) (string %tag)))
+                                         (or (address %operators_config) (address %whitelist_config))))) ;
+                          IF_NONE
+                            { { PUSH string "bad address for get_entrypoint (%get_permissions_policy)" ;
+                                FAILWITH } }
+                            { {} } } } ;
+                      { { { { { DIP { DUP } ; SWAP } ; DIP { {} } } ;
+                            PUSH string "%Continue_config_action" } ;
+                          { DROP ;
+                            CONTRACT %Continue_config_action
+                              (list (or (or (address %allowances_config)
+                                            (pair %custom_config (address %entrypoint) (string %tag)))
+                                        (or (address %operators_config) (address %whitelist_config)))) ;
+                            IF_NONE
+                              { { PUSH string "bad address for get_entrypoint (%Continue_config_action)" ;
+                                  FAILWITH } }
+                              { {} } } } ;
+                        { { DUP ;
+                            DIP { { { { DIP { DUP } ; SWAP } ; DIP { {} } } ; PUSH mutez 0 } } } ;
+                          TRANSFER_TOKENS } ;
+                        {} ;
+                        DIP { DROP } } ;
+                      {} ;
+                      DIP { DROP } } ;
+                    {} ;
+                    DIP { DROP } ;
+                    { DIP { DROP } } } ;
+             SWAP ;
+             APPLY ;
+             DIP { DROP } } ;
+         LAMBDA
+           (or (or (unit %nothing_pending) (address %pending_add_operator))
+               (address %pending_remove_operator))
+           bool
+           { DUP ;
+             IF_LEFT
+               { DUP ;
+                 IF_LEFT { DROP ; PUSH bool False } { DROP ; PUSH bool True } ;
+                 DIP { DROP } }
+               { DROP ; PUSH bool True } ;
+             DIP { DROP } } ;
+         DIP 2 { DUP } ;
+         DIG 2 ;
+         DUP ;
+         CDR ;
+         DIP { DUP } ;
+         SWAP ;
+         CAR ;
+         IF_LEFT
+           { DUP ;
+             IF_LEFT
+               { DUP ;
+                 DIP 3 { DUP } ;
+                 DIG 3 ;
+                 DIP { DIP 5 { DUP } ; DIG 5 } ;
+                 EXEC ;
+                 IF { PUSH string "pending config action" ; FAILWITH }
+                    { SELF ;
+                      ADDRESS ;
+                      DIP { DUP ; CAR ; DIP { DIP 6 { DUP } ; DIG 6 } ; EXEC } ;
+                      EXEC ;
+                      DUP ;
+                      NIL operation ;
+                      SWAP ;
+                      CONS ;
+                      DIP { DIP { DUP } ; SWAP ; CDR ; RIGHT unit ; LEFT address } ;
+                      PAIR ;
+                      DIP { DROP } } ;
+                 DIP { DROP 2 } }
+               { DUP ;
+                 NONE address ;
+                 SWAP ;
+                 ITER { SWAP ;
+                        PAIR ;
+                        DUP ;
+                        DUP ;
+                        CAR ;
+                        DIP { DUP } ;
+                        SWAP ;
+                        CDR ;
+                        IF_LEFT
+                          { DUP ;
+                            IF_LEFT
+                              { DIP 2 { DUP } ; DIG 2 ; DIP { DROP } }
+                              { DIP 2 { DUP } ; DIG 2 ; DIP { DROP } } ;
+                            DIP { DROP } }
+                          { DUP ;
+                            IF_LEFT
+                              { DUP ; SOME ; DIP { DROP } }
+                              { DIP 2 { DUP } ; DIG 2 ; DIP { DROP } } ;
+                            DIP { DROP } } ;
+                        DIP { DROP 3 } } ;
+                 DUP ;
+                 IF_NONE
+                   { PUSH string "No operators config for FA2 available" ; FAILWITH }
+                   { DUP ;
+                     CONTRACT
+                       (or (or (list %add_operators (pair (address %operator) (address %owner)))
+                               (pair %is_operator
+                                  (list %operators (pair (address %operator) (address %owner)))
+                                  (contract %view
+                                     (list (pair (bool %is_operator) (pair %operator (address %operator) (address %owner)))))))
+                           (list %remove_operators (pair (address %operator) (address %owner)))) ;
+                     IF_NONE { PUSH string "bad address for get_contract" ; FAILWITH } {} ;
+                     DUP ;
+                     DIP { DROP 2 } } ;
+                 DIP { DROP } ;
+                 DIP 3 { DUP } ;
+                 DIG 3 ;
+                 IF_LEFT
+                   { DUP ;
+                     IF_LEFT
+                       { PUSH string "there is no pending config operation to continue" ; FAILWITH }
+                       { DUP ;
+                         DIP { SELF ; ADDRESS } ;
+                         PAIR ;
+                         DUP ;
+                         NIL (pair (address %operator) (address %owner)) ;
+                         SWAP ;
+                         CONS ;
+                         LEFT (pair (list %operators (pair (address %operator) (address %owner)))
+                                    (contract %view
+                                       (list (pair (bool %is_operator) (pair %operator (address %operator) (address %owner)))))) ;
+                         LEFT (list (pair (address %operator) (address %owner))) ;
+                         DIP { DIP 3 { DUP } ; DIG 3 ; PUSH mutez 0 } ;
+                         TRANSFER_TOKENS ;
+                         DIP { DROP 2 } } ;
+                     DIP { DROP } }
+                   { DUP ;
+                     DIP { SELF ; ADDRESS } ;
+                     PAIR ;
+                     DUP ;
+                     NIL (pair (address %operator) (address %owner)) ;
+                     SWAP ;
+                     CONS ;
+                     RIGHT
+                       (or (list (pair (address %operator) (address %owner)))
+                           (pair (list %operators (pair (address %operator) (address %owner)))
+                                 (contract %view
+                                    (list (pair (bool %is_operator) (pair %operator (address %operator) (address %owner))))))) ;
+                     DIP { DIP 2 { DUP } ; DIG 2 ; PUSH mutez 0 } ;
+                     TRANSFER_TOKENS ;
+                     DIP { DROP 2 } } ;
+                 DIP { DROP } ;
+                 DUP ;
+                 NIL operation ;
+                 SWAP ;
+                 CONS ;
+                 DIP { PUSH unit Unit ; LEFT address ; LEFT address } ;
+                 PAIR ;
+                 DIP { DROP 2 } } ;
+             DIP { DROP } }
+           { DUP ;
+             IF_LEFT
+               { DIP 2 { DUP } ; DIG 2 ; NIL operation ; PAIR ; DIP { DROP } }
+               { DUP ;
+                 DIP 3 { DUP } ;
+                 DIG 3 ;
+                 DIP { DIP 5 { DUP } ; DIG 5 } ;
+                 EXEC ;
+                 IF { PUSH string "pending config action" ; FAILWITH }
+                    { SELF ;
+                      ADDRESS ;
+                      DIP { DUP ; CAR ; DIP { DIP 6 { DUP } ; DIG 6 } ; EXEC } ;
+                      EXEC ;
+                      DUP ;
+                      NIL operation ;
+                      SWAP ;
+                      CONS ;
+                      DIP { DIP { DUP } ; SWAP ; CDR ; RIGHT (or unit address) } ;
+                      PAIR ;
+                      DIP { DROP } } ;
+                 DIP { DROP 2 } } ;
+             DIP { DROP } } ;
+         DIP { DROP 5 } } }
+

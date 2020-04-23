@@ -1,20 +1,17 @@
-# Multi Asset Contract
+# FA2 Single Asset Contract
 
-Specification for Tezos multi-asset contract adapted from the corresponding
-specification for [Ethereum](https://eips.ethereum.org/EIPS/eip-1155).
+Implementation of the FA2 token contract (TZIP-12) for a single asset.
 
 ## Project Structure
 
-* [`multi_asset.md`](multi_asset.md) - standard specification
-* [`multi_token_interface.mligo`](multi_token_interface.mligo) - multi-asset
-contract interfaces defined in
-[LIGO](https://ligolang.org/), smart-contract language for Tezos
-* [`impl`](impl/) folder - reference implementation of the multi-asset contract,
+* [`fa2_interface.mligo`](fa2_interface.mligo) - FA2 contract interfaces defined
+in [LIGO](https://ligolang.org/), smart-contract language for Tezos
+* [`impl`](impl/) folder - reference implementation of the single-asset FA2 contract,
 test helper contracts and code.
-* [`out`](out/) folder - multi-asset contract and helper contract compiled into
-Michelson
-* [`tezos_mac_tests`](tezos_mac_tests/) folder - Python multi_asset contract tests
-implemented with
+* [`out`](out/) folder - single-asset FA2 contract and helper contract compiled
+into Michelson
+* [`tezos_fa2_single_tests`](tezos_fa2_single_tests/) folder - Python single asset
+FA2  contract tests implemented with
 [Pytezos](https://github.com/baking-bad/pytezos) and
 [unittest](https://docs.python.org/3/library/unittest.html).
 
@@ -35,7 +32,7 @@ To run the test, Python 3.6+ and pip 19.0.1+ are required.
 
 ### Cryptographic Libraries For Pytezos
 
-Pytezos can be installed as `tezos_mac_tests` module dependency, but it requires
+Pytezos can be installed as `tezos_fa2_single_tests` module dependency, but it requires
 to install several cryptographic packages first.
 
 See [Pytezos requirements](https://github.com/baking-bad/pytezos#requirements).
@@ -60,16 +57,16 @@ $ brew install libsodium libsecp256k1 gmp
 Tests are configured to run on [Flextesa sandbox](https://assets.tqtezos.com/sandbox-quickstart).
 There are two helper scripts in `tezos_mac_tests` module:
 
-* [`start-sandbox.sh`](tezos_mac_tests/start-sandbox.sh) - starts Flextesa sandbox
-from the docker image
-* [`kill-sandbox.sh`](tezos_mac_tests/kill-sandbox.sh) - kills running Flextesa
+* [`start-sandbox.sh`](./tezos_fa2_single_tests/start-sandbox.sh) - starts Flextesa
+sandbox from the docker image
+* [`kill-sandbox.sh`](./tezos_fa2_single_tests/kill-sandbox.sh) - kills running Flextesa
 sandbox docker container
 
 ## Installation and Running The Tests
 
 ### Install dependencies
 
-#### LIGO 
+#### LIGO
 
 `curl https://gitlab.com/ligolang/ligo/raw/dev/scripts/installer.sh | bash -s "next"`
 
@@ -91,19 +88,19 @@ source tezos_mac_tests_env/bin/activate
 
 ```
 git clone https://github.com/tqtezos/smart-contracts.git
-cd smart-contracts/multi_asset
+cd smart-contracts/single_asset
 pip install -e .
 ```
 
 Alternatively, you can install it directly from Github:
 
-`pip3 install -e "git+https://github.com/tqtezos/smart-contracts.git#subdirectory=multi_asset&egg=tezos_mac_tests"`
+`pip3 install -e "git+https://github.com/tqtezos/smart-contracts.git#subdirectory=single_asset&egg=tezos_fa2_single_tests"`
 
 It will install Pytezos dependencies as well.
 
 ### Start Tezos Sandbox
 
-`tezos_mac_tests/start-sandbox.sh`
+`./tezos_fa2_single_tests/start-sandbox.sh`
 
 Alternative command:
 
@@ -114,4 +111,4 @@ It may take a few seconds until sandbox is bootstrapped.
 
 ### Run The Tests
 
-`python -m unittest discover tezos_mac_tests`
+`python -m unittest discover tezos_fa2_single_tests`

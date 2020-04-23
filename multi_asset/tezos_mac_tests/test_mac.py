@@ -2,7 +2,7 @@ from pathlib import Path
 from decimal import *
 from unittest import TestCase
 
-from pytezos import Key
+from pytezos import Key, pytezos
 
 from tezos_mac_tests.ligo import LigoEnv, LigoContract, PtzUtils, flextesa_sandbox
 
@@ -15,7 +15,9 @@ class TestMacSetUp(TestCase):
     @classmethod
     def setUpClass(cls):
         cls.sandbox = flextesa_sandbox
-        cls.util = PtzUtils(flextesa_sandbox, block_time=8)
+        cls.util = PtzUtils(cls.sandbox, block_time=8)
+        # cls.sandbox = pytezos
+        # cls.util = PtzUtils(cls.sandbox, block_time=60, num_blocks_wait=4)
         cls.admin_key = cls.sandbox.key
 
         cls.orig_contracts()
@@ -23,7 +25,8 @@ class TestMacSetUp(TestCase):
         cls.mike_key = Key.generate(export=False)
         cls.kyle_key = Key.generate(export=False)
 
-        cls.transfer_init_funds()
+        # cls.transfer_init_funds()
+        print("test setup completed")
 
     @classmethod
     def orig_contracts(cls):
@@ -38,8 +41,11 @@ class TestMacSetUp(TestCase):
 
         print("originating contracts...")
         cls.mac = cls.orig_mac(cls.ligo_mac)
+        print(f"MAC address {cls.mac.address}")
         cls.alice_receiver = cls.orig_receiver(cls.ligo_receiver)
+        print(f"Alice address {cls.alice_receiver.address}")
         cls.bob_receiver = cls.orig_receiver(cls.ligo_receiver)
+        print(f"Bob address {cls.bob_receiver.address}")
         cls.inspector = cls.orig_inspector(cls.ligo_inspector)
 
     @classmethod
@@ -51,7 +57,6 @@ class TestMacSetUp(TestCase):
             admin = {
               admin = ("%s" : address);
               paused = true;
-              tokens = (Big_map.empty : (nat, string) big_map);
             };
             assets = {
               operators = (Big_map.empty : (address, address set) big_map);
@@ -63,6 +68,7 @@ class TestMacSetUp(TestCase):
                 balances = (Big_map.empty : (nat, nat) big_map);
               }
             };
+            tokens = (Big_map.empty : token_storage);
         }
         """
             % cls.admin_key.public_key_hash()
@@ -87,8 +93,10 @@ class TestMacSetUp(TestCase):
         cls.util.transfer(cls.kyle_key.public_key_hash(), 100000000)
 
     @classmethod
-    def create_token(self, id, name):
-        op = self.mac.create_token(token_id=id, descriptor=name).inject()
+    def create_token(self, id, symbol):
+        op = self.mac.create_token(
+            token_id=id, symbol=symbol, uri="dummy.token.tz"
+        ).inject()
         self.util.wait_for_ops(op)
 
     @classmethod
@@ -207,6 +215,7 @@ class TestTransfer(TestMacSetUp):
             mac=cls.mac.address, operator=cls.admin_key.public_key_hash()
         ).inject()
         cls.util.wait_for_ops(op_op)
+        print("transfer test setup completed")
 
     def test_transfer_to_receiver(self):
         self.create_token(1, "TK1")
