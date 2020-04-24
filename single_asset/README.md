@@ -55,7 +55,7 @@ $ brew install libsodium libsecp256k1 gmp
 ### Flextesa Sanbox
 
 Tests are configured to run on [Flextesa sandbox](https://assets.tqtezos.com/sandbox-quickstart).
-There are two helper scripts in `tezos_mac_tests` module:
+There are two helper scripts in `tezos_fa2_single_tests` module:
 
 * [`start-sandbox.sh`](./tezos_fa2_single_tests/start-sandbox.sh) - starts Flextesa
 sandbox from the docker image
@@ -80,11 +80,11 @@ $ brew install libsodium libsecp256k1 gmp
 ### Create Python virtual environment
 
 ```
-python3 -m venv tezos_mac_tests_env
-source tezos_mac_tests_env/bin/activate
+python3 -m venv tezos_fa2_single_tests
+source tezos_fa2_single_tests/bin/activate
 ```
 
-### Install `tezos_mac_tests` Python module
+### Install `tezos_fa2_single_tests` Python module
 
 ```
 git clone https://github.com/tqtezos/smart-contracts.git
