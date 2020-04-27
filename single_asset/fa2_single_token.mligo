@@ -11,12 +11,15 @@ type single_token_storage = {
   permissions_descriptor : permissions_descriptor;
 }
 
-let validate_operator (txs, tx_policy, ops_storage 
-    : (transfer_descriptor list) * operator_transfer_policy * operators) : unit =
-  let can_owner_tx, can_operator_tx = match tx_policy with
-  | No_transfer -> (failwith "TX_DENIED" : bool * bool)
-  | Owner_transfer -> true, false
-  | Owner_or_operator_transfer -> true, true
+let validate_operator (txs, permissions, ops_storage 
+    : (transfer_descriptor list) * permissions_descriptor * operators) : unit =
+  let can_self_tx = match permissions.self with
+  | Self_transfer_permitted -> true
+  | Self_transfer_denied -> false
+  in
+  let can_operator_tx = match permissions.operator with
+  | Operator_transfer_permitted -> true
+  | Operator_transfer_denied -> false
   in
   let operator = Current.sender in
   let owners = List.fold
@@ -33,6 +36,9 @@ let validate_operator (txs, tx_policy, ops_storage
       else if not can_operator_tx
       then failwith "NOT_OWNER"
       else
+        if not can_operator_tx
+        then failwith "OPERATORS_DENIED"
+        else
           let key = owner, operator in
           let is_op_opt = Big_map.find_opt key ops_storage in
           match is_op_opt with
@@ -145,8 +151,7 @@ let fa2_main (param, storage : fa2_entry_points * single_token_storage)
   match param with
   | Transfer txs -> 
     let tx_descriptors = transfers_to_descriptors txs in
-    let u = validate_operator 
-      (tx_descriptors, storage.permissions_descriptor.operator, storage.operators) in
+    let u = validate_operator (tx_descriptors, storage.permissions_descriptor, storage.operators) in
     let new_ledger = transfer (tx_descriptors, storage.ledger) in
     let new_storage = { storage with ledger = new_ledger; }
     in ([] : operation list), new_storage
