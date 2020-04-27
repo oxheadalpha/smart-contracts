@@ -27,18 +27,14 @@ let pause (paused, s: bool * simple_admin_storage) : simple_admin_storage =
 
 let simple_admin (param, s : simple_admin *simple_admin_storage)
     : (operation list) * simple_admin_storage =
-  if sender <> s.admin
-  then 
-    (failwith "operation requires admin privileges" : (operation list) * simple_admin_storage)
-  else
-    match param with
-    | Set_admin new_admin ->
-        let new_s = set_admin (new_admin, s) in
-        (([]: operation list), new_s)
+  match param with
+  | Set_admin new_admin ->
+      let new_s = set_admin (new_admin, s) in
+      (([]: operation list), new_s)
 
-    | Pause paused ->
-        let new_s = pause (paused, s) in
-        (([]: operation list), new_s)
+  | Pause paused ->
+      let new_s = pause (paused, s) in
+      (([]: operation list), new_s)
 
         
 

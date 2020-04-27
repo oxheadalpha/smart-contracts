@@ -158,9 +158,6 @@ class PtzUtils:
         :param num_blocks_wait number of backed blocks to retry wait until failing with timeout
         """
         self.client = client
-        self.block_time = int(
-            client.shell.block.context.constants()["time_between_blocks"][0]
-        )
         self.block_depth = block_depth
         self.num_blocks_wait = num_blocks_wait
 
@@ -187,7 +184,7 @@ class PtzUtils:
             if len(ops) == len(res):
                 return res
             try:
-                self.client.shell.wait_next_block(block_time=self.block_time)
+                self.client.shell.wait_next_block()
             except AssertionError:
                 print("block waiting timed out")
 

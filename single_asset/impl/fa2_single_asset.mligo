@@ -25,12 +25,12 @@ type single_asset_param =
 
 let fail_if_not_admin (a : simple_admin_storage) : unit =
   if sender <> a.admin
-  then failwith "operation requires admin privileges"
+  then failwith "NOT_AN_ADMIN"
   else unit
 
 let fail_if_paused (a : simple_admin_storage) : unit =
   if a.paused
-  then failwith("contract is paused")
+  then failwith "PAUSED"
   else unit
 
 let single_asset_main 
