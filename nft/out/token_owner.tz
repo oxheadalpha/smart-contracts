@@ -1,0 +1,98 @@
+{ parameter
+    (or (or (unit %default) (pair %owner_add_operator (address %fa2) (address %operator)))
+        (pair %owner_remove_operator (address %fa2) (address %operator))) ;
+  storage unit ;
+  code { DUP ;
+         CAR ;
+         IF_LEFT
+           { DUP ;
+             IF_LEFT
+               { UNIT ; NIL operation ; PAIR ; DIP { DROP } }
+               { DUP ;
+                 CDR ;
+                 DIP { SELF ; ADDRESS } ;
+                 PAIR ;
+                 DIP { PUSH unit Unit ; LEFT (set nat) } ;
+                 PAIR ;
+                 DIP { DUP } ;
+                 SWAP ;
+                 CAR ;
+                 CONTRACT %update_operators
+                   (list (or (pair %add_operator
+                                (pair (address %operator) (address %owner))
+                                (or %tokens (unit %all_tokens) (set %some_tokens nat)))
+                             (pair %remove_operator
+                                (pair (address %operator) (address %owner))
+                                (or %tokens (unit %all_tokens) (set %some_tokens nat))))) ;
+                 IF_NONE
+                   { PUSH string "bad address for get_entrypoint (%update_operators)" ;
+                     FAILWITH }
+                   {} ;
+                 DIP { DUP } ;
+                 SWAP ;
+                 LEFT (pair (pair (address %operator) (address %owner))
+                            (or %tokens (unit %all_tokens) (set %some_tokens nat))) ;
+                 NIL (or (pair %add_operator
+                            (pair (address %operator) (address %owner))
+                            (or %tokens (unit %all_tokens) (set %some_tokens nat)))
+                         (pair %remove_operator
+                            (pair (address %operator) (address %owner))
+                            (or %tokens (unit %all_tokens) (set %some_tokens nat)))) ;
+                 SWAP ;
+                 CONS ;
+                 DIP { DUP ; PUSH mutez 0 } ;
+                 TRANSFER_TOKENS ;
+                 DUP ;
+                 NIL operation ;
+                 SWAP ;
+                 CONS ;
+                 UNIT ;
+                 SWAP ;
+                 PAIR ;
+                 DIP { DROP 4 } } ;
+             DIP { DROP } }
+           { DUP ;
+             CDR ;
+             DIP { SELF ; ADDRESS } ;
+             PAIR ;
+             DIP { PUSH unit Unit ; LEFT (set nat) } ;
+             PAIR ;
+             DIP { DUP } ;
+             SWAP ;
+             CAR ;
+             CONTRACT %update_operators
+               (list (or (pair %add_operator
+                            (pair (address %operator) (address %owner))
+                            (or %tokens (unit %all_tokens) (set %some_tokens nat)))
+                         (pair %remove_operator
+                            (pair (address %operator) (address %owner))
+                            (or %tokens (unit %all_tokens) (set %some_tokens nat))))) ;
+             IF_NONE
+               { PUSH string "bad address for get_entrypoint (%update_operators)" ;
+                 FAILWITH }
+               {} ;
+             DIP { DUP } ;
+             SWAP ;
+             RIGHT
+               (pair (pair (address %operator) (address %owner))
+                     (or %tokens (unit %all_tokens) (set %some_tokens nat))) ;
+             NIL (or (pair %add_operator
+                        (pair (address %operator) (address %owner))
+                        (or %tokens (unit %all_tokens) (set %some_tokens nat)))
+                     (pair %remove_operator
+                        (pair (address %operator) (address %owner))
+                        (or %tokens (unit %all_tokens) (set %some_tokens nat)))) ;
+             SWAP ;
+             CONS ;
+             DIP { DUP ; PUSH mutez 0 } ;
+             TRANSFER_TOKENS ;
+             DUP ;
+             NIL operation ;
+             SWAP ;
+             CONS ;
+             UNIT ;
+             SWAP ;
+             PAIR ;
+             DIP { DROP 4 } } ;
+         DIP { DROP } } }
+
