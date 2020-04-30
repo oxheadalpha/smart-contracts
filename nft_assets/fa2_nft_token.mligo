@@ -9,8 +9,7 @@ type token_def = {
 type nft_meta = (token_def, token_metadata) big_map
 
 type token_storage = {
-  token_defs : token_def set; 
-  last_used_id : token_id;
+  token_defs : token_def list; (* reverse order list of defs *)
   metadata : nft_meta;
 }
 
@@ -25,38 +24,8 @@ type nft_token_storage = {
   permissions_descriptor : permissions_descriptor;
 }
 
-let get_balance (p, ledger : balance_of_param * ledger) : operation =
-  let to_balance = fun (r : balance_of_request) ->
-    let owner = Big_map.find_opt r.token_id ledger in
-    match owner with
-    | None -> (failwith "TOKEN_UNDEFINED" : balance_of_response)
-    | Some o ->
-      let bal = if o = r.owner then 1n else 0n in
-      { request = r; balance = bal; } 
-  in
-  let responses = List.map to_balance p.requests in
-  Operation.transaction responses 0mutez p.callback
-
-let transfer (txs, ledger : (transfer list) * ledger) : ledger =
-  let make_transfer = fun (l, tx : ledger * transfer) ->
-    if tx.amount = 0n
-    then l
-    else if tx.amount <> 1n
-    then (failwith "INSUFFICIENT_BALANCE" : ledger)
-    else
-      let owner = Big_map.find_opt tx.token_id ledger in
-      match owner with
-      | None -> (failwith "TOKEN_UNDEFINED" : ledger)
-      | Some o -> 
-        if o <> tx.from_
-        then (failwith "INSUFFICIENT_BALANCE" : ledger)
-        else Big_map.update tx.token_id (Some tx.to_) l
-  in
-    
-  List.fold make_transfer txs ledger
-
 let validate_operator (txs, tx_policy, ops_storage 
-    : (transfer list) * operator_transfer_policy * operators) : unit =
+    : (transfer_descriptor list) * operator_transfer_policy * operators) : unit =
   let can_owner_tx, can_operator_tx = match tx_policy with
   | No_transfer -> (failwith "TX_DENIED" : bool * bool)
   | Owner_transfer -> true, false
@@ -64,8 +33,10 @@ let validate_operator (txs, tx_policy, ops_storage
   in
   let operator = Current.sender in
   let owners = List.fold
-    (fun (owners, tx : (address set) * transfer) ->
-      Set.add tx.from_ owners
+    (fun (owners, tx : (address set) * transfer_descriptor) ->
+      match tx.from_ with
+      | None -> owners
+      | Some o -> Set.add o owners
     ) txs (Set.empty : address set) in
 
   Set.iter
@@ -101,8 +72,8 @@ let get_supply (tokens, ledger : (token_id list) * ledger )
     else (failwith "TOKEN_UNDEFINED" : total_supply_response)
   ) tokens
 
-let find_token_type (tid, token_defs : token_id * (token_def set)) : token_def =
-  let tdef = Set.fold (fun (res, d : (token_def option) * token_def) ->
+let find_token_type (tid, token_defs : token_id * (token_def list)) : token_def =
+  let tdef = List.fold (fun (res, d : (token_def option) * token_def) ->
     match res with
     | Some r -> res
     | None ->
@@ -121,7 +92,7 @@ let get_metadata (tokens, meta : (token_id list) * token_storage )
     let ttype = find_token_type (tid, meta.token_defs) in
     let meta = Big_map.find_opt ttype meta.metadata in
     match meta with
-    | Some m -> { m with token_id = tid; }
+    | Some m -> m
     | None -> (failwith "NO_DATA" : token_metadata)
   ) tokens
 
@@ -145,15 +116,18 @@ let fa2_main (param, storage : fa2_entry_points * nft_token_storage)
     : (operation  list) * nft_token_storage =
   match param with
   | Transfer txs -> 
+    (* let tx_descriptors = transfers_to_descriptors txs in
     let u = validate_operator 
-      (txs, storage.permissions_descriptor.operator, storage.operators) in
-    let new_ledger = transfer (txs, storage.ledger) in
+      (tx_descriptors, storage.permissions_descriptor.operator, storage.operators) in
+    let new_ledger = transfer (tx_descriptors, storage.ledger) in
     let new_storage = { storage with ledger = new_ledger; }
-    in ([] : operation list), new_storage
+    in ([] : operation list), new_storage *)
+    ([] : operation list), storage
 
   | Balance_of p -> 
-    let op = get_balance (p, storage.ledger) in
-    [op], storage
+    (* let op = get_balance (p, storage.ledger) in
+    [op], storage *)
+    ([] : operation list), storage
 
 
   | Total_supply p ->
