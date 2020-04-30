@@ -645,12 +645,19 @@
                                    DIP { DROP } } ;
                              DIG 4 ;
                              DUP ;
-                             DIP { DIP 4 { DUP } ; DIG 4 ; CAR ; CDR ; CDR } ;
+                             DIP { DIP 4 { DUP } ; DIG 4 ; CAR ; CDR ; CDR ; CAR ; CDR } ;
                              PAIR ;
                              PAIR ;
                              DUP ;
                              CAR ;
                              CDR ;
+                             IF_LEFT
+                               { DUP ;
+                                 IF_LEFT
+                                   { PUSH string "TX_DENIED" ; FAILWITH }
+                                   { PUSH bool True ; PUSH bool True ; PAIR ; DIP { DROP } } ;
+                                 DIP { DROP } }
+                               { PUSH bool False ; PUSH bool True ; PAIR ; DIP { DROP } } ;
                              SENDER ;
                              DIP 2 { DUP } ;
                              DIG 2 ;
@@ -692,20 +699,14 @@
                                     DUP ;
                                     DUG 5 ;
                                     CAR ;
-                                    CDR ;
-                                    CDR ;
-                                    IF_LEFT { DROP ; PUSH bool False } { DROP ; PUSH bool True } ;
                                     DIP { DUP ; DIP { DIP 2 { DUP } ; DIG 2 } ; COMPARE ; EQ } ;
                                     AND ;
                                     IF { UNIT }
                                        { DIP 3 { DUP } ;
                                          DIG 3 ;
-                                         CAR ;
-                                         CAR ;
                                          CDR ;
-                                         IF_LEFT { DROP ; PUSH bool False } { DROP ; PUSH bool True } ;
                                          NOT ;
-                                         IF { PUSH string "OPERATORS_DENIED" ; FAILWITH }
+                                         IF { PUSH string "NOT_OWNER" ; FAILWITH }
                                             { DUP ;
                                               DIP { DIP 2 { DUP } ; DIG 2 } ;
                                               PAIR ;
