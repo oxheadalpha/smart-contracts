@@ -1,6 +1,5 @@
 include README.md
 include *.mligo
 include impl/*.mligo
-include tezos_fa2_single_tests/start-sandbox.sh
-include tezos_fa2_single_tests/kill-sandbox.sh
-include tezos_fa2_single_tests/pytezos_mac_schema.txt
+include tezos_fa2_nft_tests/start-sandbox.sh
+include tezos_fa2_nft_tests/kill-sandbox.sh
