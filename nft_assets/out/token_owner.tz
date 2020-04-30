@@ -8,19 +8,14 @@
            { DUP ;
              IF_LEFT
                { UNIT ; NIL operation ; PAIR ; DIP { DROP } }
-               { PUSH unit Unit ;
-                 LEFT (set nat) ;
-                 SELF ;
-                 ADDRESS ;
-                 DIG 2 ;
-                 DUP ;
-                 DUG 3 ;
+               { DUP ;
                  CDR ;
+                 DIP { SELF ; ADDRESS } ;
                  PAIR ;
+                 DIP { PUSH unit Unit ; LEFT (set nat) } ;
                  PAIR ;
-                 DIG 1 ;
-                 DUP ;
-                 DUG 2 ;
+                 DIP { DUP } ;
+                 SWAP ;
                  CAR ;
                  CONTRACT %update_operators
                    (list (or (pair %add_operator
@@ -33,43 +28,37 @@
                    { PUSH string "bad address for get_entrypoint (%update_operators)" ;
                      FAILWITH }
                    {} ;
-                 DUP ;
-                 PUSH mutez 0 ;
+                 DIP { DUP } ;
+                 SWAP ;
+                 LEFT (pair (pair (address %operator) (address %owner))
+                            (or %tokens (unit %all_tokens) (set %some_tokens nat))) ;
                  NIL (or (pair %add_operator
                             (pair (address %operator) (address %owner))
                             (or %tokens (unit %all_tokens) (set %some_tokens nat)))
                          (pair %remove_operator
                             (pair (address %operator) (address %owner))
                             (or %tokens (unit %all_tokens) (set %some_tokens nat)))) ;
-                 DIG 4 ;
-                 DUP ;
-                 DUG 5 ;
-                 LEFT (pair (pair (address %operator) (address %owner))
-                            (or %tokens (unit %all_tokens) (set %some_tokens nat))) ;
+                 SWAP ;
                  CONS ;
+                 DIP { DUP ; PUSH mutez 0 } ;
                  TRANSFER_TOKENS ;
-                 UNIT ;
-                 NIL operation ;
-                 DIG 2 ;
                  DUP ;
-                 DUG 3 ;
+                 NIL operation ;
+                 SWAP ;
                  CONS ;
+                 UNIT ;
+                 SWAP ;
                  PAIR ;
                  DIP { DROP 4 } } ;
              DIP { DROP } }
-           { PUSH unit Unit ;
-             LEFT (set nat) ;
-             SELF ;
-             ADDRESS ;
-             DIG 2 ;
-             DUP ;
-             DUG 3 ;
+           { DUP ;
              CDR ;
+             DIP { SELF ; ADDRESS } ;
              PAIR ;
+             DIP { PUSH unit Unit ; LEFT (set nat) } ;
              PAIR ;
-             DIG 1 ;
-             DUP ;
-             DUG 2 ;
+             DIP { DUP } ;
+             SWAP ;
              CAR ;
              CONTRACT %update_operators
                (list (or (pair %add_operator
@@ -82,28 +71,27 @@
                { PUSH string "bad address for get_entrypoint (%update_operators)" ;
                  FAILWITH }
                {} ;
-             DUP ;
-             PUSH mutez 0 ;
+             DIP { DUP } ;
+             SWAP ;
+             RIGHT
+               (pair (pair (address %operator) (address %owner))
+                     (or %tokens (unit %all_tokens) (set %some_tokens nat))) ;
              NIL (or (pair %add_operator
                         (pair (address %operator) (address %owner))
                         (or %tokens (unit %all_tokens) (set %some_tokens nat)))
                      (pair %remove_operator
                         (pair (address %operator) (address %owner))
                         (or %tokens (unit %all_tokens) (set %some_tokens nat)))) ;
-             DIG 4 ;
-             DUP ;
-             DUG 5 ;
-             RIGHT
-               (pair (pair (address %operator) (address %owner))
-                     (or %tokens (unit %all_tokens) (set %some_tokens nat))) ;
+             SWAP ;
              CONS ;
+             DIP { DUP ; PUSH mutez 0 } ;
              TRANSFER_TOKENS ;
-             UNIT ;
-             NIL operation ;
-             DIG 2 ;
              DUP ;
-             DUG 3 ;
+             NIL operation ;
+             SWAP ;
              CONS ;
+             UNIT ;
+             SWAP ;
              PAIR ;
              DIP { DROP 4 } } ;
          DIP { DROP } } }

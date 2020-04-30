@@ -1,114 +1,94 @@
 (*
   One of the possible implementations of token management API which can create
-  mint and burn non-fungible tokens.
+  new fungible tokens, mint and burn them.
   
-  Mint operation creates a new type of NFTs and assign them to owner accounts.
-  Burn operation removes existing NFT type and removes its tokens from owner
-  accounts.
+  Token manager API allows to mint and burn tokens to some existing or new owner account.
+
+  Mint operation performs safety check as specified for `multi_token`
+  transfer entry points. Burn operation fails if the owner holds
+  less tokens then burn amount.
 *)
 
-#include "../fa2_nft_token.mligo"
+#include "../fa2_single_token.mligo"
 
-type mint_param = {
-  token_def : token_def;
-  metadata : token_metadata;
-  owners : address list;
+type mint_burn_tx = {
+  owner : address;
+  amount : nat;
 }
+
+type mint_burn_tokens_param = mint_burn_tx list
 
 
 (* `token_manager` entry points *)
 type token_manager =
-  | Mint_tokens of mint_param
-  | Burn_tokens of token_def
+  | Mint_tokens of mint_burn_tokens_param
+  | Burn_tokens of mint_burn_tokens_param
 
 
-let validate_mint_param (p : mint_param) : unit =
-  let num_tokens = is_nat (p.token_def.to_ - p.token_def.from_) in
-  match num_tokens with
-  | None -> failwith "INVALID_PARAM"
-  | Some n -> if n <> List.size p.owners then failwith "INVALID_PARAM" else unit
+let burn_param_to_hook_param (ts : mint_burn_tx list) : transfer_descriptor_param =
+  let batch : transfer_descriptor list = List.map 
+    (fun (t : mint_burn_tx) -> {
+        from_ = Some t.owner;
+        to_ = (None : address option);
+        token_id = 0n;
+        amount = t.amount;
+      })
+    ts in 
+  {
+    batch = batch;
+    operator = Current.sender;
+    fa2 = Current.self_address;
+  }
 
-type zip_acc = {
-  zip : (address * token_id ) list;
-  next_token : token_id;
-}
-let zip_owners_with_token_ids (owners, from_token_id : (address list) * token_id) :
-    (address * token_id ) list =
-  let res = List.fold 
-    ( fun (acc, owner : zip_acc * address) ->
+let mint_param_to_hook_param (ts : mint_burn_tx list) : transfer_descriptor_param =
+  let batch : transfer_descriptor list = List.map 
+    (fun (t : mint_burn_tx) -> 
       {
-        zip = (owner, acc.next_token) :: acc.zip;
-        next_token = acc.next_token + 1n;
-      }
-    ) 
-    owners 
-    { 
-      zip = ([] : (address * token_id) list); 
-      next_token = from_token_id; 
-    }
-  in
-  res.zip
+        to_ = Some t.owner;
+        from_ = (None : address option);
+        token_id = 0n;
+        amount = t.amount;
+      })
+    ts in 
+  {
+    batch = batch;
+    operator = Current.sender;
+    fa2 = Current.self_address;
+  }
 
-let mint_tokens (p, s : mint_param * nft_token_storage) : nft_token_storage =
-  let u = validate_mint_param p in
-  if s.metadata.last_used_id > p.token_def.from_
-  then (failwith "INVALID_PARAM" : nft_token_storage)
-  else
-    let new_metadata = {
-      token_defs = Set.add p.token_def s.metadata.token_defs;
-      metadata = Big_map.add p.token_def p.metadata s.metadata.metadata;
-      last_used_id = p.token_def.to_;
-    } in
-    let tid_owners = zip_owners_with_token_ids (p.owners, p.token_def.from_) in
-    let new_ledger = List.fold (fun (l, owner_id : ledger * (address * token_id)) ->
-      let owner, tid = owner_id in
-      Big_map.add tid owner l
-    ) tid_owners s.ledger in
-    { s with 
-      metadata = new_metadata;
+let get_total_supply_change (txs : mint_burn_tx list) : nat =
+  List.fold (fun (total, tx : nat * mint_burn_tx) -> total + tx.amount) txs 0n
+
+let mint_tokens (txs, storage : mint_burn_tokens_param * single_token_storage) 
+    : (operation list) * single_token_storage =
+    let hp = mint_param_to_hook_param txs in
+    let new_ledger = transfer (hp.batch, storage.ledger) in
+    let supply_change = get_total_supply_change txs in
+    let new_s = { storage with
       ledger = new_ledger;
-    }
-
-
-type aux_remove_tokens = {
-  from_ : token_id;
-  to_ : token_id;
-  ledger : ledger;
-}
-
-let rec remove_tokens (p : aux_remove_tokens) : aux_remove_tokens =
-  if p.from_ = p.to_
-  then p
-  else
-    let new_p = {
-        from_ = p.from_ + 1n;
-        to_ = p.to_;
-        ledger = Big_map.remove p.from_ p.ledger;
+      total_supply = storage.total_supply + supply_change;
     } in
-    remove_tokens new_p
+    ([] : operation list), new_s
 
-let burn_tokens (p, s : token_def * nft_token_storage) : nft_token_storage =
-  if not Set.mem p s.metadata.token_defs
-  then (failwith "INVALID_PARAM" : nft_token_storage)
-  else
-    let new_metadata = { s.metadata with
-      token_defs = Set.remove p s.metadata.token_defs;
-      metadata = Big_map.remove p s.metadata.metadata;
+    
+let burn_tokens (txs, storage : mint_burn_tokens_param * single_token_storage) 
+    : (operation list) * single_token_storage =
+    let hp = burn_param_to_hook_param txs in
+    let new_ledger = transfer (hp.batch, storage.ledger) in
+    let supply_change = get_total_supply_change txs in
+    let new_supply_opt = Michelson.is_nat (storage.total_supply - supply_change) in
+    let new_supply = match new_supply_opt with
+    | None -> (failwith "INSUFFICIENT_BALANCE" : nat)
+    | Some s -> s
+    in
+    let new_s = { storage with
+      ledger = new_ledger;
+      total_supply = new_supply;
     } in
-    let new_ledger = remove_tokens {
-      from_ = p.from_; 
-      to_ = p.to_; 
-      ledger = s.ledger; 
-    } in
-    { s with
-      metadata = new_metadata;
-      ledger = new_ledger.ledger;
-    }
+    ([] : operation list), new_s
 
-let token_manager (param, s : token_manager * nft_token_storage)
-    : (operation list) * nft_token_storage =
-  let new_s = match param with
-  | Mint_tokens p -> mint_tokens (p, s)
-  | Burn_tokens p -> burn_tokens (p, s)
-  in
-  ([] : operation list), new_s
+let token_manager (param, s : token_manager * single_token_storage)
+    : (operation list) * single_token_storage =
+  match param with
+  | Mint_tokens txs -> mint_tokens (txs, s)
+  | Burn_tokens txs -> burn_tokens (txs, s)

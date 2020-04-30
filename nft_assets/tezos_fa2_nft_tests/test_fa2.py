@@ -3,9 +3,8 @@ from decimal import *
 from unittest import TestCase
 
 from pytezos import Key, pytezos
-from pytezos.rpc.errors import MichelsonRuntimeError
 
-from tezos_fa2_nft_tests.ligo import (
+from tezos_fa2_single_tests.ligo import (
     LigoEnv,
     LigoContract,
     PtzUtils,
@@ -34,7 +33,9 @@ class TestFa2SetUp(TestCase):
 
     def orig_contracts(self):
         print("loading ligo contracts...")
-        ligo_fa2 = ligo_env.contract_from_file("fa2_nft_asset.mligo", "nft_asset_main")
+        ligo_fa2 = ligo_env.contract_from_file(
+            "fa2_single_asset.mligo", "single_asset_main"
+        )
         ligo_receiver = ligo_env.contract_from_file("token_owner.mligo", "main")
         ligo_inspector = ligo_env.contract_from_file("inspector.mligo", "main")
 
@@ -58,13 +59,16 @@ class TestFa2SetUp(TestCase):
               paused = true;
             };
             assets = {
-                ledger = (Big_map.empty : (token_id, address) big_map);
+                ledger = (Big_map.empty : (address, nat) big_map);
                 operators = (Big_map.empty : ((address * address), bool) big_map);
                 metadata = {
-                  token_defs = (Set.empty : token_def set);
-                  last_used_id = 0n;
-                  metadata = (Big_map.empty : (token_def, token_metadata) big_map);
+                    token_id = 0n;
+                    symbol = "TK1";
+                    name = "Test Token";
+                    decimals = 0n;
+                    extras = (Map.empty : (string, string) map);
                 };
+                total_supply = 0n;
                 permissions_descriptor = {
                   operator = Owner_or_operator_transfer;
                   sender = Owner_no_op;
@@ -72,7 +76,7 @@ class TestFa2SetUp(TestCase):
                   custom = (None : custom_permission_policy option);
                 };
             };
-        } 
+        }
         """
             % self.admin_key.public_key_hash()
         )
@@ -96,21 +100,25 @@ class TestFa2SetUp(TestCase):
         op = self.fa2.pause(paused).inject()
         self.util.wait_for_ops(op)
 
-    def assertBalance(self, owner_address, token_id, expected_balance, msg=None):
-        op = self.inspector.query(
-            fa2=self.fa2.address, owner=owner_address, token_id=token_id
-        ).inject()
+    def assertBalance(self, owner_address, expected_balance, msg=None):
+        op = self.inspector.query(fa2=self.fa2.address, owner=owner_address).inject()
         self.util.wait_for_ops(op)
         b = self.inspector.storage()["state"]
         print(b)
         self.assertEqual(
             {
                 "balance": expected_balance,
-                "request": {"token_id": token_id, "owner": owner_address},
+                "request": {"token_id": 0, "owner": owner_address},
             },
             b,
             msg,
         )
+
+    def get_balance(self, owner_address):
+        op = self.inspector.query(fa2=self.fa2.address, owner=owner_address).inject()
+        self.util.wait_for_ops(op)
+        b = self.inspector.storage()["state"]
+        return b["balance"]
 
 
 class TestMintBurn(TestFa2SetUp):
@@ -120,43 +128,24 @@ class TestMintBurn(TestFa2SetUp):
         self.pause_fa2(False)
 
     def test_mint_burn_to_receiver(self):
-        self.mint_burn(self.alice_receiver.address, self.bob_receiver.address)
+        self.mint_burn(self.alice_receiver.address)
 
     def test_mint_burn_implicit(self):
-        self.mint_burn(self.mike_key.public_key_hash(), self.kyle_key.public_key_hash())
+        self.mint_burn(self.mike_key.public_key_hash())
 
-    def mint_burn(self, owner1_address, owner2_address):
+    def mint_burn(self, owner_address):
         print("minting")
         mint_op = self.fa2.mint_tokens(
-            {
-                "metadata": {
-                    "decimals": 0,
-                    "name": "socks token",
-                    "symbol": "SOCK",
-                    "token_id": 0,
-                    "extras": {"0": "left", "1": "right"},
-                },
-                "token_def": {"from_": 0, "to_": 2,},
-                "owners": [owner1_address, owner2_address],
-            }
+            [{"amount": 10, "owner": owner_address}]
         ).inject()
         self.util.wait_for_ops(mint_op)
-        self.assertBalance(owner1_address, 0, 1, "invalid mint balance 1")
-        self.assertBalance(owner1_address, 1, 0, "invalid mint balance 1")
-        self.assertBalance(owner2_address, 1, 1, "invalid mint balance 2")
+        self.assertBalance(owner_address, 10, "invalid mint balance")
 
         print("burning")
-        burn_op = self.fa2.burn_tokens(from_=0, to_=2).inject()
+        burn_op = self.fa2.burn_tokens([{"amount": 3, "owner": owner_address}]).inject()
         self.util.wait_for_ops(burn_op)
 
-        with self.assertRaises(MichelsonRuntimeError) as cm:
-            op = self.inspector.query(
-                fa2=self.fa2.address, owner=owner1_address, token_id=0
-            ).inject()
-            self.util.wait_for_ops(op)
-
-        failedwith = cm.exception.args[0]["with"]["string"]
-        self.assertEqual("TOKEN_UNDEFINED", failedwith)
+        self.assertBalance(owner_address, 7, "invalid balance after burn")
 
 
 class TestOperator(TestFa2SetUp):
@@ -166,13 +155,11 @@ class TestOperator(TestFa2SetUp):
 
     def test_add_operator_to_receiver(self):
 
-        print("adding operator")
         op_add = self.alice_receiver.owner_add_operator(
             fa2=self.fa2.address, operator=self.admin_key.public_key_hash()
         ).inject()
         self.util.wait_for_ops(op_add)
 
-        print("checking operator")
         op_check = self.inspector.assert_is_operator(
             fa2=self.fa2.address,
             request={
@@ -181,6 +168,7 @@ class TestOperator(TestFa2SetUp):
                 "tokens": {"all_tokens": None},
             },
         ).inject()
+
         self.util.wait_for_ops(op_check)
 
 
@@ -193,51 +181,26 @@ class TestTransfer(TestFa2SetUp):
             fa2=self.fa2.address, operator=self.admin_key.public_key_hash()
         ).inject()
         self.util.wait_for_ops(op_op)
-
-        op_op2 = self.bob_receiver.owner_add_operator(
-            fa2=self.fa2.address, operator=self.admin_key.public_key_hash()
-        ).inject()
-        self.util.wait_for_ops(op_op2)
         print("transfer test setup completed")
 
-    def test_transfer(self):
+    def test_transfer_to_receiver(self):
+        self.transfer(self.alice_receiver.address, self.bob_receiver.address)
 
-        alice_a = self.alice_receiver.address
-        bob_a = self.bob_receiver.address
-        mike_a = self.mike_key.public_key_hash()
-        left_sock = 0
-        right_sock = 1
+    def test_transfer_to_implicit(self):
+        self.transfer(self.alice_receiver.address, self.mike_key.public_key_hash())
 
-        mint_op = self.fa2.mint_tokens(
-            {
-                "metadata": {
-                    "decimals": 0,
-                    "name": "socks token",
-                    "symbol": "SOCK",
-                    "token_id": 0,
-                    "extras": {"0": "left", "1": "right"},
-                },
-                "token_def": {"from_": 0, "to_": 2,},
-                "owners": [alice_a, bob_a],
-            }
-        ).inject()
+    def transfer(self, from_address, to_address):
+
+        mint_op = self.fa2.mint_tokens([{"amount": 10, "owner": from_address}]).inject()
         self.util.wait_for_ops(mint_op)
 
-        self.assertBalance(alice_a, left_sock, 1, "invalid mint balance alice")
-        self.assertBalance(bob_a, right_sock, 1, "invalid mint balance bob")
-        self.assertBalance(mike_a, left_sock, 0, "invalid mint balance mike")
-        self.assertBalance(mike_a, right_sock, 0, "invalid mint balance mike")
+        from_bal = self.get_balance(from_address)
 
         print("transfering")
         op_tx = self.fa2.transfer(
-            [
-                {"from_": alice_a, "to_": mike_a, "token_id": left_sock, "amount": 1},
-                {"from_": bob_a, "to_": mike_a, "token_id": right_sock, "amount": 1},
-            ]
+            [{"from_": from_address, "to_": to_address, "token_id": 0, "amount": 3}]
         ).inject()
         self.util.wait_for_ops(op_tx)
 
-        self.assertBalance(alice_a, left_sock, 0, "invalid mint balance alice")
-        self.assertBalance(bob_a, right_sock, 0, "invalid mint balance bob")
-        self.assertBalance(mike_a, left_sock, 1, "invalid mint balance mike")
-        self.assertBalance(mike_a, right_sock, 1, "invalid mint balance mike")
+        self.assertBalance(to_address, 3, "invalid recipient balance")
+        self.assertBalance(from_address, from_bal - 3, "invalid source balance")

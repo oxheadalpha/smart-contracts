@@ -1,5 +1,0 @@
-include README.md
-include *.mligo
-include impl/*.mligo
-include tezos_fa2_nft_tests/start-sandbox.sh
-include tezos_fa2_nft_tests/kill-sandbox.sh

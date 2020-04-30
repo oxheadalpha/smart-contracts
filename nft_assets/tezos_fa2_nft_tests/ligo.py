@@ -153,6 +153,7 @@ class PtzUtils:
     def __init__(self, client, block_depth=5, num_blocks_wait=3):
         """
         :param client: PyTezosClient
+        :param block_time: block baking time in seconds
         :param block_depth number of recent blocks to test when checking for operation status
         :param num_blocks_wait number of backed blocks to retry wait until failing with timeout
         """
