@@ -66,18 +66,15 @@ type is_operator_response = {
 
 type is_operator_param = {
   operator : operator_param;
-  callback : is_operator_response contract;
+  callback : (is_operator_response) contract;
 }
 
 (* permission policy definition *)
 
-type self_transfer_policy =
-  | Self_transfer_permitted
-  | Self_transfer_denied
-
 type operator_transfer_policy =
-  | Operator_transfer_permitted
-  | Operator_transfer_denied
+  | No_transfer
+  | Owner_transfer
+  | Owner_or_operator_transfer
 
 type owner_transfer_policy =
   | Owner_no_op
@@ -90,7 +87,6 @@ type custom_permission_policy = {
 }
 
 type permissions_descriptor = {
-  self : self_transfer_policy;
   operator : operator_transfer_policy;
   receiver : owner_transfer_policy;
   sender : owner_transfer_policy;

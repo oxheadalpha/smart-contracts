@@ -15,17 +15,16 @@
                              (pair (address %operator) (address %owner))
                              (or %tokens (unit %all_tokens) (set %some_tokens nat)))))
                    (or (contract %permissions_descriptor
-                          (pair (pair (pair (option %custom (pair (option %config_api address) (string %tag)))
-                                            (or %operator
-                                               (unit %operator_transfer_denied)
-                                               (unit %operator_transfer_permitted)))
-                                      (pair (or %receiver
-                                               (or (unit %optional_owner_hook) (unit %owner_no_op))
-                                               (unit %required_owner_hook))
-                                            (or %self (unit %self_transfer_denied) (unit %self_transfer_permitted))))
-                                (or %sender
-                                   (or (unit %optional_owner_hook) (unit %owner_no_op))
-                                   (unit %required_owner_hook))))
+                          (pair (pair (option %custom (pair (option %config_api address) (string %tag)))
+                                      (or %operator
+                                         (or (unit %no_transfer) (unit %owner_or_operator_transfer))
+                                         (unit %owner_transfer)))
+                                (pair (or %receiver
+                                         (or (unit %optional_owner_hook) (unit %owner_no_op))
+                                         (unit %required_owner_hook))
+                                      (or %sender
+                                         (or (unit %optional_owner_hook) (unit %owner_no_op))
+                                         (unit %required_owner_hook)))))
                        (pair %token_metadata
                           (contract %callback
                              (list (pair (pair (pair (nat %decimals) (map %extras string string))
@@ -57,17 +56,16 @@
                             (nat %token_id)))
                    (pair (big_map %operators (pair address address) bool)
                          (pair %permissions_descriptor
-                            (pair (pair (option %custom (pair (option %config_api address) (string %tag)))
-                                        (or %operator
-                                           (unit %operator_transfer_denied)
-                                           (unit %operator_transfer_permitted)))
-                                  (pair (or %receiver
-                                           (or (unit %optional_owner_hook) (unit %owner_no_op))
-                                           (unit %required_owner_hook))
-                                        (or %self (unit %self_transfer_denied) (unit %self_transfer_permitted))))
-                            (or %sender
-                               (or (unit %optional_owner_hook) (unit %owner_no_op))
-                               (unit %required_owner_hook)))))
+                            (pair (option %custom (pair (option %config_api address) (string %tag)))
+                                  (or %operator
+                                     (or (unit %no_transfer) (unit %owner_or_operator_transfer))
+                                     (unit %owner_transfer)))
+                            (pair (or %receiver
+                                     (or (unit %optional_owner_hook) (unit %owner_no_op))
+                                     (unit %required_owner_hook))
+                                  (or %sender
+                                     (or (unit %optional_owner_hook) (unit %owner_no_op))
+                                     (unit %required_owner_hook))))))
              (nat %total_supply))) ;
   code { LAMBDA
            (pair address (big_map address nat))
@@ -478,13 +476,20 @@
                                         PAIR } ;
                                    DIP { DROP } } ;
                              DUP ;
-                             DIP { DIP 4 { DUP } ; DIG 4 ; CAR ; CDR ; CDR } ;
+                             DIP { DIP 4 { DUP } ; DIG 4 ; CAR ; CDR ; CDR ; CAR ; CDR } ;
                              PAIR ;
                              DIP { DIP 4 { DUP } ; DIG 4 ; CAR ; CDR ; CAR } ;
                              PAIR ;
                              DUP ;
                              CAR ;
                              CDR ;
+                             IF_LEFT
+                               { DUP ;
+                                 IF_LEFT
+                                   { PUSH string "TX_DENIED" ; FAILWITH }
+                                   { PUSH bool True ; PUSH bool True ; PAIR ; DIP { DROP } } ;
+                                 DIP { DROP } }
+                               { PUSH bool False ; PUSH bool True ; PAIR ; DIP { DROP } } ;
                              SENDER ;
                              DIP 2 { DUP } ;
                              DIG 2 ;
@@ -512,20 +517,14 @@
                              ITER { DIP 3 { DUP } ;
                                     DIG 3 ;
                                     CAR ;
-                                    CDR ;
-                                    CDR ;
-                                    IF_LEFT { DROP ; PUSH bool False } { DROP ; PUSH bool True } ;
                                     DIP { DUP ; DIP { DIP 2 { DUP } ; DIG 2 } ; COMPARE ; EQ } ;
                                     AND ;
                                     IF { UNIT }
                                        { DIP 3 { DUP } ;
                                          DIG 3 ;
-                                         CAR ;
-                                         CAR ;
                                          CDR ;
-                                         IF_LEFT { DROP ; PUSH bool False } { DROP ; PUSH bool True } ;
                                          NOT ;
-                                         IF { PUSH string "OPERATORS_DENIED" ; FAILWITH }
+                                         IF { PUSH string "NOT_OWNER" ; FAILWITH }
                                             { DUP ;
                                               DIP { DIP 2 { DUP } ; DIG 2 } ;
                                               PAIR ;

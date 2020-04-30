@@ -77,8 +77,7 @@ let store : single_asset_storage = {
                 };
                 total_supply = 0n;
                 permissions_descriptor = {
-                  self = Self_transfer_permitted;
-                  operator = Operator_transfer_permitted;
+                  operator = Owner_or_operator_transfer;
                   sender = Owner_no_op;
                   receiver = Owner_no_op;
                   custom = (None : custom_permission_policy option);
