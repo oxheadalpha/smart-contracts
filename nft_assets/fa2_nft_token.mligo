@@ -9,7 +9,8 @@ type token_def = {
 type nft_meta = (token_def, token_metadata) big_map
 
 type token_storage = {
-  token_defs : token_def list; (* reverse order list of defs *)
+  token_defs : token_def set; 
+  last_used_id : token_id;
   metadata : nft_meta;
 }
 
@@ -100,8 +101,8 @@ let get_supply (tokens, ledger : (token_id list) * ledger )
     else (failwith "TOKEN_UNDEFINED" : total_supply_response)
   ) tokens
 
-let find_token_type (tid, token_defs : token_id * (token_def list)) : token_def =
-  let tdef = List.fold (fun (res, d : (token_def option) * token_def) ->
+let find_token_type (tid, token_defs : token_id * (token_def set)) : token_def =
+  let tdef = Set.fold (fun (res, d : (token_def option) * token_def) ->
     match res with
     | Some r -> res
     | None ->
