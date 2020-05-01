@@ -7,6 +7,7 @@ type storage =
 type query_param = {
   fa2 : address;
   owner : address;
+  token_id : token_id;
 }
 
 type assert_is_operator_param = {
@@ -27,7 +28,7 @@ let main (p, s : param * storage) : (operation list) * storage =
   | Query q ->
     let br : balance_of_request = {
       owner = q.owner;
-      token_id = 0n;
+      token_id = q.token_id;
     } in
     let bp : balance_of_param = {
       requests = [ br ];
