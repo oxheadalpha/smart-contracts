@@ -1,11 +1,9 @@
 (*
-  One of the possible implementations of token management API which can create
-  new fungible tokens, mint and burn them.
   
   Token manager API allows to mint and burn tokens to some existing or new owner account.
 
-  Mint operation performs safety check as specified for `multi_token`
-  transfer entry points. Burn operation fails if the owner holds
+  Mint operation performs safety check as specified for the
+  transfer entry point. Burn operation fails if the owner holds
   less tokens then burn amount.
 *)
 
@@ -78,7 +76,7 @@ let burn_tokens (txs, storage : mint_burn_tokens_param * single_token_storage)
     let supply_change = get_total_supply_change txs in
     let new_supply_opt = Michelson.is_nat (storage.total_supply - supply_change) in
     let new_supply = match new_supply_opt with
-    | None -> (failwith "total supply is negative" : nat)
+    | None -> (failwith "INSUFFICIENT_BALANCE" : nat)
     | Some s -> s
     in
     let new_s = { storage with

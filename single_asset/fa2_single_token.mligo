@@ -11,11 +11,12 @@ type single_token_storage = {
   permissions_descriptor : permissions_descriptor;
 }
 
-let validate_operator (txs, self, ops_storage 
-    : (transfer_descriptor list) * self_transfer_policy * operators) : unit =
-  let can_self_tx = match self with
-  | Self_transfer_permitted -> true
-  | Self_transfer_denied -> false
+let validate_operator (txs, tx_policy, ops_storage 
+    : (transfer_descriptor list) * operator_transfer_policy * operators) : unit =
+  let can_owner_tx, can_operator_tx = match tx_policy with
+  | No_transfer -> (failwith "TX_DENIED" : bool * bool)
+  | Owner_transfer -> true, false
+  | Owner_or_operator_transfer -> true, true
   in
   let operator = Current.sender in
   let owners = List.fold
@@ -27,21 +28,23 @@ let validate_operator (txs, self, ops_storage
 
   Set.iter
     (fun (owner : address) ->
-      if can_self_tx && owner = operator
+      if can_owner_tx && owner = operator
       then unit
+      else if not can_operator_tx
+      then failwith "NOT_OWNER"
       else
-        let key = owner, operator in
-        let is_op_opt = Big_map.find_opt key ops_storage in
-        match is_op_opt with
-        | None -> failwith "not permitted operator"
-        | Some o -> unit
+          let key = owner, operator in
+          let is_op_opt = Big_map.find_opt key ops_storage in
+          match is_op_opt with
+          | None -> failwith "NOT_OPERATOR"
+          | Some o -> unit
     ) owners
 
 let transfers_to_descriptors (txs : transfer list) : transfer_descriptor list =
   List.map 
     (fun (tx : transfer) ->
       if tx.token_id <> 0n
-      then (failwith "Only 0n token_id is accepted" : transfer_descriptor)
+      then (failwith "TOKEN_UNDEFINED" : transfer_descriptor)
       else {
         from_ = Some tx.from_;
         to_ = Some tx.to_;
@@ -59,7 +62,7 @@ let get_balance_amt (owner, ledger : address  * ledger) : nat =
 let get_balance (p, ledger : balance_of_param * ledger) : operation =
   let to_balance = fun (r : balance_of_request) ->
     if r.token_id <> 0n
-    then (failwith "Only 0n token_id is accepted" : balance_of_response)
+    then (failwith "TOKEN_UNDEFINED" : balance_of_response)
     else
       let bal = get_balance_amt (r.owner, ledger) in
       { request = r; balance = bal; } 
@@ -77,7 +80,7 @@ let dec_balance (owner, amt, ledger
     : address * nat * ledger) : ledger =
   let bal = get_balance_amt (owner, ledger) in
   match Michelson.is_nat (bal - amt) with
-  | None -> (failwith ("Insufficient balance") : ledger)
+  | None -> (failwith ("INSUFFICIENT_BALANCE") : ledger)
   | Some new_bal ->
     if new_bal = 0n
     then Big_map.remove owner ledger
@@ -103,23 +106,23 @@ let validate_operator_tokens (tokens : operator_tokens) : unit =
   | All_tokens -> unit
   | Some_tokens ts ->
     if Set.size ts <> 1n
-    then failwith "Only 0n token_id is accepted"
+    then failwith "TOKEN_UNDEFINED"
     else 
       (if Set.mem 0n ts
       then unit
-      else failwith "Only 0n token_id is accepted")
+      else failwith "TOKEN_UNDEFINED")
 
 let validate_token_ids (tokens : token_id list) : unit =
   match tokens with
   | tid :: tail -> 
     if List.size tail <> 0n
-    then failwith "Only 0n token_id is accepted"
+    then failwith "TOKEN_UNDEFINED"
     else 
     (if tid = 0n
     then unit
-    else failwith "Only 0n token_id is accepted"
+    else failwith "TOKEN_UNDEFINED"
     )
-  | [] -> failwith "No token_id provided"
+  | [] -> failwith "NO_TOKEN_ID"
 
 let update_operators (params, storage : (update_operator list) * operators)
     : operators =
@@ -142,7 +145,8 @@ let fa2_main (param, storage : fa2_entry_points * single_token_storage)
   match param with
   | Transfer txs -> 
     let tx_descriptors = transfers_to_descriptors txs in
-    let u = validate_operator (tx_descriptors, storage.permissions_descriptor.self, storage.operators) in
+    let u = validate_operator 
+      (tx_descriptors, storage.permissions_descriptor.operator, storage.operators) in
     let new_ledger = transfer (tx_descriptors, storage.ledger) in
     let new_storage = { storage with ledger = new_ledger; }
     in ([] : operation list), new_storage

@@ -70,8 +70,7 @@ class TestFa2SetUp(TestCase):
                 };
                 total_supply = 0n;
                 permissions_descriptor = {
-                  self = Self_transfer_permitted;
-                  operator = Operator_transfer_permitted;
+                  operator = Owner_or_operator_transfer;
                   sender = Owner_no_op;
                   receiver = Owner_no_op;
                   custom = (None : custom_permission_policy option);
@@ -114,13 +113,6 @@ class TestFa2SetUp(TestCase):
             b,
             msg,
         )
-
-    def get_balance(self, owner_address):
-        op = self.inspector.query(fa2=self.fa2.address, owner=owner_address).inject()
-        self.util.wait_for_ops(op)
-        b = self.inspector.storage()["state"]
-        return b["balance"]
-
 
 class TestMintBurn(TestFa2SetUp):
     def setUp(self):
@@ -195,8 +187,6 @@ class TestTransfer(TestFa2SetUp):
         mint_op = self.fa2.mint_tokens([{"amount": 10, "owner": from_address}]).inject()
         self.util.wait_for_ops(mint_op)
 
-        from_bal = self.get_balance(from_address)
-
         print("transfering")
         op_tx = self.fa2.transfer(
             [{"from_": from_address, "to_": to_address, "token_id": 0, "amount": 3}]
@@ -204,4 +194,4 @@ class TestTransfer(TestFa2SetUp):
         self.util.wait_for_ops(op_tx)
 
         self.assertBalance(to_address, 3, "invalid recipient balance")
-        self.assertBalance(from_address, from_bal - 3, "invalid source balance")
+        self.assertBalance(from_address, 7, "invalid source balance")
