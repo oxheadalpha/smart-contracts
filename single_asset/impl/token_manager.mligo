@@ -1,11 +1,9 @@
 (*
-  One of the possible implementations of token management API which can create
-  new fungible tokens, mint and burn them.
   
   Token manager API allows to mint and burn tokens to some existing or new owner account.
 
-  Mint operation performs safety check as specified for `multi_token`
-  transfer entry points. Burn operation fails if the owner holds
+  Mint operation performs safety check as specified for the
+  transfer entry point. Burn operation fails if the owner holds
   less tokens then burn amount.
 *)
 
