@@ -4,7 +4,7 @@ from unittest import TestCase
 
 from pytezos import Key, pytezos
 
-from tezos_fa2_single_tests.ligo import (
+from tezos_fa2_nft_tests.ligo import (
     LigoEnv,
     LigoContract,
     PtzUtils,
