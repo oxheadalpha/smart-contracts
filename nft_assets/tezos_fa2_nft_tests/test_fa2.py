@@ -112,14 +112,6 @@ class TestFa2SetUp(TestCase):
             msg,
         )
 
-    def get_balance(self, owner_address, token_id):
-        op = self.inspector.query(
-            fa2=self.fa2.address, owner=owner_address, token_id=token_idwhich
-        ).inject()
-        self.util.wait_for_ops(op)
-        b = self.inspector.storage()["state"]
-        return b["balance"]
-
 
 class TestMintBurn(TestFa2SetUp):
     def setUp(self):
@@ -201,26 +193,51 @@ class TestTransfer(TestFa2SetUp):
             fa2=self.fa2.address, operator=self.admin_key.public_key_hash()
         ).inject()
         self.util.wait_for_ops(op_op)
+
+        op_op2 = self.bob_receiver.owner_add_operator(
+            fa2=self.fa2.address, operator=self.admin_key.public_key_hash()
+        ).inject()
+        self.util.wait_for_ops(op_op2)
         print("transfer test setup completed")
 
-    def test_transfer_to_receiver(self):
-        self.transfer(self.alice_receiver.address, self.bob_receiver.address)
+    def test_transfer(self):
 
-    def test_transfer_to_implicit(self):
-        self.transfer(self.alice_receiver.address, self.mike_key.public_key_hash())
+        alice_a = self.alice_receiver.address
+        bob_a = self.bob_receiver.address
+        mike_a = self.mike_key.public_key_hash()
+        left_sock = 0
+        right_sock = 1
 
-    def transfer(self, from_address, to_address):
-
-        mint_op = self.fa2.mint_tokens([{"amount": 10, "owner": from_address}]).inject()
+        mint_op = self.fa2.mint_tokens(
+            {
+                "metadata": {
+                    "decimals": 0,
+                    "name": "socks token",
+                    "symbol": "SOCK",
+                    "token_id": 0,
+                    "extras": {"0": "left", "1": "right"},
+                },
+                "token_def": {"from_": 0, "to_": 2,},
+                "owners": [alice_a, bob_a],
+            }
+        ).inject()
         self.util.wait_for_ops(mint_op)
 
-        from_bal = self.get_balance(from_address)
+        self.assertBalance(alice_a, left_sock, 1, "invalid mint balance alice")
+        self.assertBalance(bob_a, right_sock, 1, "invalid mint balance bob")
+        self.assertBalance(mike_a, left_sock, 0, "invalid mint balance mike")
+        self.assertBalance(mike_a, right_sock, 0, "invalid mint balance mike")
 
         print("transfering")
         op_tx = self.fa2.transfer(
-            [{"from_": from_address, "to_": to_address, "token_id": 0, "amount": 3}]
+            [
+                {"from_": alice_a, "to_": mike_a, "token_id": left_sock, "amount": 1},
+                {"from_": bob_a, "to_": mike_a, "token_id": right_sock, "amount": 1},
+            ]
         ).inject()
         self.util.wait_for_ops(op_tx)
 
-        self.assertBalance(to_address, 3, "invalid recipient balance")
-        self.assertBalance(from_address, from_bal - 3, "invalid source balance")
+        self.assertBalance(alice_a, left_sock, 0, "invalid mint balance alice")
+        self.assertBalance(bob_a, right_sock, 0, "invalid mint balance bob")
+        self.assertBalance(mike_a, left_sock, 1, "invalid mint balance mike")
+        self.assertBalance(mike_a, right_sock, 1, "invalid mint balance mike")
