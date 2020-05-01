@@ -121,7 +121,7 @@ let get_metadata (tokens, meta : (token_id list) * token_storage )
     let ttype = find_token_type (tid, meta.token_defs) in
     let meta = Big_map.find_opt ttype meta.metadata in
     match meta with
-    | Some m -> m
+    | Some m -> { m with token_id = tid; }
     | None -> (failwith "NO_DATA" : token_metadata)
   ) tokens
 

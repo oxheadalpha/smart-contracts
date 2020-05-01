@@ -10,7 +10,7 @@
                    (pair %operator
                       (pair (address %operator) (address %owner))
                       (or %tokens (unit %all_tokens) (set %some_tokens nat))))
-                (pair %query (address %fa2) (address %owner))))
+                (pair %query (pair (address %fa2) (address %owner)) (nat %token_id))))
         (list %response
            (pair (nat %balance) (pair %request (address %owner) (nat %token_id))))) ;
   storage
@@ -89,10 +89,14 @@
                      PAIR ;
                      DIP { DROP 2 } }
                    { NIL (pair (address %owner) (nat %token_id)) ;
-                     PUSH nat 0 ;
+                     DIG 1 ;
+                     DUP ;
+                     DUG 2 ;
+                     CDR ;
                      DIG 2 ;
                      DUP ;
                      DUG 3 ;
+                     CAR ;
                      CDR ;
                      PAIR ;
                      CONS ;
@@ -107,6 +111,7 @@
                      DIG 1 ;
                      DUP ;
                      DUG 2 ;
+                     CAR ;
                      CAR ;
                      CONTRACT %balance_of
                        (pair (contract %callback
