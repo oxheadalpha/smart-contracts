@@ -432,7 +432,9 @@
                                    DUP ;
                                    DUG 2 ;
                                    GET ;
-                                   IF_NONE { PUSH string "NO_DATA" ; FAILWITH } { DUP ; DIP { DROP } } ;
+                                   IF_NONE
+                                     { PUSH string "NO_DATA" ; FAILWITH }
+                                     { DUP ; DIG 3 ; DUP ; DUG 4 ; SWAP ; CAR ; PAIR ; DIP { DROP } } ;
                                    DIP { DROP 2 } } ;
                              DIP { DROP 2 } ;
                              DIG 1 ;
