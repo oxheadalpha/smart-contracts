@@ -34,7 +34,7 @@ class TestFa2SetUp(TestCase):
     def orig_contracts(self):
         print("loading ligo contracts...")
         ligo_fa2 = ligo_env.contract_from_file(
-            "fa2_single_asset.mligo", "single_asset_main"
+            "fa2_nft_asset.mligo", "nft_asset_main"
         )
         ligo_receiver = ligo_env.contract_from_file("token_owner.mligo", "main")
         ligo_inspector = ligo_env.contract_from_file("inspector.mligo", "main")
@@ -59,16 +59,13 @@ class TestFa2SetUp(TestCase):
               paused = true;
             };
             assets = {
-                ledger = (Big_map.empty : (address, nat) big_map);
+                ledger = (Big_map.empty : (token_id, address) big_map);
                 operators = (Big_map.empty : ((address * address), bool) big_map);
                 metadata = {
-                    token_id = 0n;
-                    symbol = "TK1";
-                    name = "Test Token";
-                    decimals = 0n;
-                    extras = (Map.empty : (string, string) map);
+                  token_defs = (Set.empty : token_def set);
+                  last_used_id = 0n;
+                  metadata = (Big_map.empty : (token_def, token_metadata) big_map);
                 };
-                total_supply = 0n;
                 permissions_descriptor = {
                   operator = Owner_or_operator_transfer;
                   sender = Owner_no_op;
@@ -76,7 +73,7 @@ class TestFa2SetUp(TestCase):
                   custom = (None : custom_permission_policy option);
                 };
             };
-        }
+        } 
         """
             % self.admin_key.public_key_hash()
         )
@@ -155,11 +152,13 @@ class TestOperator(TestFa2SetUp):
 
     def test_add_operator_to_receiver(self):
 
+        print("adding operator")
         op_add = self.alice_receiver.owner_add_operator(
             fa2=self.fa2.address, operator=self.admin_key.public_key_hash()
         ).inject()
         self.util.wait_for_ops(op_add)
 
+        print("checking operator")
         op_check = self.inspector.assert_is_operator(
             fa2=self.fa2.address,
             request={
@@ -168,7 +167,6 @@ class TestOperator(TestFa2SetUp):
                 "tokens": {"all_tokens": None},
             },
         ).inject()
-
         self.util.wait_for_ops(op_check)
 
 
