@@ -1,0 +1,151 @@
+{ parameter
+    (or (or (or (pair %assert_is_operator
+                   (address %fa2)
+                   (pair %request
+                      (pair (address %operator) (address %owner))
+                      (or %tokens (unit %all_tokens) (set %some_tokens nat))))
+                (unit %default))
+            (or (pair %is_operator_response
+                   (bool %is_operator)
+                   (pair %operator
+                      (pair (address %operator) (address %owner))
+                      (or %tokens (unit %all_tokens) (set %some_tokens nat))))
+                (pair %query (pair (address %fa2) (address %owner)) (nat %token_id))))
+        (list %response
+           (pair (nat %balance) (pair %request (address %owner) (nat %token_id))))) ;
+  storage
+    (or (unit %empty)
+        (pair %state (nat %balance) (pair %request (address %owner) (nat %token_id)))) ;
+  code { DUP ;
+         CDR ;
+         DIG 1 ;
+         DUP ;
+         DUG 2 ;
+         CAR ;
+         IF_LEFT
+           { DUP ;
+             IF_LEFT
+               { DUP ;
+                 IF_LEFT
+                   { DUP ;
+                     CAR ;
+                     CONTRACT %is_operator
+                       (pair (contract %callback
+                                (pair (bool %is_operator)
+                                      (pair %operator
+                                         (pair (address %operator) (address %owner))
+                                         (or %tokens (unit %all_tokens) (set %some_tokens nat)))))
+                             (pair %operator
+                                (pair (address %operator) (address %owner))
+                                (or %tokens (unit %all_tokens) (set %some_tokens nat)))) ;
+                     IF_NONE
+                       { PUSH string "bad address for get_entrypoint (%is_operator)" ; FAILWITH }
+                       {} ;
+                     SELF ;
+                     ADDRESS ;
+                     CONTRACT %is_operator_response
+                       (pair (bool %is_operator)
+                             (pair %operator
+                                (pair (address %operator) (address %owner))
+                                (or %tokens (unit %all_tokens) (set %some_tokens nat)))) ;
+                     IF_NONE
+                       { PUSH string "bad address for get_entrypoint (%is_operator_response)" ;
+                         FAILWITH }
+                       {} ;
+                     DIG 1 ;
+                     DUP ;
+                     DUG 2 ;
+                     PUSH mutez 0 ;
+                     DIG 4 ;
+                     DUP ;
+                     DUG 5 ;
+                     CDR ;
+                     DIG 3 ;
+                     DUP ;
+                     DUG 4 ;
+                     PAIR ;
+                     TRANSFER_TOKENS ;
+                     DIG 6 ;
+                     DUP ;
+                     DUG 7 ;
+                     NIL operation ;
+                     DIG 2 ;
+                     DUP ;
+                     DUG 3 ;
+                     CONS ;
+                     PAIR ;
+                     DIP { DROP 4 } }
+                   { DIG 3 ; DUP ; DUG 4 ; NIL operation ; PAIR ; DIP { DROP } } ;
+                 DIP { DROP } }
+               { DUP ;
+                 IF_LEFT
+                   { DUP ;
+                     CAR ;
+                     IF { UNIT } { PUSH string "not an operator response" ; FAILWITH } ;
+                     DIG 4 ;
+                     DUP ;
+                     DUG 5 ;
+                     NIL operation ;
+                     PAIR ;
+                     DIP { DROP 2 } }
+                   { NIL (pair (address %owner) (nat %token_id)) ;
+                     DIG 1 ;
+                     DUP ;
+                     DUG 2 ;
+                     CDR ;
+                     DIG 2 ;
+                     DUP ;
+                     DUG 3 ;
+                     CAR ;
+                     CDR ;
+                     PAIR ;
+                     CONS ;
+                     SELF ;
+                     ADDRESS ;
+                     CONTRACT %response
+                       (list (pair (nat %balance) (pair %request (address %owner) (nat %token_id)))) ;
+                     IF_NONE
+                       { PUSH string "bad address for get_entrypoint (%response)" ; FAILWITH }
+                       {} ;
+                     PAIR ;
+                     DIG 1 ;
+                     DUP ;
+                     DUG 2 ;
+                     CAR ;
+                     CAR ;
+                     CONTRACT %balance_of
+                       (pair (contract %callback
+                                (list (pair (nat %balance) (pair %request (address %owner) (nat %token_id)))))
+                             (list %requests (pair (address %owner) (nat %token_id)))) ;
+                     IF_NONE
+                       { PUSH string "bad address for get_entrypoint (%balance_of)" ; FAILWITH }
+                       {} ;
+                     DUP ;
+                     PUSH mutez 0 ;
+                     DIG 3 ;
+                     DUP ;
+                     DUG 4 ;
+                     TRANSFER_TOKENS ;
+                     DIG 6 ;
+                     DUP ;
+                     DUG 7 ;
+                     NIL operation ;
+                     DIG 2 ;
+                     DUP ;
+                     DUG 3 ;
+                     CONS ;
+                     PAIR ;
+                     DIP { DROP 4 } } ;
+                 DIP { DROP } } ;
+             DIP { DROP } }
+           { DUP ;
+             IF_CONS
+               { DUP ; DIP { DROP 2 } }
+               { PUSH string "invalid response" ; FAILWITH } ;
+             DUP ;
+             RIGHT unit ;
+             NIL operation ;
+             PAIR ;
+             DIP { DROP 2 } } ;
+         DIP { DROP 2 } } }
+
