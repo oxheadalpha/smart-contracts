@@ -63,16 +63,16 @@ let operator_param_to_michelson (p : operator_param) : operator_param_michelson 
   } in
   Layout.convert_to_right_comb aux
 
+let operator_update_from_michelson (uom : update_operator_michelson) : update_operator =
+    let aux : update_operator_aux = Layout.convert_from_right_comb uom in
+    match aux with
+    | Add_operator opm -> Add_operator_p (operator_param_from_michelson opm)
+    | Remove_operator opm -> Remove_operator_p (operator_param_from_michelson opm)
+
+(* check this *)
 let operator_updates_from_michelson (updates_michelson : update_operator_michelson list)
     : update_operator list =
-  let convert =
-    (fun (uom : update_operator_michelson) ->
-      let aux : update_operator_aux = Layout.convert_from_right_comb uom in
-      match aux with
-      | Add_operator opm -> Add_operator_p (operator_param_from_michelson opm)
-      | Remove_operator opm -> Remove_operator_p (operator_param_from_michelson opm)
-    ) in
-  List.map convert updates_michelson
+  List.map operator_update_from_michelson updates_michelson
 
 let is_operator_param_from_michelson (p : is_operator_param_michelson) : is_operator_param =
   let aux : is_operator_param_aux = Layout.convert_from_right_comb p in

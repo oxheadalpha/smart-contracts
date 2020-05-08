@@ -180,10 +180,11 @@ let fa2_main (param, storage : fa2_entry_points * nft_token_storage)
     [op], storage
 
   | Update_operators updates_michelson ->
-    let updates = operator_updates_from_michelson updates_michelson in
+    (* let updates = operator_updates_from_michelson updates_michelson in
     let new_ops = update_operators (updates, storage.operators) in
     let new_storage = { storage with operators = new_ops; } in
-    ([] : operation list), new_storage
+    ([] : operation list), new_storage *)
+    ([] : operation list), storage
 
   | Is_operator pm ->
     let p = is_operator_param_from_michelson pm in
