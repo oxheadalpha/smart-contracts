@@ -7,13 +7,12 @@ type storage =
 
 type query_param = {
   fa2 : address;
-  owner : address;
-  token_id : token_id;
+  request : balance_of_request_michelson;
 }
 
 type assert_is_operator_param = {
   fa2 : address;
-  request : operator_param;
+  request : operator_param_michelson;
 }
 
 type param =
@@ -27,17 +26,13 @@ let main (p, s : param * storage) : (operation list) * storage =
   match p with
 
   | Query q ->
-    let br : balance_of_request = {
-      owner = q.owner;
-      token_id = q.token_id;
-    } in
-    let bp : balance_of_param = {
-      requests = [ br ];
+    let aux : balance_of_param_aux = {
+      requests = [ q.request ];
       callback =
         (Operation.get_entrypoint "%response" Current.self_address :
           (balance_of_response_michelson list) contract);
     } in
-    let bpm = balance_of_param_to_michelson bp in
+    let bpm = Layout.convert_to_right_comb aux in
     let fa2 : balance_of_param_michelson contract = 
       Operation.get_entrypoint "%balance_of" q.fa2 in
     let q_op = Operation.transaction bpm 0mutez fa2 in
@@ -61,12 +56,12 @@ let main (p, s : param * storage) : (operation list) * storage =
     let fa2 : is_operator_param_michelson contract = Operation.get_entrypoint "%is_operator" p.fa2 in
     let callback : is_operator_response_michelson contract =
       Operation.get_entrypoint "%is_operator_response" Current.self_address in
-    let pp : is_operator_param = {
+    let aux : is_operator_param_aux = {
       operator = p.request;
       callback = callback;
     } in
-    let ppm = is_operator_param_to_michelson pp in
-    let op = Operation.transaction ppm 0mutez fa2 in
+    let pm : is_operator_param_michelson = Layout.convert_to_right_comb aux in
+    let op = Operation.transaction pm 0mutez fa2 in
     [op], s
 
   | Is_operator_response rm ->

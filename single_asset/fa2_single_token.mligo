@@ -1,4 +1,5 @@
-#include "fa2_interface.mligo"
+#include "fa2_convertors.mligo"
+#include "fa2_errors.mligo"
 
 type ledger = (address, nat) big_map
 type operators = ((address * address), bool) big_map
@@ -62,10 +63,11 @@ let get_balance_amt (owner, ledger : address  * ledger) : nat =
 let get_balance (p, ledger : balance_of_param * ledger) : operation =
   let to_balance = fun (r : balance_of_request) ->
     if r.token_id <> 0n
-    then (failwith "TOKEN_UNDEFINED" : balance_of_response)
+    then (failwith token_undefined : balance_of_response_michelson)
     else
       let bal = get_balance_amt (r.owner, ledger) in
-      { request = r; balance = bal; } 
+      let response = { request = r; balance = bal; } in
+      balance_of_response_to_michelson response
   in
   let responses = List.map to_balance p.requests in
   Operation.transaction responses 0mutez p.callback
@@ -129,12 +131,12 @@ let update_operators (params, storage : (update_operator list) * operators)
   List.fold
     (fun (s, up : operators * update_operator) ->
       match up with
-      | Add_operator op -> 
+      | Add_operator_p op -> 
         let u = validate_operator_tokens op.tokens in
         let key = op.owner, op.operator in
         Big_map.update key (Some true) s
 
-      | Remove_operator op -> 
+      | Remove_operator_p op -> 
         let u = validate_operator_tokens op.tokens in
         let key = op.owner, op.operator in
         Big_map.remove key s
@@ -143,7 +145,8 @@ let update_operators (params, storage : (update_operator list) * operators)
 let fa2_main (param, storage : fa2_entry_points * single_token_storage)
     : (operation  list) * single_token_storage =
   match param with
-  | Transfer txs -> 
+  | Transfer txs_michelson -> 
+    let txs = transfers_from_michelson txs_michelson in
     let tx_descriptors = transfers_to_descriptors txs in
     let u = validate_operator 
       (tx_descriptors, storage.permissions_descriptor.operator, storage.operators) in
@@ -151,31 +154,44 @@ let fa2_main (param, storage : fa2_entry_points * single_token_storage)
     let new_storage = { storage with ledger = new_ledger; }
     in ([] : operation list), new_storage
 
-  | Balance_of p -> 
+  | Balance_of pm ->
+    let p = balance_of_param_from_michelson pm in
     let op = get_balance (p, storage.ledger) in
     [op], storage
 
-  | Total_supply p ->
+  | Total_supply pm ->
+    let p : total_supply_param = Layout.convert_from_right_comb pm in
     let u = validate_token_ids p.token_ids in
-    let response = { token_id = 0n; total_supply = storage.total_supply; } in
-    let op = Operation.transaction [response] 0mutez p.callback in
+    let response : total_supply_response = { 
+      token_id = 0n;
+      total_supply = storage.total_supply;
+    } in
+    let response_michelson = Layout.convert_to_right_comb response in
+    let op = Operation.transaction [response_michelson] 0mutez p.callback in
     [op], storage
 
-  | Token_metadata p ->
+  | Token_metadata pm ->
+    let p : token_metadata_param = Layout.convert_from_right_comb pm in
     let u = validate_token_ids p.token_ids in
-    let op = Operation.transaction [storage.metadata] 0mutez p.callback in
+    let metadata_michelson : token_metadata_michelson = 
+      Layout.convert_to_right_comb storage.metadata in
+    let op = Operation.transaction [metadata_michelson] 0mutez p.callback in
     [op], storage
 
   | Permissions_descriptor callback ->
-    let op = Operation.transaction storage.permissions_descriptor 0mutez callback in
+    let descriptor_michelson =
+      permissions_descriptor_to_michelson storage.permissions_descriptor in
+    let op = Operation.transaction descriptor_michelson 0mutez callback in
     [op], storage
 
-  | Update_operators updates ->
+  | Update_operators updates_michelson ->
+    let updates = operator_updates_from_michelson updates_michelson in
     let new_ops = update_operators (updates, storage.operators) in
     let new_storage = { storage with operators = new_ops; } in
     ([] : operation list), new_storage
 
-  | Is_operator p ->
+  | Is_operator pm ->
+    let p = is_operator_param_from_michelson pm in
     let u = validate_operator_tokens p.operator.tokens in
     let key = p.operator.owner, p.operator.operator in
     let is_op_opt = Big_map.find_opt key storage.operators in
@@ -184,6 +200,7 @@ let fa2_main (param, storage : fa2_entry_points * single_token_storage)
     | Some o -> o
     in 
     let resp = { operator = p.operator; is_operator = is_op; } in
-    let op = Operation.transaction resp 0mutez p.callback in
+    let resp_michelson = is_operator_response_to_michelson resp in
+    let op = Operation.transaction resp_michelson 0mutez p.callback in
     [op], storage
 
