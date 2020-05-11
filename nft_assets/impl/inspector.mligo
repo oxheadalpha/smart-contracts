@@ -43,14 +43,19 @@ let main (p, s : param * storage) : (operation list) * storage =
     let q_op = Operation.transaction bpm 0mutez fa2 in
     [q_op], s
 
-  | Response r ->
-    (* let new_s = 
-      match r with 
+  | Response responses_michelson ->
+    let responses = List.map
+      (fun (rm : balance_of_response_michelson) ->
+        balance_of_response_from_michelson rm
+      )
+      responses_michelson
+    in
+    let new_s = 
+      match responses with 
       | b :: tl -> b
       | [] -> (failwith "invalid response" : balance_of_response)
     in
-    ([] : operation list), State new_s *)
-    ([] : operation list), s
+    ([] : operation list), State new_s
 
   | Assert_is_operator p ->
     (* let fa2 : is_operator_param contract = Operation.get_entrypoint "%is_operator" p.fa2 in

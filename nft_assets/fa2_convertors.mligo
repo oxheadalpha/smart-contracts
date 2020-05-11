@@ -102,13 +102,6 @@ let balance_of_param_from_michelson (p : balance_of_param_michelson) : balance_o
     callback = aux.callback;
   } 
 
-let balance_of_response_to_michelson (r : balance_of_response) : balance_of_response_michelson =
-  let aux : balance_of_response_aux = {
-    request = Layout.convert_to_right_comb r.request;
-    balance = r.balance;
-  } in
-  Layout.convert_to_right_comb aux
-
 let balance_of_param_to_michelson (p : balance_of_param) : balance_of_param_michelson =
   let aux : balance_of_param_aux = {
     requests = List.map 
@@ -117,6 +110,21 @@ let balance_of_param_to_michelson (p : balance_of_param) : balance_of_param_mich
     callback = p.callback;
   } in
   Layout.convert_to_right_comb aux
+
+let balance_of_response_to_michelson (r : balance_of_response) : balance_of_response_michelson =
+  let aux : balance_of_response_aux = {
+    request = Layout.convert_to_right_comb r.request;
+    balance = r.balance;
+  } in
+  Layout.convert_to_right_comb aux
+
+let balance_of_response_from_michelson (rm : balance_of_response_michelson) : balance_of_response =
+  let aux : balance_of_response_aux = Layout.convert_from_right_comb rm in
+  let request : balance_of_request = Layout.convert_from_right_comb aux.request in
+  {
+    request = request;
+    balance = aux.balance;
+  }
 
 let total_supply_responses_to_michelson (rs : total_supply_response list)
     : total_supply_response_michelson list =
