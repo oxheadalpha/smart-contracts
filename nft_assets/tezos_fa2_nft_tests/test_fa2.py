@@ -151,7 +151,7 @@ class TestMintBurn(TestFa2SetUp):
 
         with self.assertRaises(MichelsonRuntimeError) as cm:
             op = self.inspector.query(
-                fa2=self.fa2.address, owner=owner1_address, token_id=0
+                fa2=self.fa2.address, request={"owner": owner1_address, "token_id": 0}
             ).inject()
             self.util.wait_for_ops(op)
 
