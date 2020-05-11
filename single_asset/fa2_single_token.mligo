@@ -15,7 +15,7 @@ type single_token_storage = {
 let validate_operator (txs, tx_policy, ops_storage 
     : (transfer_descriptor list) * operator_transfer_policy * operators) : unit =
   let can_owner_tx, can_operator_tx = match tx_policy with
-  | No_transfer -> (failwith "TX_DENIED" : bool * bool)
+  | No_transfer -> (failwith tx_denied : bool * bool)
   | Owner_transfer -> true, false
   | Owner_or_operator_transfer -> true, true
   in
@@ -32,12 +32,12 @@ let validate_operator (txs, tx_policy, ops_storage
       if can_owner_tx && owner = operator
       then unit
       else if not can_operator_tx
-      then failwith "NOT_OWNER"
+      then failwith not_owner
       else
           let key = owner, operator in
           let is_op_opt = Big_map.find_opt key ops_storage in
           match is_op_opt with
-          | None -> failwith "NOT_OPERATOR"
+          | None -> failwith not_operator
           | Some o -> unit
     ) owners
 
@@ -45,7 +45,7 @@ let transfers_to_descriptors (txs : transfer list) : transfer_descriptor list =
   List.map 
     (fun (tx : transfer) ->
       if tx.token_id <> 0n
-      then (failwith "TOKEN_UNDEFINED" : transfer_descriptor)
+      then (failwith token_undefined : transfer_descriptor)
       else {
         from_ = Some tx.from_;
         to_ = Some tx.to_;
@@ -82,7 +82,7 @@ let dec_balance (owner, amt, ledger
     : address * nat * ledger) : ledger =
   let bal = get_balance_amt (owner, ledger) in
   match Michelson.is_nat (bal - amt) with
-  | None -> (failwith ("INSUFFICIENT_BALANCE") : ledger)
+  | None -> (failwith insufficient_balance : ledger)
   | Some new_bal ->
     if new_bal = 0n
     then Big_map.remove owner ledger
@@ -108,21 +108,21 @@ let validate_operator_tokens (tokens : operator_tokens) : unit =
   | All_tokens -> unit
   | Some_tokens ts ->
     if Set.size ts <> 1n
-    then failwith "TOKEN_UNDEFINED"
+    then failwith token_undefined
     else 
       (if Set.mem 0n ts
       then unit
-      else failwith "TOKEN_UNDEFINED")
+      else failwith token_undefined)
 
 let validate_token_ids (tokens : token_id list) : unit =
   match tokens with
   | tid :: tail -> 
     if List.size tail <> 0n
-    then failwith "TOKEN_UNDEFINED"
+    then failwith token_undefined
     else 
     (if tid = 0n
     then unit
-    else failwith "TOKEN_UNDEFINED"
+    else failwith token_undefined
     )
   | [] -> failwith "NO_TOKEN_ID"
 
