@@ -470,26 +470,26 @@
                              DUG 2 ;
                              CDR ;
                              PAIR ;
-                             DIP { DROP } ;
-                             DIG 3 ;
+                             DIP { DROP 2 } ;
+                             DIG 2 ;
                              DUP ;
-                             DUG 4 ;
+                             DUG 3 ;
                              CAR ;
                              PUSH mutez 0 ;
                              DIG 2 ;
                              DUP ;
                              DUG 3 ;
                              TRANSFER_TOKENS ;
-                             DIG 8 ;
+                             DIG 7 ;
                              DUP ;
-                             DUG 9 ;
+                             DUG 8 ;
                              NIL operation ;
                              DIG 2 ;
                              DUP ;
                              DUG 3 ;
                              CONS ;
                              PAIR ;
-                             DIP { DROP 6 } } ;
+                             DIP { DROP 5 } } ;
                          DIP { DROP } }
                        { DUP ;
                          IF_LEFT

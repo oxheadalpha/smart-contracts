@@ -98,7 +98,7 @@ class TestFa2SetUp(TestCase):
 
     def assertBalance(self, owner_address, token_id, expected_balance, msg=None):
         op = self.inspector.query(
-            fa2=self.fa2.address, owner=owner_address, token_id=token_id
+            fa2=self.fa2.address, request={"owner": owner_address, "token_id": token_id}
         ).inject()
         self.util.wait_for_ops(op)
         b = self.inspector.storage()["state"]

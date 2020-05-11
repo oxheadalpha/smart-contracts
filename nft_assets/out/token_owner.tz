@@ -1,8 +1,219 @@
+{ parameter
+    (or (or (unit %default) (pair %owner_add_operator (address %fa2) (address %operator)))
+        (pair %owner_remove_operator (address %fa2) (address %operator))) ;
+  storage unit ;
+  code { LAMBDA
+           (pair (pair (address %operator) (address %owner))
+                 (or %tokens (unit %all_tokens) (set %some_tokens nat)))
+           (pair (address %owner)
+                 (pair (address %operator) (or %tokens (unit %all_tokens) (set %some_tokens nat))))
+           { DUP ;
+             CDR ;
+             IF_LEFT
+               { DUP ; LEFT (set nat) ; DIP { DROP } }
+               { DUP ; RIGHT unit ; DIP { DROP } } ;
+             DIG 1 ;
+             DUP ;
+             DUG 2 ;
+             CAR ;
+             CDR ;
+             DIG 2 ;
+             DUP ;
+             DUG 3 ;
+             CAR ;
+             CAR ;
+             PAIR ;
+             PAIR ;
+             DUP ;
+             CDR ;
+             DIG 1 ;
+             DUP ;
+             DUG 2 ;
+             CAR ;
+             CAR ;
+             PAIR ;
+             DIG 1 ;
+             DUP ;
+             DUG 2 ;
+             CAR ;
+             CDR ;
+             PAIR ;
+             DIP { DROP 2 } } ;
+         DUP ;
+         LAMBDA
+           (pair (lambda
+                    (pair (pair (address %operator) (address %owner))
+                          (or %tokens (unit %all_tokens) (set %some_tokens nat)))
+                    (pair (address %owner)
+                          (pair (address %operator) (or %tokens (unit %all_tokens) (set %some_tokens nat)))))
+                 (or (pair %add_operator_p
+                        (pair (address %operator) (address %owner))
+                        (or %tokens (unit %all_tokens) (set %some_tokens nat)))
+                     (pair %remove_operator_p
+                        (pair (address %operator) (address %owner))
+                        (or %tokens (unit %all_tokens) (set %some_tokens nat)))))
+           (or (pair %add_operator
+                  (address %owner)
+                  (pair (address %operator) (or %tokens (unit %all_tokens) (set %some_tokens nat))))
+               (pair %remove_operator
+                  (address %owner)
+                  (pair (address %operator) (or %tokens (unit %all_tokens) (set %some_tokens nat)))))
+           { DUP ;
+             CAR ;
+             SWAP ;
+             CDR ;
+             DUP ;
+             IF_LEFT
+               { DUP ;
+                 DIG 3 ;
+                 DUP ;
+                 DUG 4 ;
+                 SWAP ;
+                 EXEC ;
+                 LEFT (pair (address %owner)
+                            (pair (address %operator) (or %tokens (unit %all_tokens) (set %some_tokens nat)))) ;
+                 DIP { DROP } }
+               { DUP ;
+                 DIG 3 ;
+                 DUP ;
+                 DUG 4 ;
+                 SWAP ;
+                 EXEC ;
+                 RIGHT
+                   (pair (address %owner)
+                         (pair (address %operator) (or %tokens (unit %all_tokens) (set %some_tokens nat)))) ;
+                 DIP { DROP } } ;
+             DUP ;
+             IF_LEFT
+               { DUP ;
+                 LEFT (pair (address %owner)
+                            (pair (address %operator) (or %tokens (unit %all_tokens) (set %some_tokens nat)))) ;
+                 DIP { DROP } }
+               { DUP ;
+                 RIGHT
+                   (pair (address %owner)
+                         (pair (address %operator) (or %tokens (unit %all_tokens) (set %some_tokens nat)))) ;
+                 DIP { DROP } } ;
+             DIP { DROP 3 } } ;
+         SWAP ;
+         APPLY ;
+         DIG 2 ;
+         DUP ;
+         DUG 3 ;
+         CAR ;
+         IF_LEFT
+           { DUP ;
+             IF_LEFT
+               { UNIT ; NIL operation ; PAIR ; DIP { DROP } }
+               { PUSH unit Unit ;
+                 LEFT (set nat) ;
+                 SELF ;
+                 ADDRESS ;
+                 DIG 2 ;
+                 DUP ;
+                 DUG 3 ;
+                 CDR ;
+                 PAIR ;
+                 PAIR ;
+                 DUP ;
+                 LEFT (pair (pair (address %operator) (address %owner))
+                            (or %tokens (unit %all_tokens) (set %some_tokens nat))) ;
+                 DIG 4 ;
+                 DUP ;
+                 DUG 5 ;
+                 SWAP ;
+                 EXEC ;
+                 DIG 2 ;
+                 DUP ;
+                 DUG 3 ;
+                 CAR ;
+                 CONTRACT %update_operators
+                   (list (or (pair %add_operator
+                                (address %owner)
+                                (pair (address %operator) (or %tokens (unit %all_tokens) (set %some_tokens nat))))
+                             (pair %remove_operator
+                                (address %owner)
+                                (pair (address %operator) (or %tokens (unit %all_tokens) (set %some_tokens nat)))))) ;
+                 IF_NONE
+                   { PUSH string "bad address for get_entrypoint (%update_operators)" ;
+                     FAILWITH }
+                   {} ;
+                 DUP ;
+                 PUSH mutez 0 ;
+                 NIL (or (pair %add_operator
+                            (address %owner)
+                            (pair (address %operator) (or %tokens (unit %all_tokens) (set %some_tokens nat))))
+                         (pair %remove_operator
+                            (address %owner)
+                            (pair (address %operator) (or %tokens (unit %all_tokens) (set %some_tokens nat))))) ;
+                 DIG 4 ;
+                 DUP ;
+                 DUG 5 ;
+                 CONS ;
+                 TRANSFER_TOKENS ;
+                 UNIT ;
+                 NIL operation ;
+                 DIG 2 ;
+                 DUP ;
+                 DUG 3 ;
+                 CONS ;
+                 PAIR ;
+                 DIP { DROP 5 } } ;
+             DIP { DROP } }
+           { PUSH unit Unit ;
+             LEFT (set nat) ;
+             SELF ;
+             ADDRESS ;
+             DIG 2 ;
+             DUP ;
+             DUG 3 ;
+             CDR ;
+             PAIR ;
+             PAIR ;
+             DUP ;
+             RIGHT
+               (pair (pair (address %operator) (address %owner))
+                     (or %tokens (unit %all_tokens) (set %some_tokens nat))) ;
+             DIG 3 ;
+             DUP ;
+             DUG 4 ;
+             SWAP ;
+             EXEC ;
+             DIG 2 ;
+             DUP ;
+             DUG 3 ;
+             CAR ;
+             CONTRACT %update_operators
+               (list (or (pair %add_operator
+                            (address %owner)
+                            (pair (address %operator) (or %tokens (unit %all_tokens) (set %some_tokens nat))))
+                         (pair %remove_operator
+                            (address %owner)
+                            (pair (address %operator) (or %tokens (unit %all_tokens) (set %some_tokens nat)))))) ;
+             IF_NONE
+               { PUSH string "bad address for get_entrypoint (%update_operators)" ;
+                 FAILWITH }
+               {} ;
+             DUP ;
+             PUSH mutez 0 ;
+             NIL (or (pair %add_operator
+                        (address %owner)
+                        (pair (address %operator) (or %tokens (unit %all_tokens) (set %some_tokens nat))))
+                     (pair %remove_operator
+                        (address %owner)
+                        (pair (address %operator) (or %tokens (unit %all_tokens) (set %some_tokens nat))))) ;
+             DIG 4 ;
+             DUP ;
+             DUG 5 ;
+             CONS ;
+             TRANSFER_TOKENS ;
+             UNIT ;
+             NIL operation ;
+             DIG 2 ;
+             DUP ;
+             DUG 3 ;
+             CONS ;
+             PAIR ;
+             DIP { DROP 5 } } ;
+         DIP { DROP 3 } } }
 
- If you're not sure how to fix this error, you can
- do one of the following:
-
-* Visit our documentation: https://ligolang.org/docs/intro/introduction
-* Ask a question on our Discord: https://discord.gg/9rhYaEt
-* Open a gitlab issue: https://gitlab.com/ligolang/ligo/issues/new
-* Check the changelog by running 'ligo changelog'
