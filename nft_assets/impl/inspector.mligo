@@ -65,9 +65,9 @@ let main (p, s : param * storage) : (operation list) * storage =
       operator = p.request;
       callback = callback;
     } in
-    (* let op = Operation.transaction pp 0mutez fa2 in
-    [op], s *)
-    ([] : operation list), s
+    let ppm = is_operator_param_to_michelson pp in
+    let op = Operation.transaction ppm 0mutez fa2 in
+    [op], s
 
   | Is_operator_response rm ->
     let r : is_operator_response_aux = Layout.convert_from_right_comb rm in
