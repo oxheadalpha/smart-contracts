@@ -167,7 +167,10 @@ let fa2_main (param, storage : fa2_entry_points * single_token_storage)
       total_supply = storage.total_supply;
     } in
     let response_michelson = Layout.convert_to_right_comb response in
-    let op = Operation.transaction [response_michelson] 0mutez p.callback in
+    let responses = List.map 
+      (fun (tid: token_id) -> response_michelson)
+      p.token_ids in
+    let op = Operation.transaction responses 0mutez p.callback in
     [op], storage
 
   | Token_metadata pm ->
@@ -175,7 +178,10 @@ let fa2_main (param, storage : fa2_entry_points * single_token_storage)
     let u = validate_token_ids p.token_ids in
     let metadata_michelson : token_metadata_michelson = 
       Layout.convert_to_right_comb storage.metadata in
-    let op = Operation.transaction [metadata_michelson] 0mutez p.callback in
+    let responses = List.map 
+      (fun (tid: token_id) -> metadata_michelson)
+      p.token_ids in
+    let op = Operation.transaction responses 0mutez p.callback in
     [op], storage
 
   | Permissions_descriptor callback ->
