@@ -109,6 +109,15 @@ let balance_of_response_to_michelson (r : balance_of_response) : balance_of_resp
   } in
   Layout.convert_to_right_comb aux
 
+let balance_of_param_to_michelson (p : balance_of_param) : balance_of_param_michelson =
+  let aux : balance_of_param_aux = {
+    requests = List.map 
+      (fun (r : balance_of_request) -> Layout.convert_to_right_comb r)
+      p.requests;
+    callback = p.callback;
+  } in
+  Layout.convert_to_right_comb aux
+
 let total_supply_responses_to_michelson (rs : total_supply_response list)
     : total_supply_response_michelson list =
   List.map
