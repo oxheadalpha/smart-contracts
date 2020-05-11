@@ -53,7 +53,8 @@ let main (p, s : param * storage) : (operation list) * storage =
     ([] : operation list), State new_s
 
   | Assert_is_operator p ->
-    let fa2 : is_operator_param_michelson contract = Operation.get_entrypoint "%is_operator" p.fa2 in
+    let fa2 : is_operator_param_michelson contract =
+      Operation.get_entrypoint "%is_operator" p.fa2 in
     let callback : is_operator_response_michelson contract =
       Operation.get_entrypoint "%is_operator_response" Current.self_address in
     let aux : is_operator_param_aux = {
