@@ -1,4 +1,5 @@
-#include "../fa2_interface.mligo"
+(* #include "../fa2_interface.mligo" *)
+#include "../fa2_convertors.mligo"
 
 type storage =
   | State of balance_of_response
@@ -17,7 +18,7 @@ type assert_is_operator_param = {
 
 type param =
   | Query of query_param
-  | Response of balance_of_response list
+  | Response of balance_of_response_michelson list
   | Assert_is_operator of assert_is_operator_param
   | Is_operator_response of is_operator_response
   | Default of unit
@@ -34,23 +35,25 @@ let main (p, s : param * storage) : (operation list) * storage =
       requests = [ br ];
       callback =
         (Operation.get_entrypoint "%response" Current.self_address :
-          (balance_of_response list) contract);
+          (balance_of_response_michelson list) contract);
     } in
-    let fa2 : balance_of_param contract = 
+    let bpm = balance_of_param_to_michelson bp in
+    let fa2 : balance_of_param_michelson contract = 
       Operation.get_entrypoint "%balance_of" q.fa2 in
-    let q_op = Operation.transaction bp 0mutez fa2 in
+    let q_op = Operation.transaction bpm 0mutez fa2 in
     [q_op], s
 
   | Response r ->
-    let new_s = 
+    (* let new_s = 
       match r with 
       | b :: tl -> b
       | [] -> (failwith "invalid response" : balance_of_response)
     in
-    ([] : operation list), State new_s
+    ([] : operation list), State new_s *)
+    ([] : operation list), s
 
   | Assert_is_operator p ->
-    let fa2 : is_operator_param contract = Operation.get_entrypoint "%is_operator" p.fa2 in
+    (* let fa2 : is_operator_param contract = Operation.get_entrypoint "%is_operator" p.fa2 in
     let callback : is_operator_response contract =
       Operation.get_entrypoint "%is_operator_response" Current.self_address in
     let pp : is_operator_param = {
@@ -58,11 +61,13 @@ let main (p, s : param * storage) : (operation list) * storage =
       callback = callback;
     } in
     let op = Operation.transaction pp 0mutez fa2 in
-    [op], s
+    [op], s *)
+    ([] : operation list), s
 
   | Is_operator_response r ->
-    let u = if r.is_operator
+    (* let u = if r.is_operator
       then unit else failwith "not an operator response" in
+    ([] : operation list), s *)
     ([] : operation list), s
 
   | Default u -> ([] : operation list), s
