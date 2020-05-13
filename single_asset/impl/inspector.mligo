@@ -1,4 +1,4 @@
-#include "../fa2_interface.mligo"
+#include "../fa2_convertors.mligo"
 
 type storage =
   | State of balance_of_response
@@ -11,14 +11,14 @@ type query_param = {
 
 type assert_is_operator_param = {
   fa2 : address;
-  request : operator_param;
+  request : operator_param_michelson;
 }
 
 type param =
   | Query of query_param
-  | Response of balance_of_response list
+  | Response of balance_of_response_michelson list
   | Assert_is_operator of assert_is_operator_param
-  | Is_operator_response of is_operator_response
+  | Is_operator_response of is_operator_response_michelson
   | Default of unit
 
 let main (p, s : param * storage) : (operation list) * storage =
@@ -29,37 +29,41 @@ let main (p, s : param * storage) : (operation list) * storage =
       owner = q.owner;
       token_id = 0n;
     } in
-    let bp : balance_of_param = {
-      requests = [ br ];
+    let aux : balance_of_param_aux = {
+      requests = [ Layout.convert_to_right_comb br ];
       callback =
         (Operation.get_entrypoint "%response" Current.self_address :
-          (balance_of_response list) contract);
+          (balance_of_response_michelson list) contract);
     } in
-    let fa2 : balance_of_param contract = 
+    let bpm = Layout.convert_to_right_comb aux in
+    let fa2 : balance_of_param_michelson contract = 
       Operation.get_entrypoint "%balance_of" q.fa2 in
-    let q_op = Operation.transaction bp 0mutez fa2 in
+    let q_op = Operation.transaction bpm 0mutez fa2 in
     [q_op], s
 
-  | Response r ->
+  | Response r_michelson ->
     let new_s = 
-      match r with 
-      | b :: tl -> b
+      match r_michelson with 
       | [] -> (failwith "invalid response" : balance_of_response)
+      | b :: tl -> balance_of_response_from_michelson b
     in
     ([] : operation list), State new_s
 
   | Assert_is_operator p ->
-    let fa2 : is_operator_param contract = Operation.get_entrypoint "%is_operator" p.fa2 in
-    let callback : is_operator_response contract =
+    let fa2 : is_operator_param_michelson contract =
+      Operation.get_entrypoint "%is_operator" p.fa2 in
+    let callback : is_operator_response_michelson contract =
       Operation.get_entrypoint "%is_operator_response" Current.self_address in
-    let pp : is_operator_param = {
+    let aux : is_operator_param_aux = {
       operator = p.request;
       callback = callback;
     } in
-    let op = Operation.transaction pp 0mutez fa2 in
+    let pm : is_operator_param_michelson = Layout.convert_to_right_comb aux in
+    let op = Operation.transaction pm 0mutez fa2 in
     [op], s
 
-  | Is_operator_response r ->
+  | Is_operator_response rm ->
+    let r : is_operator_response_aux = Layout.convert_from_right_comb rm in
     let u = if r.is_operator
       then unit else failwith "not an operator response" in
     ([] : operation list), s

@@ -9,8 +9,6 @@ from pytezos.operation.result import OperationResult
 from pytezos.rpc.errors import RpcError
 from pytezos.operation import fees
 
-fees.hard_gas_limit_per_operation = 800000
-
 
 class LigoEnv:
     def __init__(self, src_dir, out_dir):
