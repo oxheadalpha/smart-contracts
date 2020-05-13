@@ -89,6 +89,17 @@ let get_metadata (tokens, meta : (token_id list) * token_storage )
     | None -> (failwith "NO_DATA" : token_metadata)
   ) tokens
 
+let validate_operator_updates (updates : update_operator list) : unit =
+  List.iter (fun (u : update_operator) ->
+    let op = match u with
+    | Add_operator_p op -> op
+    | Remove_operator_p op -> op
+    in
+    if op.owner = Tezos.sender
+    then unit
+    else failwith not_owner
+  ) updates
+
 let fa2_main (param, storage : fa2_entry_points * nft_token_storage)
     : (operation  list) * nft_token_storage =
   match param with
@@ -126,6 +137,7 @@ let fa2_main (param, storage : fa2_entry_points * nft_token_storage)
 
   | Update_operators updates_michelson ->
     let updates = operator_updates_from_michelson updates_michelson in
+    let u = validate_operator_updates updates in
     let new_ops = update_operators (updates, storage.operators) in
     let new_storage = { storage with operators = new_ops; } in
     ([] : operation list), new_storage
