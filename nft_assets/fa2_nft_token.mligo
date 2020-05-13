@@ -1,4 +1,4 @@
-#include "fa2_convertors.mligo"
+#include "fa2_operator_lib.mligo"
 #include "fa2_errors.mligo"
 
 (* range of nft tokens *)
@@ -17,11 +17,9 @@ type token_storage = {
 
 type ledger = (token_id, address) big_map
 
-type operators = ((address * address), bool) big_map
-
 type nft_token_storage = {
   ledger : ledger;
-  operators : operators;
+  operators : operator_storage;
   metadata : token_storage;
   permissions_descriptor : permissions_descriptor;
 }
@@ -58,43 +56,6 @@ let transfer (txs, ledger : (transfer list) * ledger) : ledger =
     
   List.fold make_transfer txs ledger
 
-let validate_operator (txs, tx_policy, ops_storage 
-    : (transfer list) * operator_transfer_policy * operators) : unit =
-  let can_owner_tx, can_operator_tx = match tx_policy with
-  | No_transfer -> (failwith "TX_DENIED" : bool * bool)
-  | Owner_transfer -> true, false
-  | Owner_or_operator_transfer -> true, true
-  in
-  let operator = Current.sender in
-  let owners = List.fold
-    (fun (owners, tx : (address set) * transfer) ->
-      Set.add tx.from_ owners
-    ) txs (Set.empty : address set) in
-
-  Set.iter
-    (fun (owner : address) ->
-      if can_owner_tx && owner = operator
-      then unit
-      else if not can_operator_tx
-      then failwith not_owner
-      else
-          let key = owner, operator in
-          let is_op_opt = Big_map.find_opt key ops_storage in
-          match is_op_opt with
-          | None -> failwith not_operator
-          | Some o -> unit
-    ) owners
-
-let validate_operator_tokens (tokens : operator_tokens) : unit =
-  match tokens with
-  | All_tokens -> unit
-  | Some_tokens ts ->
-    if Set.size ts <> 1n
-    then failwith token_undefined
-    else 
-      (if Set.mem 0n ts
-      then unit
-      else failwith token_undefined)
 
 let get_supply (tokens, ledger : (token_id list) * ledger )
     : total_supply_response list =
@@ -128,29 +89,13 @@ let get_metadata (tokens, meta : (token_id list) * token_storage )
     | None -> (failwith "NO_DATA" : token_metadata)
   ) tokens
 
-let update_operators (params, storage : (update_operator list) * operators)
-    : operators =
-  List.fold
-    (fun (s, up : operators * update_operator) ->
-      match up with
-      | Add_operator_p op -> 
-        let u = validate_operator_tokens op.tokens in
-        let key = op.owner, op.operator in
-        Big_map.update key (Some true) s
-
-      | Remove_operator_p op -> 
-        let u = validate_operator_tokens op.tokens in
-        let key = op.owner, op.operator in
-        Big_map.remove key s
-    ) params storage 
-
 let fa2_main (param, storage : fa2_entry_points * nft_token_storage)
     : (operation  list) * nft_token_storage =
   match param with
   | Transfer txs_michelson ->
     let txs = transfers_from_michelson txs_michelson in
     let u = validate_operator 
-      (txs, storage.permissions_descriptor.operator, storage.operators) in
+      (storage.permissions_descriptor.operator, txs, storage.operators) in
     let new_ledger = transfer (txs, storage.ledger) in
     let new_storage = { storage with ledger = new_ledger; }
     in ([] : operation list), new_storage
@@ -187,14 +132,5 @@ let fa2_main (param, storage : fa2_entry_points * nft_token_storage)
 
   | Is_operator pm ->
     let p = is_operator_param_from_michelson pm in
-    let u = validate_operator_tokens p.operator.tokens in
-    let key = p.operator.owner, p.operator.operator in
-    let is_op_opt = Big_map.find_opt key storage.operators in
-    let is_op = match is_op_opt with
-    | None -> false
-    | Some o -> o
-    in 
-    let resp = { operator = p.operator; is_operator = is_op; } in
-    let resp_michelson = is_operator_response_to_michelson resp in
-    let op = Operation.transaction resp_michelson 0mutez p.callback in
+    let op = is_operator (p, storage.operators) in
     [op], storage

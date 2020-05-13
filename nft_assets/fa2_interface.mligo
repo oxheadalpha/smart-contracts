@@ -11,7 +11,7 @@ type transfer_michelson = transfer michelson_pair_right_comb
 
 type balance_of_request = {
   owner : address;
-  token_id : token_id;  
+  token_id : token_id;
 }
 
 type balance_of_request_michelson = balance_of_request michelson_pair_right_comb
@@ -71,25 +71,12 @@ type token_metadata_param = {
 
 type token_metadata_param_michelson = token_metadata_param michelson_pair_right_comb
 
-type operator_tokens =
-  | All_tokens
-  | Some_tokens of token_id set
-
-type operator_tokens_michelson = operator_tokens michelson_or_right_comb
-
 type operator_param = {
   owner : address;
   operator : address;
-  tokens : operator_tokens;
 }
 
-type operator_param_aux = {
-  owner : address;
-  operator : address;
-  tokens : operator_tokens_michelson;
-}
-
-type operator_param_michelson = operator_param_aux michelson_pair_right_comb
+type operator_param_michelson = operator_param michelson_pair_right_comb
 
 type update_operator =
   | Add_operator_p of operator_param
@@ -134,12 +121,12 @@ type operator_transfer_policy =
 
 type operator_transfer_policy_michelson = operator_transfer_policy michelson_or_right_comb
 
-type owner_transfer_policy =
-  | Owner_no_op
+type owner_hook_policy =
+  | Owner_no_hook
   | Optional_owner_hook
   | Required_owner_hook
 
-type owner_transfer_policy_michelson = owner_transfer_policy michelson_or_right_comb
+type owner_hook_policy_michelson = owner_hook_policy michelson_or_right_comb
 
 type custom_permission_policy = {
   tag : string;
@@ -150,15 +137,15 @@ type custom_permission_policy_michelson = custom_permission_policy michelson_pai
 
 type permissions_descriptor = {
   operator : operator_transfer_policy;
-  receiver : owner_transfer_policy;
-  sender : owner_transfer_policy;
+  receiver : owner_hook_policy;
+  sender : owner_hook_policy;
   custom : custom_permission_policy option;
 }
 
 type permissions_descriptor_aux = {
   operator : operator_transfer_policy_michelson;
-  receiver : owner_transfer_policy_michelson;
-  sender : owner_transfer_policy_michelson;
+  receiver : owner_hook_policy_michelson;
+  sender : owner_hook_policy_michelson;
   custom : custom_permission_policy_michelson option;
 }
 
