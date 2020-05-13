@@ -1,14 +1,10 @@
 { parameter
     (or (or (or (pair %assert_is_operator
                    (address %fa2)
-                   (pair %request
-                      (address %owner)
-                      (pair (address %operator) (or %tokens (unit %all_tokens) (set %some_tokens nat)))))
+                   (pair %request (address %owner) (address %operator)))
                 (unit %default))
             (or (pair %is_operator_response
-                   (pair %operator
-                      (address %owner)
-                      (pair (address %operator) (or %tokens (unit %all_tokens) (set %some_tokens nat))))
+                   (pair %operator (address %owner) (address %operator))
                    (bool %is_operator))
                 (pair %query (address %fa2) (address %owner))))
         (list %response
@@ -30,24 +26,16 @@
                    { DUP ;
                      CAR ;
                      CONTRACT %is_operator
-                       (pair (pair %operator
-                                (address %owner)
-                                (pair (address %operator) (or %tokens (unit %all_tokens) (set %some_tokens nat))))
+                       (pair (pair %operator (address %owner) (address %operator))
                              (contract %callback
-                                (pair (pair %operator
-                                         (address %owner)
-                                         (pair (address %operator) (or %tokens (unit %all_tokens) (set %some_tokens nat))))
-                                      (bool %is_operator)))) ;
+                                (pair (pair %operator (address %owner) (address %operator)) (bool %is_operator)))) ;
                      IF_NONE
                        { PUSH string "bad address for get_entrypoint (%is_operator)" ; FAILWITH }
                        {} ;
                      SELF ;
                      ADDRESS ;
                      CONTRACT %is_operator_response
-                       (pair (pair %operator
-                                (address %owner)
-                                (pair (address %operator) (or %tokens (unit %all_tokens) (set %some_tokens nat))))
-                             (bool %is_operator)) ;
+                       (pair (pair %operator (address %owner) (address %operator)) (bool %is_operator)) ;
                      IF_NONE
                        { PUSH string "bad address for get_entrypoint (%is_operator_response)" ;
                          FAILWITH }

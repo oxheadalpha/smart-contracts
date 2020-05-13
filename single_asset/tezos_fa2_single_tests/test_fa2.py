@@ -60,7 +60,7 @@ class TestFa2SetUp(TestCase):
             };
             assets = {
                 ledger = (Big_map.empty : (address, nat) big_map);
-                operators = (Big_map.empty : ((address * address), bool) big_map);
+                operators = (Big_map.empty : ((address * address), unit) big_map);
                 metadata = {
                     token_id = 0n;
                     symbol = "TK1";
@@ -71,8 +71,8 @@ class TestFa2SetUp(TestCase):
                 total_supply = 0n;
                 permissions_descriptor = {
                   operator = Owner_or_operator_transfer;
-                  sender = Owner_no_op;
-                  receiver = Owner_no_op;
+                  sender = Owner_no_hook;
+                  receiver = Owner_no_hook;
                   custom = (None : custom_permission_policy option);
                 };
             };
@@ -157,8 +157,7 @@ class TestOperator(TestFa2SetUp):
             fa2=self.fa2.address,
             request={
                 "owner": self.alice_receiver.address,
-                "operator": self.admin_key.public_key_hash(),
-                "tokens": {"all_tokens": None},
+                "operator": self.admin_key.public_key_hash()
             },
         ).inject()
 

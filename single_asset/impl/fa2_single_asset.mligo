@@ -57,8 +57,6 @@ let single_asset_main
     let ops, assets = fa2_main (p, s.assets) in
     let new_s = { s with assets = assets; } in
     (ops, new_s)
-(* ⬑ weird indentation. Even if ocamlformat does not work for mligo,
-   it seems I can use ocp-indent on this (that's how i did the above change) *)
 
 let store : single_asset_storage = {
             admin = {
@@ -67,7 +65,7 @@ let store : single_asset_storage = {
             };
             assets = {
                 ledger = (Big_map.empty : (address, nat) big_map);
-                operators = (Big_map.empty : ((address * address), bool) big_map);
+                operators = (Big_map.empty : ((address * address), unit) big_map);
                 metadata = {
                     token_id = 0n;
                     symbol = "TK1";
@@ -78,8 +76,8 @@ let store : single_asset_storage = {
                 total_supply = 0n;
                 permissions_descriptor = {
                   operator = Owner_or_operator_transfer;
-                  sender = Owner_no_op;
-                  receiver = Owner_no_op;
+                  sender = Owner_no_hook;
+                  receiver = Owner_no_hook;
                   custom = (None : custom_permission_policy option);
                 };
             };

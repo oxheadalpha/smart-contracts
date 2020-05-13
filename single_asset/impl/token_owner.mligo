@@ -23,7 +23,6 @@ let main (param, s : token_owner * unit)
     let param : operator_param = {
       operator = p.operator;
       owner = Current.self_address;
-      tokens = All_tokens;
     } in
     let param_michelson = operator_update_to_michelson (Add_operator_p param) in
     let fa2_update : (update_operator_michelson list) contract =
@@ -35,7 +34,6 @@ let main (param, s : token_owner * unit)
     let param : operator_param = {
       operator = p.operator;
       owner = Current.self_address;
-      tokens = All_tokens;
     } in
     let param_michelson = operator_update_to_michelson (Remove_operator_p param) in
     let fa2_update : (update_operator_michelson list) contract =

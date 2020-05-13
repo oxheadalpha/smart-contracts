@@ -3,61 +3,18 @@
         (pair %owner_remove_operator (address %fa2) (address %operator))) ;
   storage unit ;
   code { LAMBDA
-           (pair (pair (address %operator) (address %owner))
-                 (or %tokens (unit %all_tokens) (set %some_tokens nat)))
-           (pair (address %owner)
-                 (pair (address %operator) (or %tokens (unit %all_tokens) (set %some_tokens nat))))
-           { DUP ;
-             CDR ;
-             IF_LEFT
-               { DUP ; LEFT (set nat) ; DIP { DROP } }
-               { DUP ; RIGHT unit ; DIP { DROP } } ;
-             DIG 1 ;
-             DUP ;
-             DUG 2 ;
-             CAR ;
-             CDR ;
-             DIG 2 ;
-             DUP ;
-             DUG 3 ;
-             CAR ;
-             CAR ;
-             PAIR ;
-             PAIR ;
-             DUP ;
-             CDR ;
-             DIG 1 ;
-             DUP ;
-             DUG 2 ;
-             CAR ;
-             CAR ;
-             PAIR ;
-             DIG 1 ;
-             DUP ;
-             DUG 2 ;
-             CAR ;
-             CDR ;
-             PAIR ;
-             DIP { DROP 2 } } ;
+           (pair (address %operator) (address %owner))
+           (pair (address %owner) (address %operator))
+           { DUP ; CAR ; DIG 1 ; DUP ; DUG 2 ; CDR ; PAIR ; DIP { DROP } } ;
          DUP ;
          LAMBDA
            (pair (lambda
-                    (pair (pair (address %operator) (address %owner))
-                          (or %tokens (unit %all_tokens) (set %some_tokens nat)))
-                    (pair (address %owner)
-                          (pair (address %operator) (or %tokens (unit %all_tokens) (set %some_tokens nat)))))
-                 (or (pair %add_operator_p
-                        (pair (address %operator) (address %owner))
-                        (or %tokens (unit %all_tokens) (set %some_tokens nat)))
-                     (pair %remove_operator_p
-                        (pair (address %operator) (address %owner))
-                        (or %tokens (unit %all_tokens) (set %some_tokens nat)))))
-           (or (pair %add_operator
-                  (address %owner)
-                  (pair (address %operator) (or %tokens (unit %all_tokens) (set %some_tokens nat))))
-               (pair %remove_operator
-                  (address %owner)
-                  (pair (address %operator) (or %tokens (unit %all_tokens) (set %some_tokens nat)))))
+                    (pair (address %operator) (address %owner))
+                    (pair (address %owner) (address %operator)))
+                 (or (pair %add_operator_p (address %operator) (address %owner))
+                     (pair %remove_operator_p (address %operator) (address %owner))))
+           (or (pair %add_operator (address %owner) (address %operator))
+               (pair %remove_operator (address %owner) (address %operator)))
            { DUP ;
              CAR ;
              SWAP ;
@@ -70,8 +27,7 @@
                  DUG 4 ;
                  SWAP ;
                  EXEC ;
-                 LEFT (pair (address %owner)
-                            (pair (address %operator) (or %tokens (unit %all_tokens) (set %some_tokens nat)))) ;
+                 LEFT (pair (address %owner) (address %operator)) ;
                  DIP { DROP } }
                { DUP ;
                  DIG 3 ;
@@ -79,21 +35,12 @@
                  DUG 4 ;
                  SWAP ;
                  EXEC ;
-                 RIGHT
-                   (pair (address %owner)
-                         (pair (address %operator) (or %tokens (unit %all_tokens) (set %some_tokens nat)))) ;
+                 RIGHT (pair (address %owner) (address %operator)) ;
                  DIP { DROP } } ;
              DUP ;
              IF_LEFT
-               { DUP ;
-                 LEFT (pair (address %owner)
-                            (pair (address %operator) (or %tokens (unit %all_tokens) (set %some_tokens nat)))) ;
-                 DIP { DROP } }
-               { DUP ;
-                 RIGHT
-                   (pair (address %owner)
-                         (pair (address %operator) (or %tokens (unit %all_tokens) (set %some_tokens nat)))) ;
-                 DIP { DROP } } ;
+               { DUP ; LEFT (pair (address %owner) (address %operator)) ; DIP { DROP } }
+               { DUP ; RIGHT (pair (address %owner) (address %operator)) ; DIP { DROP } } ;
              DIP { DROP 3 } } ;
          SWAP ;
          APPLY ;
@@ -105,19 +52,15 @@
            { DUP ;
              IF_LEFT
                { UNIT ; NIL operation ; PAIR ; DIP { DROP } }
-               { PUSH unit Unit ;
-                 LEFT (set nat) ;
-                 SELF ;
+               { SELF ;
                  ADDRESS ;
-                 DIG 2 ;
+                 DIG 1 ;
                  DUP ;
-                 DUG 3 ;
+                 DUG 2 ;
                  CDR ;
                  PAIR ;
-                 PAIR ;
                  DUP ;
-                 LEFT (pair (pair (address %operator) (address %owner))
-                            (or %tokens (unit %all_tokens) (set %some_tokens nat))) ;
+                 LEFT (pair (address %operator) (address %owner)) ;
                  DIG 4 ;
                  DUP ;
                  DUG 5 ;
@@ -128,24 +71,16 @@
                  DUG 3 ;
                  CAR ;
                  CONTRACT %update_operators
-                   (list (or (pair %add_operator
-                                (address %owner)
-                                (pair (address %operator) (or %tokens (unit %all_tokens) (set %some_tokens nat))))
-                             (pair %remove_operator
-                                (address %owner)
-                                (pair (address %operator) (or %tokens (unit %all_tokens) (set %some_tokens nat)))))) ;
+                   (list (or (pair %add_operator (address %owner) (address %operator))
+                             (pair %remove_operator (address %owner) (address %operator)))) ;
                  IF_NONE
                    { PUSH string "bad address for get_entrypoint (%update_operators)" ;
                      FAILWITH }
                    {} ;
                  DUP ;
                  PUSH mutez 0 ;
-                 NIL (or (pair %add_operator
-                            (address %owner)
-                            (pair (address %operator) (or %tokens (unit %all_tokens) (set %some_tokens nat))))
-                         (pair %remove_operator
-                            (address %owner)
-                            (pair (address %operator) (or %tokens (unit %all_tokens) (set %some_tokens nat))))) ;
+                 NIL (or (pair %add_operator (address %owner) (address %operator))
+                         (pair %remove_operator (address %owner) (address %operator))) ;
                  DIG 4 ;
                  DUP ;
                  DUG 5 ;
@@ -160,20 +95,15 @@
                  PAIR ;
                  DIP { DROP 5 } } ;
              DIP { DROP } }
-           { PUSH unit Unit ;
-             LEFT (set nat) ;
-             SELF ;
+           { SELF ;
              ADDRESS ;
-             DIG 2 ;
+             DIG 1 ;
              DUP ;
-             DUG 3 ;
+             DUG 2 ;
              CDR ;
              PAIR ;
-             PAIR ;
              DUP ;
-             RIGHT
-               (pair (pair (address %operator) (address %owner))
-                     (or %tokens (unit %all_tokens) (set %some_tokens nat))) ;
+             RIGHT (pair (address %operator) (address %owner)) ;
              DIG 3 ;
              DUP ;
              DUG 4 ;
@@ -184,24 +114,16 @@
              DUG 3 ;
              CAR ;
              CONTRACT %update_operators
-               (list (or (pair %add_operator
-                            (address %owner)
-                            (pair (address %operator) (or %tokens (unit %all_tokens) (set %some_tokens nat))))
-                         (pair %remove_operator
-                            (address %owner)
-                            (pair (address %operator) (or %tokens (unit %all_tokens) (set %some_tokens nat)))))) ;
+               (list (or (pair %add_operator (address %owner) (address %operator))
+                         (pair %remove_operator (address %owner) (address %operator)))) ;
              IF_NONE
                { PUSH string "bad address for get_entrypoint (%update_operators)" ;
                  FAILWITH }
                {} ;
              DUP ;
              PUSH mutez 0 ;
-             NIL (or (pair %add_operator
-                        (address %owner)
-                        (pair (address %operator) (or %tokens (unit %all_tokens) (set %some_tokens nat))))
-                     (pair %remove_operator
-                        (address %owner)
-                        (pair (address %operator) (or %tokens (unit %all_tokens) (set %some_tokens nat))))) ;
+             NIL (or (pair %add_operator (address %owner) (address %operator))
+                     (pair %remove_operator (address %owner) (address %operator))) ;
              DIG 4 ;
              DUP ;
              DUG 5 ;

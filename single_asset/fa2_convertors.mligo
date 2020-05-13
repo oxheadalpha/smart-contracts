@@ -47,21 +47,11 @@ let transfers_from_michelson (txsm : transfer_michelson list) : transfer list =
     ) txsm
 
 let operator_param_from_michelson (p : operator_param_michelson) : operator_param =
-  let aux : operator_param_aux = Layout.convert_from_right_comb p in
-  let tokens : operator_tokens = Layout.convert_from_right_comb aux.tokens in
-  {
-    owner = aux.owner;
-    operator = aux.operator;
-    tokens = tokens;
-  }
+  let op : operator_param = Layout.convert_from_right_comb p in
+  op
 
 let operator_param_to_michelson (p : operator_param) : operator_param_michelson =
-  let aux : operator_param_aux = {
-    owner = p.owner;
-    operator = p.operator;
-    tokens = Layout.convert_to_right_comb p.tokens;
-  } in
-  Layout.convert_to_right_comb aux
+  Layout.convert_to_right_comb p
 
 let operator_update_from_michelson (uom : update_operator_michelson) : update_operator =
     let aux : update_operator_aux = Layout.convert_from_right_comb uom in
