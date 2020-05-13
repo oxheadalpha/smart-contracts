@@ -85,6 +85,17 @@ let validate_token_ids (tokens : token_id list) : unit =
     )
   | [] -> failwith "NO_TOKEN_ID"
 
+let validate_operator_updates (updates : update_operator list) : unit =
+  List.iter (fun (u : update_operator) ->
+    let op = match u with
+    | Add_operator_p op -> op
+    | Remove_operator_p op -> op
+    in
+    if op.owner = Tezos.sender
+    then unit
+    else failwith not_owner
+  ) updates
+
 
 let fa2_main (param, storage : fa2_entry_points * single_token_storage)
     : (operation  list) * single_token_storage =
@@ -136,6 +147,7 @@ let fa2_main (param, storage : fa2_entry_points * single_token_storage)
 
   | Update_operators updates_michelson ->
     let updates = operator_updates_from_michelson updates_michelson in
+    let u = validate_operator_updates updates in
     let new_ops = update_operators (updates, storage.operators) in
     let new_storage = { storage with operators = new_ops; } in
     ([] : operation list), new_storage
