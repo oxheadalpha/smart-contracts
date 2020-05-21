@@ -230,8 +230,14 @@ class TestTransfer(TestFa2SetUp):
         print("transfering")
         op_tx = self.fa2.transfer(
             [
-                {"from_": alice_a, "to_": mike_a, "token_id": left_sock, "amount": 1},
-                {"from_": bob_a, "to_": mike_a, "token_id": right_sock, "amount": 1},
+                {
+                    "from_": alice_a,
+                    "txs": [{"to_": mike_a, "token_id": left_sock, "amount": 1}],
+                },
+                {
+                    "from_": bob_a,
+                    "txs": [{"to_": mike_a, "token_id": right_sock, "amount": 1}],
+                },
             ]
         ).inject()
         self.util.wait_for_ops(op_tx)
