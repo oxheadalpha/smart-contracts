@@ -30,9 +30,11 @@ let burn_param_to_hook_param (ts : mint_burn_tx list) : transfer_descriptor_para
   let batch : transfer_descriptor list = List.map 
     (fun (t : mint_burn_tx) -> {
         from_ = Some t.owner;
-        to_ = (None : address option);
-        token_id = 0n;
-        amount = t.amount;
+        txs = [{
+          to_ = (None : address option);
+          token_id = 0n;
+          amount = t.amount;
+        }];
       })
     ts in 
   {
@@ -45,10 +47,12 @@ let mint_param_to_hook_param (ts : mint_burn_tx list) : transfer_descriptor_para
   let batch : transfer_descriptor list = List.map 
     (fun (t : mint_burn_tx) -> 
       {
-        to_ = Some t.owner;
         from_ = (None : address option);
-        token_id = 0n;
-        amount = t.amount;
+        txs = [{
+          to_ = Some t.owner;
+          token_id = 0n;
+          amount = t.amount;
+        }];
       })
     ts in 
   {
@@ -60,10 +64,13 @@ let mint_param_to_hook_param (ts : mint_burn_tx list) : transfer_descriptor_para
 let get_total_supply_change (txs : mint_burn_tx list) : nat =
   List.fold (fun (total, tx : nat * mint_burn_tx) -> total + tx.amount) txs 0n
 
+let noop_owner_validator = fun (p : address * operator_storage) -> unit
+
 let mint_tokens (txs, storage : mint_burn_tokens_param * single_token_storage) 
     : (operation list) * single_token_storage =
     let hp = mint_param_to_hook_param txs in
-    let new_ledger = transfer (hp.batch, storage.ledger) in
+    let new_ledger = transfer 
+      (hp.batch, noop_owner_validator, storage.operators, storage.ledger) in
     let supply_change = get_total_supply_change txs in
     let new_s = { storage with
       ledger = new_ledger;
@@ -75,7 +82,8 @@ let mint_tokens (txs, storage : mint_burn_tokens_param * single_token_storage)
 let burn_tokens (txs, storage : mint_burn_tokens_param * single_token_storage) 
     : (operation list) * single_token_storage =
     let hp = burn_param_to_hook_param txs in
-    let new_ledger = transfer (hp.batch, storage.ledger) in
+    let new_ledger = transfer 
+      (hp.batch, noop_owner_validator, storage.operators, storage.ledger) in
     let supply_change = get_total_supply_change txs in
     let new_supply_opt = Michelson.is_nat (storage.total_supply - supply_change) in
     let new_supply = match new_supply_opt with
