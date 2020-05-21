@@ -1,5 +1,4 @@
 (** Reference implementation of the FA2 operator storage and config API functions *)
-
 #if !FA2_OPERATOR_LIB
 #define FA2_OPERATOR_LIB
 

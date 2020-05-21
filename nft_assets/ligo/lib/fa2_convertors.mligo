@@ -1,8 +1,7 @@
-
 #if !FA2_CONVERTORS
 #define FA2_CONVERTORS
 
-#include "fa2_interface.mligo"
+#include "../fa2_interface.mligo"
 
 let permissions_descriptor_to_michelson (d : permissions_descriptor)
     : permissions_descriptor_michelson =
@@ -16,24 +15,47 @@ let permissions_descriptor_to_michelson (d : permissions_descriptor)
   } in
   Layout.convert_to_right_comb aux
 
+let transfer_descriptor_to_michelson (p : transfer_descriptor) : transfer_descriptor_michelson =
+  let aux : transfer_descriptor_aux = {
+    from_ = p.from_;
+    txs = List.map 
+      (fun (tx : transfer_destination_descriptor) ->
+        Layout.convert_to_right_comb tx
+      )
+      p.txs;
+  } in
+  Layout.convert_to_right_comb aux
+
 let transfer_descriptor_param_to_michelson (p : transfer_descriptor_param)
     : transfer_descriptor_param_michelson =
   let aux : transfer_descriptor_param_aux = {
     fa2 = p.fa2;
     operator = p.operator;
     batch = List.map 
-      (fun (td: transfer_descriptor) -> Layout.convert_to_right_comb td) 
+      (fun (td: transfer_descriptor) -> transfer_descriptor_to_michelson td) 
       p.batch;
   } in
   Layout.convert_to_right_comb aux
+
+let transfer_descriptor_from_michelson (p : transfer_descriptor_michelson) : transfer_descriptor =
+  let aux : transfer_descriptor_aux = Layout.convert_from_right_comb p in
+  {
+    from_ = aux.from_;
+    txs = List.map
+      (fun (txm : transfer_destination_descriptor_michelson) ->
+        let tx : transfer_destination_descriptor =
+          Layout.convert_from_right_comb txm in
+        tx
+      )
+      aux.txs;
+  }
 
 let transfer_descriptor_param_from_michelson (p : transfer_descriptor_param_michelson)
     : transfer_descriptor_param =
   let aux : transfer_descriptor_param_aux = Layout.convert_from_right_comb p in
   let b : transfer_descriptor list = List.map 
       (fun (tdm : transfer_descriptor_michelson) -> 
-        let td : transfer_descriptor = Layout.convert_from_right_comb tdm in
-        td
+        transfer_descriptor_from_michelson tdm
       )
       aux.batch
   in
@@ -43,10 +65,22 @@ let transfer_descriptor_param_from_michelson (p : transfer_descriptor_param_mich
     batch = b;
   }
 
+let transfer_from_michelson (txm : transfer_michelson) : transfer =
+  let aux : transfer_aux = Layout.convert_from_right_comb txm in 
+  {
+    from_ = aux.from_;
+    txs = List.map
+      (fun (txm : transfer_destination_michelson) ->
+        let tx : transfer_destination = Layout.convert_from_right_comb txm in
+        tx
+      )
+      aux.txs;
+  }
+
 let transfers_from_michelson (txsm : transfer_michelson list) : transfer list =
   List.map 
     (fun (txm: transfer_michelson) ->
-      let tx : transfer = Layout.convert_from_right_comb txm in
+      let tx : transfer = transfer_from_michelson txm in
       tx
     ) txsm
 
