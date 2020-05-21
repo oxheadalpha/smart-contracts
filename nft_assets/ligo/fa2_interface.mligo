@@ -1,3 +1,6 @@
+#if ! FA2_INTERFACE
+#define FA2_INTERFACE
+
 type token_id = nat
 
 type transfer = {
@@ -188,3 +191,5 @@ type fa2_token_receiver =
 
 type fa2_token_sender =
   | Tokens_sent of transfer_descriptor_param_michelson
+
+#endif

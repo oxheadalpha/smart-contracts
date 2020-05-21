@@ -1,3 +1,6 @@
+#if !SIMPLE_ADMIN
+#define SIMPLE_ADMIN
+
 (*
   One of the possible implementations of admin API for `multi_token` contract.
 
@@ -36,5 +39,4 @@ let simple_admin (param, s : simple_admin *simple_admin_storage)
       let new_s = pause (paused, s) in
       (([]: operation list), new_s)
 
-        
-
+#endif

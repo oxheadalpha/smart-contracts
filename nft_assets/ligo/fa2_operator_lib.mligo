@@ -1,5 +1,8 @@
 (** Reference implementation of the FA2 operator storage and config API functions *)
 
+#if !FA2_OPERATOR_LIB
+#define FA2_OPERATOR_LIB
+
 #include "fa2_convertors.mligo"
 
 (*  (owner, operator) -> unit *)
@@ -46,3 +49,5 @@ let validate_operator (tx_policy, txs, ops_storage
         if Big_map.mem (tx.from_, operator) ops_storage
         then unit else failwith "NOT_OPERATOR"
     ) txs
+
+#endif

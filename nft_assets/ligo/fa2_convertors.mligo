@@ -1,3 +1,7 @@
+
+#if !FA2_CONVERTORS
+#define FA2_CONVERTORS
+
 #include "fa2_interface.mligo"
 
 let permissions_descriptor_to_michelson (d : permissions_descriptor)
@@ -145,3 +149,5 @@ let token_metas_to_michelson (ms : token_metadata list) : token_metadata_michels
       let mm : token_metadata_michelson = Layout.convert_to_right_comb m in
       mm
     ) ms
+
+#endif

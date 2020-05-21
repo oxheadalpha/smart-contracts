@@ -1,4 +1,3 @@
-(* #include "../fa2_interface.mligo" *)
 #include "../fa2_convertors.mligo"
 
 type storage =

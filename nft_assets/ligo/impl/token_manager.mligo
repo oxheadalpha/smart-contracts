@@ -7,6 +7,9 @@
   accounts.
 *)
 
+#if !TOKEN_MANAGER
+#define TOKEN_MANAGER
+
 #include "fa2_nft_token.mligo"
 
 type mint_param = {
@@ -112,3 +115,5 @@ let token_manager (param, s : token_manager * nft_token_storage)
   | Burn_tokens p -> burn_tokens (p, s)
   in
   ([] : operation list), new_s
+
+#endif

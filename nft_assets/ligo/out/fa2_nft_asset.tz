@@ -67,12 +67,12 @@
                             (or %sender
                                (or (unit %optional_owner_hook) (unit %owner_no_hook))
                                (unit %required_owner_hook))))))) ;
-  code { LAMBDA
+  code { PUSH string "TOKEN_UNDEFINED" ;
+         PUSH string "INSUFFICIENT_BALANCE" ;
+         LAMBDA
            (pair (address %owner) (address %operator))
            (pair (address %operator) (address %owner))
            { DUP ; CAR ; DIG 1 ; DUP ; DUG 2 ; CDR ; PAIR ; DIP { DROP } } ;
-         PUSH string "TOKEN_UNDEFINED" ;
-         PUSH string "INSUFFICIENT_BALANCE" ;
          LAMBDA
            (pair (address %admin) (bool %paused))
            unit
@@ -242,7 +242,7 @@
                                    CDR ;
                                    GET ;
                                    IF_NONE
-                                     { DIG 15 ; DUP ; DUG 16 ; FAILWITH }
+                                     { DIG 16 ; DUP ; DUG 17 ; FAILWITH }
                                      { DIG 1 ;
                                        DUP ;
                                        DUG 2 ;
@@ -309,9 +309,9 @@
                              PAIR ;
                              DUP ;
                              CDR ;
-                             DIG 14 ;
+                             DIG 12 ;
                              DUP ;
-                             DUG 15 ;
+                             DUG 13 ;
                              SWAP ;
                              EXEC ;
                              DIG 1 ;
@@ -565,7 +565,7 @@
                                             { DIG 2 ; DUP ; DUG 3 ; DIP { DROP } } ;
                                           DIP { DROP 3 } } ;
                                    DUP ;
-                                   IF_NONE { DIG 18 ; DUP ; DUG 19 ; FAILWITH } { DUP ; DIP { DROP } } ;
+                                   IF_NONE { DIG 19 ; DUP ; DUG 20 ; FAILWITH } { DUP ; DIP { DROP } } ;
                                    DIP { DROP 3 } ;
                                    DIG 2 ;
                                    DUP ;
@@ -666,7 +666,7 @@
                                    DUG 2 ;
                                    MEM ;
                                    IF { PUSH nat 1 ; DIG 1 ; DUP ; DUG 2 ; PAIR }
-                                      { DIG 14 ; DUP ; DUG 15 ; FAILWITH } ;
+                                      { DIG 15 ; DUP ; DUG 16 ; FAILWITH } ;
                                    DIP { DROP } } ;
                              DIP { DROP } ;
                              DUP ;
@@ -828,7 +828,7 @@
                                          CAR ;
                                          COMPARE ;
                                          NEQ ;
-                                         IF { DIG 17 ; DUP ; DUG 18 ; FAILWITH }
+                                         IF { DIG 18 ; DUP ; DUG 19 ; FAILWITH }
                                             { DIG 3 ;
                                               DUP ;
                                               DUG 4 ;
@@ -839,7 +839,7 @@
                                               CDR ;
                                               GET ;
                                               IF_NONE
-                                                { DIG 18 ; DUP ; DUG 19 ; FAILWITH }
+                                                { DIG 19 ; DUP ; DUG 20 ; FAILWITH }
                                                 { DIG 1 ;
                                                   DUP ;
                                                   DUG 2 ;
@@ -850,7 +850,7 @@
                                                   DUG 2 ;
                                                   COMPARE ;
                                                   NEQ ;
-                                                  IF { DIG 18 ; DUP ; DUG 19 ; FAILWITH }
+                                                  IF { DIG 19 ; DUP ; DUG 20 ; FAILWITH }
                                                      { DIG 2 ;
                                                        DUP ;
                                                        DUG 3 ;
@@ -890,17 +890,17 @@
                                DUP ;
                                IF_LEFT
                                  { DUP ;
-                                   DIG 15 ;
+                                   DIG 13 ;
                                    DUP ;
-                                   DUG 16 ;
+                                   DUG 14 ;
                                    SWAP ;
                                    EXEC ;
                                    LEFT (pair (address %operator) (address %owner)) ;
                                    DIP { DROP } }
                                  { DUP ;
-                                   DIG 15 ;
+                                   DIG 13 ;
                                    DUP ;
-                                   DUG 16 ;
+                                   DUG 14 ;
                                    SWAP ;
                                    EXEC ;
                                    RIGHT (pair (address %operator) (address %owner)) ;

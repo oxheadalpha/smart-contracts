@@ -1,5 +1,9 @@
-#include "../fa2_operator_lib.mligo"
+#if !FA2_NFT_TOKEN
+#define FA2_NFT_TOKEN
+
+#include "../fa2_interface.mligo"
 #include "../fa2_errors.mligo"
+#include "../fa2_operator_lib.mligo"
 
 (* range of nft tokens *)
 type token_def = {
@@ -146,3 +150,5 @@ let fa2_main (param, storage : fa2_entry_points * nft_token_storage)
     let p = is_operator_param_from_michelson pm in
     let op = is_operator (p, storage.operators) in
     [op], storage
+
+#endif

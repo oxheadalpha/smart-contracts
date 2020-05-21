@@ -10,6 +10,10 @@
   Only current admin can access `simple_admin` and `token_manager` entry points.
 *)
 
+#if !FA2_NFT_ASSET
+#define FA2_NFT_ASSET
+
+#include "fa2_nft_token.mligo"
 #include "token_manager.mligo"
 #include "simple_admin.mligo"
 
@@ -79,3 +83,5 @@ let store : nft_asset_storage = {
                 };
             };
         } 
+
+#endif
