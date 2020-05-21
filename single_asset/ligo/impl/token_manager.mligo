@@ -7,7 +7,10 @@
   less tokens then burn amount.
 *)
 
-#include "../fa2_single_token.mligo"
+#if !TOKEN_MANAGER
+#define TOKEN_MANAGER
+
+#include "fa2_single_token.mligo"
 
 type mint_burn_tx = {
   owner : address;
@@ -90,3 +93,5 @@ let token_manager (param, s : token_manager * single_token_storage)
   match param with
   | Mint_tokens txs -> mint_tokens (txs, s)
   | Burn_tokens txs -> burn_tokens (txs, s)
+
+#endif

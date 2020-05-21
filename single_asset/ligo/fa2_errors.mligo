@@ -1,3 +1,6 @@
+#if !FA2_ERRORS
+#define FA2_ERRORS
+
 (** One of the specified `token_id`s is not defined within the FA2 contract *)
 let token_undefined = "TOKEN_UNDEFINED" 
 (** 
@@ -37,3 +40,5 @@ Sender hook is required by the permission behavior, but is not implemented by
 a sender contract
  *)
 let sender_hook_undefined = "SENDER_HOOK_UNDEFINED"
+
+#endif

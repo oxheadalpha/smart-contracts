@@ -8,6 +8,9 @@
     2. Pause the contract.
 *)
 
+#if !SIMPLE_ADMIN
+#define SIMPLE_ADMIN
+
 (* `simple_admin` entry points *)
 type simple_admin =
   | Set_admin of address
@@ -36,5 +39,4 @@ let simple_admin (param, s : simple_admin *simple_admin_storage)
       let new_s = pause (paused, s) in
       (([]: operation list), new_s)
 
-        
-
+#endif
