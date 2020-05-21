@@ -7,7 +7,7 @@
   accounts.
 *)
 
-#include "../fa2_nft_token.mligo"
+#include "fa2_nft_token.mligo"
 
 type mint_param = {
   token_def : token_def;

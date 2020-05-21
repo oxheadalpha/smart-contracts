@@ -1,5 +1,5 @@
-#include "fa2_operator_lib.mligo"
-#include "fa2_errors.mligo"
+#include "../fa2_operator_lib.mligo"
+#include "../fa2_errors.mligo"
 
 (* range of nft tokens *)
 type token_def = {
