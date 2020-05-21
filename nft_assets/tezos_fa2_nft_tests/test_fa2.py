@@ -13,7 +13,7 @@ from tezos_fa2_nft_tests.ligo import (
 )
 
 
-root_dir = Path(__file__).parent.parent
+root_dir = Path(__file__).parent.parent / "ligo"
 ligo_env = LigoEnv(root_dir / "impl", root_dir / "out")
 
 
