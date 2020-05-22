@@ -140,11 +140,8 @@ let fa2_main (param, storage : fa2_entry_points * nft_token_storage)
       let u = validate_update_operators_by_owner (update, updater) in
       update_operators (update, ops)
     ) in
-    let new_ops = List.fold
-      (fun (ops, update : operator_storage * update_operator) ->
-         process_update (ops, update)
-      ) 
-      updates storage.operators in
+    let new_ops = 
+      List.fold process_update updates storage.operators in
     let new_storage = { storage with operators = new_ops; } in
     ([] : operation list), new_storage
 
