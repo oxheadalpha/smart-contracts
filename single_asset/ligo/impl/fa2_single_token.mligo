@@ -79,13 +79,16 @@ let transfer (txs, owner_validator, ops_storage, ledger
     in
     List.fold 
       (fun (ll, dst : ledger * transfer_destination_descriptor) ->
-        let lll = match tx.from_ with
-        | None -> ll
-        | Some from_ -> dec_balance (from_, dst.amount, ll)
-        in 
-        match dst.to_ with
-        | None -> lll
-        | Some to_ -> inc_balance(to_, dst.amount, lll) 
+        if dst.token_id <> 0n
+        then (failwith token_undefined : ledger)
+        else
+          let lll = match tx.from_ with
+          | None -> ll
+          | Some from_ -> dec_balance (from_, dst.amount, ll)
+          in 
+          match dst.to_ with
+          | None -> lll
+          | Some to_ -> inc_balance(to_, dst.amount, lll) 
       ) tx.txs l
   in    
   List.fold make_transfer txs ledger
