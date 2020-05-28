@@ -56,6 +56,7 @@ class TestFa2SetUp(TestCase):
         {
             admin = {
               admin = ("%s" : address);
+              pending_admin = (None : address option);
               paused = true;
             };
             assets = {
