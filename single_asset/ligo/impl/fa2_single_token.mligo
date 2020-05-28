@@ -91,16 +91,9 @@ let transfer (txs, owner_validator, ops_storage, ledger
   List.fold make_transfer txs ledger
 
 let validate_token_ids (tokens : token_id list) : unit =
-  match tokens with
-  | tid :: tail -> 
-    if List.size tail <> 0n
-    then failwith token_undefined
-    else 
-    (if tid = 0n
-    then unit
-    else failwith token_undefined
-    )
-  | [] -> failwith "NO_TOKEN_ID"
+  List.iter (fun (id : nat) ->
+    if id = 0n then unit else failwith token_undefined
+  ) tokens
 
 let fa2_main (param, storage : fa2_entry_points * single_token_storage)
     : (operation  list) * single_token_storage =
