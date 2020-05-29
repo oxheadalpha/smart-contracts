@@ -23,22 +23,11 @@ type single_asset_param =
   | Admin of simple_admin
   | Tokens of token_manager
 
-let fail_if_not_admin (a : simple_admin_storage) : unit =
-  if sender <> a.admin
-  then failwith "NOT_AN_ADMIN"
-  else unit
-
-let fail_if_paused (a : simple_admin_storage) : unit =
-  if a.paused
-  then failwith "PAUSED"
-  else unit
-
 let single_asset_main 
     (param, s : single_asset_param * single_asset_storage)
   : (operation list) * single_asset_storage =
   match param with
   | Admin p ->
-    let u = fail_if_not_admin s.admin in 
 
     let ops, admin = simple_admin (p, s.admin) in
     let new_s = { s with admin = admin; } in
@@ -61,6 +50,7 @@ let single_asset_main
 let store : single_asset_storage = {
             admin = {
               admin = ("tz1YPSCGWXwBdTncK2aCctSZAXWvGsGwVJqU" : address);
+              pending_admin = (None : address option);
               paused = true;
             };
             assets = {

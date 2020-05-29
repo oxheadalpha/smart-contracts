@@ -1,13 +1,27 @@
+#if ! FA2_INTERFACE
+#define FA2_INTERFACE
+
 type token_id = nat
 
-type transfer = {
-  from_ : address;
+type transfer_destination = {
   to_ : address;
   token_id : token_id;
   amount : nat;
 }
 
-type transfer_michelson = transfer michelson_pair_right_comb
+type transfer_destination_michelson = transfer_destination michelson_pair_right_comb
+
+type transfer = {
+  from_ : address;
+  txs : transfer_destination list;
+}
+
+type transfer_aux = {
+  from_ : address;
+  txs : transfer_destination_michelson list;
+}
+
+type transfer_michelson = transfer_aux michelson_pair_right_comb
 
 type balance_of_request = {
   owner : address;
@@ -160,14 +174,27 @@ type fa2_entry_points =
   | Update_operators of update_operator_michelson list
   | Is_operator of is_operator_param_michelson
 
-type transfer_descriptor = {
-  from_ : address option;
+
+type transfer_destination_descriptor = {
   to_ : address option;
   token_id : token_id;
   amount : nat;
 }
 
-type transfer_descriptor_michelson = transfer_descriptor michelson_pair_right_comb
+type transfer_destination_descriptor_michelson =
+  transfer_destination_descriptor michelson_pair_right_comb
+
+type transfer_descriptor = {
+  from_ : address option;
+  txs : transfer_destination_descriptor list
+}
+
+type transfer_descriptor_aux = {
+  from_ : address option;
+  txs : transfer_destination_descriptor_michelson list
+}
+
+type transfer_descriptor_michelson = transfer_descriptor_aux michelson_pair_right_comb
 
 type transfer_descriptor_param = {
   fa2 : address;
@@ -188,3 +215,5 @@ type fa2_token_receiver =
 
 type fa2_token_sender =
   | Tokens_sent of transfer_descriptor_param_michelson
+
+#endif

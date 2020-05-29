@@ -1,5 +1,9 @@
-#include "fa2_operator_lib.mligo"
-#include "fa2_errors.mligo"
+#if !FA2_NFT_TOKEN
+#define FA2_NFT_TOKEN
+
+#include "../fa2_interface.mligo"
+#include "../fa2_errors.mligo"
+#include "../lib/fa2_operator_lib.mligo"
 
 (* range of nft tokens *)
 type token_def = {
@@ -38,21 +42,27 @@ let get_balance (p, ledger : balance_of_param * ledger) : operation =
   let responses = List.map to_balance p.requests in
   Operation.transaction responses 0mutez p.callback
 
-let transfer (txs, ledger : (transfer list) * ledger) : ledger =
-  let make_transfer = fun (l, tx : ledger * transfer) ->
-    if tx.amount = 0n
-    then l
-    else if tx.amount <> 1n
-    then (failwith insufficient_balance : ledger)
-    else
-      let owner = Big_map.find_opt tx.token_id ledger in
-      match owner with
-      | None -> (failwith token_undefined : ledger)
-      | Some o -> 
-        if o <> tx.from_
+let transfer (txs, owner_validator, ops_storage, ledger
+    : (transfer list) * ((address * operator_storage) -> unit) * operator_storage * ledger) : ledger =
+  let make_transfer = (fun (l, tx : ledger * transfer) ->
+    let u = owner_validator (tx.from_, ops_storage) in
+    List.fold 
+      (fun (ll, dst : ledger * transfer_destination) ->
+        if dst.amount = 0n
+        then ll
+        else if dst.amount <> 1n
         then (failwith insufficient_balance : ledger)
-        else Big_map.update tx.token_id (Some tx.to_) l
-  in
+        else
+          let owner = Big_map.find_opt dst.token_id ll in
+          match owner with
+          | None -> (failwith token_undefined : ledger)
+          | Some o -> 
+            if o <> tx.from_
+            then (failwith insufficient_balance : ledger)
+            else Big_map.update dst.token_id (Some dst.to_) ll
+      ) tx.txs l
+  )
+  in 
     
   List.fold make_transfer txs ledger
 
@@ -89,25 +99,13 @@ let get_metadata (tokens, meta : (token_id list) * token_storage )
     | None -> (failwith "NO_DATA" : token_metadata)
   ) tokens
 
-let validate_operator_updates (updates : update_operator list) : unit =
-  List.iter (fun (u : update_operator) ->
-    let op = match u with
-    | Add_operator_p op -> op
-    | Remove_operator_p op -> op
-    in
-    if op.owner = Tezos.sender
-    then unit
-    else failwith not_owner
-  ) updates
-
 let fa2_main (param, storage : fa2_entry_points * nft_token_storage)
     : (operation  list) * nft_token_storage =
   match param with
   | Transfer txs_michelson ->
     let txs = transfers_from_michelson txs_michelson in
-    let u = validate_operator 
-      (storage.permissions_descriptor.operator, txs, storage.operators) in
-    let new_ledger = transfer (txs, storage.ledger) in
+    let validator = make_operator_validator storage.permissions_descriptor.operator in
+    let new_ledger = transfer (txs, validator, storage.operators, storage.ledger) in
     let new_storage = { storage with ledger = new_ledger; }
     in ([] : operation list), new_storage
 
@@ -137,8 +135,13 @@ let fa2_main (param, storage : fa2_entry_points * nft_token_storage)
 
   | Update_operators updates_michelson ->
     let updates = operator_updates_from_michelson updates_michelson in
-    let u = validate_operator_updates updates in
-    let new_ops = update_operators (updates, storage.operators) in
+    let updater = Tezos.sender in
+    let process_update = (fun (ops, update : operator_storage * update_operator) ->
+      let u = validate_update_operators_by_owner (update, updater) in
+      update_operators (update, ops)
+    ) in
+    let new_ops = 
+      List.fold process_update updates storage.operators in
     let new_storage = { storage with operators = new_ops; } in
     ([] : operation list), new_storage
 
@@ -146,3 +149,6 @@ let fa2_main (param, storage : fa2_entry_points * nft_token_storage)
     let p = is_operator_param_from_michelson pm in
     let op = is_operator (p, storage.operators) in
     [op], storage
+
+let test (u : unit) = unit
+#endif

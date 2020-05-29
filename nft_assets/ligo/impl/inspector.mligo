@@ -1,5 +1,4 @@
-(* #include "../fa2_interface.mligo" *)
-#include "../fa2_convertors.mligo"
+#include "../lib/fa2_convertors.mligo"
 
 type storage =
   | State of balance_of_response

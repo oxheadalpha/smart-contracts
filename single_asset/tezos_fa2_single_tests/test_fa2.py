@@ -12,7 +12,7 @@ from tezos_fa2_single_tests.ligo import (
 )
 
 
-root_dir = Path(__file__).parent.parent
+root_dir = Path(__file__).parent.parent / "ligo"
 ligo_env = LigoEnv(root_dir / "impl", root_dir / "out")
 
 
@@ -56,6 +56,7 @@ class TestFa2SetUp(TestCase):
         {
             admin = {
               admin = ("%s" : address);
+              pending_admin = (None : address option);
               paused = true;
             };
             assets = {
@@ -188,7 +189,12 @@ class TestTransfer(TestFa2SetUp):
 
         print("transfering")
         op_tx = self.fa2.transfer(
-            [{"from_": from_address, "to_": to_address, "token_id": 0, "amount": 3}]
+            [
+                {
+                    "from_": from_address, 
+                    "txs": [{"to_": to_address, "token_id": 0, "amount": 3}],
+                },
+            ]
         ).inject()
         self.util.wait_for_ops(op_tx)
 

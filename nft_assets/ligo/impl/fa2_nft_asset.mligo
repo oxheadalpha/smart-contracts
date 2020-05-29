@@ -10,6 +10,10 @@
   Only current admin can access `simple_admin` and `token_manager` entry points.
 *)
 
+#if !FA2_NFT_ASSET
+#define FA2_NFT_ASSET
+
+#include "fa2_nft_token.mligo"
 #include "token_manager.mligo"
 #include "simple_admin.mligo"
 
@@ -23,23 +27,11 @@ type nft_asset_param =
   | Admin of simple_admin
   | Tokens of token_manager
 
-let fail_if_not_admin (a : simple_admin_storage) : unit =
-  if sender <> a.admin
-  then failwith "NOT_AN_ADMIN"
-  else unit
-
-let fail_if_paused (a : simple_admin_storage) : unit =
-  if a.paused
-  then failwith "PAUSED"
-  else unit
-
 let nft_asset_main 
     (param, s : nft_asset_param * nft_asset_storage)
   : (operation list) * nft_asset_storage =
   match param with
   | Admin p ->
-    let u = fail_if_not_admin s.admin in 
-
     let ops, admin = simple_admin (p, s.admin) in
     let new_s = { s with admin = admin; } in
     (ops, new_s)
@@ -61,6 +53,7 @@ let nft_asset_main
 let store : nft_asset_storage = {
             admin = {
               admin = ("tz1YPSCGWXwBdTncK2aCctSZAXWvGsGwVJqU" : address);
+              pending_admin = (None : address option);
               paused = true;
             };
             assets = {
@@ -79,3 +72,5 @@ let store : nft_asset_storage = {
                 };
             };
         } 
+
+#endif
