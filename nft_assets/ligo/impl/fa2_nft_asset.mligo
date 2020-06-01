@@ -64,12 +64,6 @@ let store : nft_asset_storage = {
                   last_used_id = 0n;
                   metadata = (Big_map.empty : (token_def, token_metadata) big_map);
                 };
-                permissions_descriptor = {
-                  operator = Owner_or_operator_transfer;
-                  sender = Owner_no_hook;
-                  receiver = Owner_no_hook;
-                  custom = (None : custom_permission_policy option);
-                };
             };
         } 
 

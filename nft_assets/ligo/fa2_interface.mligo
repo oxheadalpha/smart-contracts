@@ -169,10 +169,13 @@ type fa2_entry_points =
   | Transfer of transfer_michelson list
   | Balance_of of balance_of_param_michelson
   | Total_supply of total_supply_param_michelson
-  | Token_metadata of token_metadata_param_michelson
-  | Permissions_descriptor of permissions_descriptor_michelson contract
+  | Token_metadata of token_metadata_param_michelson  
   | Update_operators of update_operator_michelson list
   | Is_operator of is_operator_param_michelson
+
+
+type fa2_entry_points_custom =
+  | Permissions_descriptor of permissions_descriptor_michelson contract
 
 
 type transfer_destination_descriptor = {

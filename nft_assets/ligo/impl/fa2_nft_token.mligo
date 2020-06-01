@@ -25,7 +25,6 @@ type nft_token_storage = {
   ledger : ledger;
   operators : operator_storage;
   metadata : token_storage;
-  permissions_descriptor : permissions_descriptor;
 }
 
 let get_balance (p, ledger : balance_of_param * ledger) : operation =
@@ -104,7 +103,7 @@ let fa2_main (param, storage : fa2_entry_points * nft_token_storage)
   match param with
   | Transfer txs_michelson ->
     let txs = transfers_from_michelson txs_michelson in
-    let validator = make_operator_validator storage.permissions_descriptor.operator in
+    let validator = make_default_operator_validator Tezos.sender in
     let new_ledger = transfer (txs, validator, storage.operators, storage.ledger) in
     let new_storage = { storage with ledger = new_ledger; }
     in ([] : operation list), new_storage
@@ -126,11 +125,6 @@ let fa2_main (param, storage : fa2_entry_points * nft_token_storage)
     let metas = get_metadata (p.token_ids, storage.metadata) in
     let metas_michelson = token_metas_to_michelson metas in
     let op = Operation.transaction metas_michelson 0mutez p.callback in
-    [op], storage
-
-  | Permissions_descriptor callback ->
-    let descriptor_michelson = permissions_descriptor_to_michelson storage.permissions_descriptor in
-    let op = Operation.transaction descriptor_michelson 0mutez callback in
     [op], storage
 
   | Update_operators updates_michelson ->
