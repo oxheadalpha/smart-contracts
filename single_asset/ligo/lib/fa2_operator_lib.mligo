@@ -55,6 +55,16 @@ let make_operator_validator (tx_policy : operator_transfer_policy)
           then unit else failwith not_operator
   )
 
+let make_default_operator_validator (operator : address)
+    : (address * operator_storage)-> unit =
+  (fun (owner, ops_storage : address * operator_storage) ->
+      if owner = operator
+      then unit
+      else
+        if Big_map.mem  (owner, operator) ops_storage
+        then unit else failwith not_operator
+  )
+
 (** validate operators for all transfers in the batch at once*)
 let validate_operator (tx_policy, txs, ops_storage 
     : operator_transfer_policy * (transfer list) * operator_storage) : unit =
