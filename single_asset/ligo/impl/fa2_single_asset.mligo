@@ -64,11 +64,5 @@ let store : single_asset_storage = {
                     extras = (Map.empty : (string, string) map);
                 };
                 total_supply = 0n;
-                permissions_descriptor = {
-                  operator = Owner_or_operator_transfer;
-                  sender = Owner_no_hook;
-                  receiver = Owner_no_hook;
-                  custom = (None : custom_permission_policy option);
-                };
             };
         }

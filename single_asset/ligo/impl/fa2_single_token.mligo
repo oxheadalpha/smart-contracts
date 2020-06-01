@@ -12,7 +12,6 @@ type single_token_storage = {
   operators : operator_storage;
   metadata : token_metadata;
   total_supply : nat;
-  permissions_descriptor : permissions_descriptor;
 }
 
 let transfers_to_descriptors (txs : transfer list) : transfer_descriptor list =
@@ -104,7 +103,7 @@ let fa2_main (param, storage : fa2_entry_points * single_token_storage)
   | Transfer txs_michelson -> 
     let txs = transfers_from_michelson txs_michelson in
     let tx_descriptors = transfers_to_descriptors txs in
-    let validator = make_operator_validator storage.permissions_descriptor.operator in
+    let validator = make_default_operator_validator Tezos.sender in
     let new_ledger = transfer (tx_descriptors, validator, storage.operators, storage.ledger) in
     let new_storage = { storage with ledger = new_ledger; }
     in ([] : operation list), new_storage
@@ -137,12 +136,6 @@ let fa2_main (param, storage : fa2_entry_points * single_token_storage)
       (fun (tid: token_id) -> metadata_michelson)
       p.token_ids in
     let op = Operation.transaction responses 0mutez p.callback in
-    [op], storage
-
-  | Permissions_descriptor callback ->
-    let descriptor_michelson =
-      permissions_descriptor_to_michelson storage.permissions_descriptor in
-    let op = Operation.transaction descriptor_michelson 0mutez callback in
     [op], storage
 
   | Update_operators updates_michelson ->
