@@ -1,3 +1,4 @@
+(** Helper contract to query FA2 `Balance_of` entry point *)
 #include "../lib/fa2_convertors.mligo"
 
 type storage =
@@ -18,6 +19,7 @@ let main (p, s : param * storage) : (operation list) * storage =
   match p with
 
   | Query q ->
+  (* preparing balance_of request and invoking FA2 *)
     let br : balance_of_request = {
       owner = q.owner;
       token_id = 0n;
@@ -35,6 +37,10 @@ let main (p, s : param * storage) : (operation list) * storage =
     [q_op], s
 
   | Response r_michelson ->
+    (* 
+    getting FA2 balance_of_response and putting it into storage
+    for off-chain inspection
+    *)
     let new_s = 
       match r_michelson with 
       | [] -> (failwith "invalid response" : balance_of_response)

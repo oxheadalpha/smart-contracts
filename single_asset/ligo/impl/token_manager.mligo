@@ -2,8 +2,7 @@
   
   Token manager API allows to mint and burn tokens to some existing or new owner account.
 
-  Mint operation performs safety check as specified for the
-  transfer entry point. Burn operation fails if the owner holds
+  Burn operation fails if the owner holds
   less tokens then burn amount.
 *)
 
