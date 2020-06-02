@@ -1,5 +1,5 @@
 (*
-A simple token owner which works with FA2 instance which supports operators permission policy
+A simple token owner which works with FA2 instance and supports operators permission policy
 and can manage its own operators.
  *)
 
@@ -20,6 +20,7 @@ let main (param, s : token_owner * unit)
   match param with
 
   | Owner_add_operator p ->
+    (* calls specified FA2 contract to add operator *)
     let param : operator_param = {
       operator = p.operator;
       owner = Current.self_address;
@@ -31,6 +32,7 @@ let main (param, s : token_owner * unit)
     [update_op], unit
 
   | Owner_remove_operator p ->
+    (* calls specified FA2 contract to remove operator *)
     let param : operator_param = {
       operator = p.operator;
       owner = Current.self_address;

@@ -1,11 +1,10 @@
 (*
-  One of the possible implementations of admin API for `multi_token` contract.
-
-  Only current `admin` of the contract can invoke admin API.
-  Admin API allows to 
+  One of the possible implementations of admin API for FA2 contract.
+  The admin API can change an admin address using two step confirmation pattern and
+  pause/unpause the contract. Only current admin can initiate those operations.
   
-    1. Change administrator, 
-    2. Pause the contract.
+  Other entry points may guard their access using helper functions
+  `fail_if_not_admin` and `fail_if_paused`.
 *)
 
 #if !SIMPLE_ADMIN

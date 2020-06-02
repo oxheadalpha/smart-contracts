@@ -1,3 +1,7 @@
+(**
+Implementation of the FA2 interface for the NFT contract supporting multiple
+types of NFTs. Each NFT type is represented by the range of token IDs - `token_def`.
+ *)
 #if !FA2_NFT_TOKEN
 #define FA2_NFT_TOKEN
 
@@ -27,6 +31,10 @@ type nft_token_storage = {
   metadata : token_storage;
 }
 
+(** 
+Retrieve the balances for the specified tokens and owners
+@return callback operation
+*)
 let get_balance (p, ledger : balance_of_param * ledger) : operation =
   let to_balance = fun (r : balance_of_request) ->
     let owner = Big_map.find_opt r.token_id ledger in
@@ -41,8 +49,15 @@ let get_balance (p, ledger : balance_of_param * ledger) : operation =
   let responses = List.map to_balance p.requests in
   Operation.transaction responses 0mutez p.callback
 
+(**
+Update leger balances according to the specified transfers. Fails if any of the
+permissions or constraints are violated.
+@param txs transfers to be applied to the ledger
+@param owner_validator function that validates of the tokens from the particular owner can be transferred. 
+ *)
 let transfer (txs, owner_validator, ops_storage, ledger
     : (transfer list) * ((address * operator_storage) -> unit) * operator_storage * ledger) : ledger =
+  (* process individual transfer *)
   let make_transfer = (fun (l, tx : ledger * transfer) ->
     let u = owner_validator (tx.from_, ops_storage) in
     List.fold 
@@ -65,16 +80,8 @@ let transfer (txs, owner_validator, ops_storage, ledger
     
   List.fold make_transfer txs ledger
 
-
-let get_supply (tokens, ledger : (token_id list) * ledger )
-    : total_supply_response list =
-  List.map (fun (tid: token_id) ->
-    if Big_map.mem tid ledger
-    then  { token_id = tid; total_supply = 1n; }
-    else (failwith token_undefined : total_supply_response)
-  ) tokens
-
-let find_token_type (tid, token_defs : token_id * (token_def set)) : token_def =
+(** Finds a definition of the token type (token_id range) associated with the provided token id *)
+let find_token_def (tid, token_defs : token_id * (token_def set)) : token_def =
   let tdef = Set.fold (fun (res, d : (token_def option) * token_def) ->
     match res with
     | Some r -> res
@@ -91,8 +98,8 @@ let find_token_type (tid, token_defs : token_id * (token_def set)) : token_def =
 let get_metadata (tokens, meta : (token_id list) * token_storage )
     : token_metadata list =
   List.map (fun (tid: token_id) ->
-    let ttype = find_token_type (tid, meta.token_defs) in
-    let meta = Big_map.find_opt ttype meta.metadata in
+    let tdef = find_token_def (tid, meta.token_defs) in
+    let meta = Big_map.find_opt tdef meta.metadata in
     match meta with
     | Some m -> { m with token_id = tid; }
     | None -> (failwith "NO_DATA" : token_metadata)
@@ -111,13 +118,6 @@ let fa2_main (param, storage : fa2_entry_points * nft_token_storage)
   | Balance_of pm ->
     let p = balance_of_param_from_michelson pm in
     let op = get_balance (p, storage.ledger) in
-    [op], storage
-
-  | Total_supply pm ->
-    let p : total_supply_param = Layout.convert_from_right_comb pm in
-    let supplies = get_supply (p.token_ids, storage.ledger) in
-    let supplies_michelson = total_supply_responses_to_michelson supplies in
-    let op = Operation.transaction supplies_michelson 0mutez p.callback in
     [op], storage
 
   | Token_metadata pm ->
@@ -139,10 +139,4 @@ let fa2_main (param, storage : fa2_entry_points * nft_token_storage)
     let new_storage = { storage with operators = new_ops; } in
     ([] : operation list), new_storage
 
-  | Is_operator pm ->
-    let p = is_operator_param_from_michelson pm in
-    let op = is_operator (p, storage.operators) in
-    [op], storage
-
-let test (u : unit) = unit
 #endif
