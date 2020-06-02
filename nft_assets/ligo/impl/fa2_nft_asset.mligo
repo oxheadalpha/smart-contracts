@@ -50,6 +50,9 @@ let nft_asset_main
     let new_s = { s with assets = assets; } in
     (ops, new_s)
 
+
+(** Example of NFT asset initial storage *)
+
 let store : nft_asset_storage = {
             admin = {
               admin = ("tz1YPSCGWXwBdTncK2aCctSZAXWvGsGwVJqU" : address);
