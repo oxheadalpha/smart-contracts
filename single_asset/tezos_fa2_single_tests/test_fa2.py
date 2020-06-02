@@ -62,13 +62,18 @@ class TestFa2SetUp(TestCase):
             assets = {
                 ledger = (Big_map.empty : (address, nat) big_map);
                 operators = (Big_map.empty : ((address * address), unit) big_map);
-                metadata = {
-                    token_id = 0n;
-                    symbol = "TK1";
-                    name = "Test Token";
-                    decimals = 0n;
-                    extras = (Map.empty : (string, string) map);
-                };
+                metadata = Big_map.literal [
+                  (
+                    0n, 
+                    {
+                      token_id = 0n;
+                      symbol = "TK1";
+                      name = "Test Token";
+                      decimals = 0n;
+                      extras = (Map.empty : (string, string) map);
+                    }
+                  );
+                ];
                 total_supply = 0n;
             };
         }
@@ -148,15 +153,6 @@ class TestOperator(TestFa2SetUp):
         ).inject()
         self.util.wait_for_ops(op_add)
 
-        op_check = self.inspector.assert_is_operator(
-            fa2=self.fa2.address,
-            request={
-                "owner": self.alice_receiver.address,
-                "operator": self.admin_key.public_key_hash()
-            },
-        ).inject()
-
-        self.util.wait_for_ops(op_check)
 
 
 class TestTransfer(TestFa2SetUp):
