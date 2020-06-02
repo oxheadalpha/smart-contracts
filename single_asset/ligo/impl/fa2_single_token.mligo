@@ -1,3 +1,8 @@
+(**
+Implementation of the FA2 interface for the single token contract.
+ *)
+
+
 #if !FA2_SINGLE_TOKEN
 #define FA2_SINGLE_TOKEN
 
@@ -14,6 +19,12 @@ type single_token_storage = {
   total_supply : nat;
 }
 
+(**
+Converts transfer parameters to `transfer_descriptors.
+
+Helps to reuse the same transfer logic for `transfer`, `min` and `burn` implementation.
+Can be used to support optional sender/receiver hooks in future.
+ *)
 let transfers_to_descriptors (txs : transfer list) : transfer_descriptor list =
   List.map 
     (fun (tx : transfer) ->
@@ -40,18 +51,6 @@ let get_balance_amt (owner, ledger : address  * ledger) : nat =
   | None -> 0n
   | Some b -> b
 
-let get_balance (p, ledger : balance_of_param * ledger) : operation =
-  let to_balance = fun (r : balance_of_request) ->
-    if r.token_id <> 0n
-    then (failwith token_undefined : balance_of_response_michelson)
-    else
-      let bal = get_balance_amt (r.owner, ledger) in
-      let response = { request = r; balance = bal; } in
-      balance_of_response_to_michelson response
-  in
-  let responses = List.map to_balance p.requests in
-  Operation.transaction responses 0mutez p.callback
-
 let inc_balance (owner, amt, ledger
     : address * nat * ledger) : ledger =
   let bal = get_balance_amt (owner, ledger) in
@@ -68,6 +67,12 @@ let dec_balance (owner, amt, ledger
     then Big_map.remove owner ledger
     else Map.update owner (Some new_bal) ledger
 
+(**
+Update leger balances according to the specified transfers. Fails if any of the
+permissions or constraints are violated.
+@param txs transfers to be applied to the ledger
+@param owner_validator function that validates of the tokens from the particular owner can be transferred. 
+ *)
 let transfer (txs, owner_validator, ops_storage, ledger
     : (transfer_descriptor list) * ((address * operator_storage) -> unit) * operator_storage * ledger)
     : ledger =
@@ -82,27 +87,67 @@ let transfer (txs, owner_validator, ops_storage, ledger
         then (failwith token_undefined : ledger)
         else
           let lll = match tx.from_ with
-          | None -> ll
+          | None -> ll (* this is a mint transfer. do not need to update `from_` balance *)
           | Some from_ -> dec_balance (from_, dst.amount, ll)
           in 
           match dst.to_ with
-          | None -> lll
+          | None -> lll (* this is a burn transfer. do not need to update `to_` balance *)
           | Some to_ -> inc_balance(to_, dst.amount, lll) 
       ) tx.txs l
   in    
   List.fold make_transfer txs ledger
 
+(** 
+Retrieve the balances for the specified tokens and owners
+@return callback operation
+*)
+let get_balance (p, ledger : balance_of_param * ledger) : operation =
+  let to_balance = fun (r : balance_of_request) ->
+    if r.token_id <> 0n
+    then (failwith token_undefined : balance_of_response_michelson)
+    else
+      let bal = get_balance_amt (r.owner, ledger) in
+      let response = { request = r; balance = bal; } in
+      balance_of_response_to_michelson response
+  in
+  let responses = List.map to_balance p.requests in
+  Operation.transaction responses 0mutez p.callback
+
+(** Validate if all provided token_ids are `0n` and correspond to a single token ID *)
 let validate_token_ids (tokens : token_id list) : unit =
   List.iter (fun (id : nat) ->
     if id = 0n then unit else failwith token_undefined
   ) tokens
 
+(** Creates a callback operation that provides total supply to the caller *)
+let get_total_supply (p, total_supply : total_supply_param * nat) : operation =
+  let u = validate_token_ids p.token_ids in
+  
+  (* prepare a response *)
+  let response : total_supply_response = { 
+    token_id = 0n;
+    total_supply = total_supply;
+  } in
+  let response_michelson = Layout.convert_to_right_comb response in
+
+  (* in case of multiple requests, just replicate the same response *)
+  let responses = List.map 
+    (fun (tid: token_id) -> response_michelson)
+    p.token_ids in
+
+  Operation.transaction responses 0mutez p.callback
+
 let fa2_main (param, storage : fa2_entry_points * single_token_storage)
     : (operation  list) * single_token_storage =
   match param with
   | Transfer txs_michelson -> 
+    (* convert transfer batch into `transfer_descriptor` batch *)
     let txs = transfers_from_michelson txs_michelson in
     let tx_descriptors = transfers_to_descriptors txs in
+    (* 
+    will validate that a sender is either `from_` parameter of each transfer
+    or a permitted operator for the owner `from_` address.
+    *)
     let validator = make_default_operator_validator Tezos.sender in
     let new_ledger = transfer (tx_descriptors, validator, storage.operators, storage.ledger) in
     let new_storage = { storage with ledger = new_ledger; }
@@ -115,16 +160,7 @@ let fa2_main (param, storage : fa2_entry_points * single_token_storage)
 
   | Total_supply pm ->
     let p : total_supply_param = Layout.convert_from_right_comb pm in
-    let u = validate_token_ids p.token_ids in
-    let response : total_supply_response = { 
-      token_id = 0n;
-      total_supply = storage.total_supply;
-    } in
-    let response_michelson = Layout.convert_to_right_comb response in
-    let responses = List.map 
-      (fun (tid: token_id) -> response_michelson)
-      p.token_ids in
-    let op = Operation.transaction responses 0mutez p.callback in
+    let op = get_total_supply (p, storage.total_supply) in
     [op], storage
 
   | Token_metadata pm ->
