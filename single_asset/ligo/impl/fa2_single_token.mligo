@@ -137,6 +137,18 @@ let get_total_supply (p, total_supply : total_supply_param * nat) : operation =
 
   Operation.transaction responses 0mutez p.callback
 
+(** Creates a callback operation that provides token metadata to the caller *)
+let get_token_metadata (p, meta : token_metadata_param * token_metadata) : operation =
+  let u = validate_token_ids p.token_ids in
+  let metadata_michelson : token_metadata_michelson = 
+    Layout.convert_to_right_comb meta in
+  (* in case of multiple requests, just replicate the same response *)
+  let responses = List.map 
+    (fun (tid: token_id) -> metadata_michelson)
+    p.token_ids in
+  
+  Operation.transaction responses 0mutez p.callback
+
 let fa2_main (param, storage : fa2_entry_points * single_token_storage)
     : (operation  list) * single_token_storage =
   match param with
@@ -165,13 +177,7 @@ let fa2_main (param, storage : fa2_entry_points * single_token_storage)
 
   | Token_metadata pm ->
     let p : token_metadata_param = Layout.convert_from_right_comb pm in
-    let u = validate_token_ids p.token_ids in
-    let metadata_michelson : token_metadata_michelson = 
-      Layout.convert_to_right_comb storage.metadata in
-    let responses = List.map 
-      (fun (tid: token_id) -> metadata_michelson)
-      p.token_ids in
-    let op = Operation.transaction responses 0mutez p.callback in
+    let op = get_token_metadata (p, storage.metadata) in
     [op], storage
 
   | Update_operators updates_michelson ->
