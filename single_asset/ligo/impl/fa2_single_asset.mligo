@@ -47,6 +47,11 @@ let single_asset_main
     let new_s = { s with assets = assets; } in
     (ops, new_s)
 
+
+(**
+This is a sample initial fa2_single_asset storage.
+ *)
+
 let store : single_asset_storage = {
             admin = {
               admin = ("tz1YPSCGWXwBdTncK2aCctSZAXWvGsGwVJqU" : address);
