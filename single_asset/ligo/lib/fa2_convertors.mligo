@@ -108,28 +108,6 @@ let operator_updates_from_michelson (updates_michelson : update_operator_michels
     : update_operator list =
   List.map operator_update_from_michelson updates_michelson
 
-let is_operator_param_from_michelson (p : is_operator_param_michelson) : is_operator_param =
-  let aux : is_operator_param_aux = Layout.convert_from_right_comb p in
-  {
-    operator = operator_param_from_michelson aux.operator;
-    callback = aux.callback;
-  }
-
-let is_operator_param_to_michelson (p : is_operator_param) : is_operator_param_michelson =
-  let aux : is_operator_param_aux = 
-  {
-    operator = operator_param_to_michelson p.operator;
-    callback = p.callback;
-  } in
-  Layout.convert_to_right_comb aux
-
-let is_operator_response_to_michelson (r : is_operator_response) : is_operator_response_michelson =
-  let aux : is_operator_response_aux = {
-    operator = operator_param_to_michelson r.operator;
-    is_operator = r.is_operator;
-  } in
-  Layout.convert_to_right_comb aux
-
 let balance_of_param_from_michelson (p : balance_of_param_michelson) : balance_of_param =
   let aux : balance_of_param_aux = Layout.convert_from_right_comb p in
   let requests = List.map 

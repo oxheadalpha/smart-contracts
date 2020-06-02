@@ -102,30 +102,6 @@ type update_operator_aux =
 
 type update_operator_michelson = update_operator_aux michelson_or_right_comb
 
-type is_operator_response = {
-  operator : operator_param;
-  is_operator : bool;
-}
-
-type is_operator_response_aux = {
-  operator : operator_param_michelson;
-  is_operator : bool;
-}
-
-type is_operator_response_michelson = is_operator_response_aux michelson_pair_right_comb
-
-type is_operator_param = {
-  operator : operator_param;
-  callback : (is_operator_response_michelson) contract;
-}
-
-type is_operator_param_aux = {
-  operator : operator_param_michelson;
-  callback : (is_operator_response_michelson) contract;
-}
-
-type is_operator_param_michelson = is_operator_param_aux michelson_pair_right_comb
-
 (* permission policy definition *)
 
 type operator_transfer_policy =
@@ -168,10 +144,8 @@ type permissions_descriptor_michelson = permissions_descriptor_aux michelson_pai
 type fa2_entry_points =
   | Transfer of transfer_michelson list
   | Balance_of of balance_of_param_michelson
-  | Total_supply of total_supply_param_michelson
   | Token_metadata of token_metadata_param_michelson  
   | Update_operators of update_operator_michelson list
-  | Is_operator of is_operator_param_michelson
 
 
 type fa2_entry_points_custom =
