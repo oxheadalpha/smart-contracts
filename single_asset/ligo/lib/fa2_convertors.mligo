@@ -1,3 +1,12 @@
+(**
+Helper function to convert FA2 entry points input parameters between their
+Michelson and internal LIGO representation.
+
+FA2 contract implementation must conform to the Michelson entry points interface
+outlined in the FA2 standard for interoperability with other contracts and off-chain
+tools.
+ *)
+
 #if !FA2_CONVERTORS
 #define FA2_CONVERTORS
 
