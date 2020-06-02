@@ -15,7 +15,7 @@ type ledger = (address, nat) big_map
 type single_token_storage = {
   ledger : ledger;
   operators : operator_storage;
-  metadata : token_metadata;
+  metadata : (nat, token_metadata) big_map;
   total_supply : nat;
 }
 
@@ -119,35 +119,23 @@ let validate_token_ids (tokens : token_id list) : unit =
     if id = 0n then unit else failwith token_undefined
   ) tokens
 
-(** Creates a callback operation that provides total supply to the caller *)
-let get_total_supply (p, total_supply : total_supply_param * nat) : operation =
-  let u = validate_token_ids p.token_ids in
-  
-  (* prepare a response *)
-  let response : total_supply_response = { 
-    token_id = 0n;
-    total_supply = total_supply;
-  } in
-  let response_michelson = Layout.convert_to_right_comb response in
-
-  (* in case of multiple requests, just replicate the same response *)
-  let responses = List.map 
-    (fun (tid: token_id) -> response_michelson)
-    p.token_ids in
-
-  Operation.transaction responses 0mutez p.callback
-
 (** Creates a callback operation that provides token metadata to the caller *)
-let get_token_metadata (p, meta : token_metadata_param * token_metadata) : operation =
+let get_token_metadata (p, meta
+    : token_metadata_param * ((nat, token_metadata) big_map)) : operation =
   let u = validate_token_ids p.token_ids in
-  let metadata_michelson : token_metadata_michelson = 
-    Layout.convert_to_right_comb meta in
-  (* in case of multiple requests, just replicate the same response *)
-  let responses = List.map 
-    (fun (tid: token_id) -> metadata_michelson)
-    p.token_ids in
-  
-  Operation.transaction responses 0mutez p.callback
+  let token_meta = Big_map.find_opt 0n meta in
+  match token_meta with
+  | Some m ->
+    let metadata_michelson : token_metadata_michelson = 
+      Layout.convert_to_right_comb m in
+    (* in case of multiple requests, just replicate the same response *)
+    let responses = List.map 
+      (fun (tid: token_id) -> metadata_michelson)
+      p.token_ids in
+    
+    Operation.transaction responses 0mutez p.callback
+
+  | None -> (failwith "NO_META" : operation)
 
 let fa2_main (param, storage : fa2_entry_points * single_token_storage)
     : (operation  list) * single_token_storage =
@@ -170,11 +158,6 @@ let fa2_main (param, storage : fa2_entry_points * single_token_storage)
     let op = get_balance (p, storage.ledger) in
     [op], storage
 
-  | Total_supply pm ->
-    let p : total_supply_param = Layout.convert_from_right_comb pm in
-    let op = get_total_supply (p, storage.total_supply) in
-    [op], storage
-
   | Token_metadata pm ->
     let p : token_metadata_param = Layout.convert_from_right_comb pm in
     let op = get_token_metadata (p, storage.metadata) in
@@ -192,9 +175,5 @@ let fa2_main (param, storage : fa2_entry_points * single_token_storage)
     let new_storage = { storage with operators = new_ops; } in
     ([] : operation list), new_storage
 
-  | Is_operator pm ->
-    let p = is_operator_param_from_michelson pm in
-    let op = is_operator (p, storage.operators) in
-    [op], storage
 
 #endif

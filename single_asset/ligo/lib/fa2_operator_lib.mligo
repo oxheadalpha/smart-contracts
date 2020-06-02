@@ -39,21 +39,6 @@ let validate_update_operators_by_owner (update, updater : update_operator * addr
   in
   if op.owner = updater then unit else failwith not_owner
 
-
-(**
-Helper to implement `Is_operator` FA2 entry point.
-@return Tezos operation that will perform a callback passing `Is_operator` result.
- *)
-let is_operator (param, storage :  is_operator_param * operator_storage) : operation =
-  let op_key = (param.operator.owner, param.operator.operator) in
-  let is_op = Big_map.mem op_key storage in 
-  let r : is_operator_response = { 
-    operator = param.operator;
-    is_operator = is_op; 
-  } in
-  let rm = is_operator_response_to_michelson r in
-  Operation.transaction rm 0mutez param.callback
-
 (**
 Create an operator validator function based on provided operator policy.
 @param tx_policy operator_transfer_policy defining the constrains on who can transfer.
