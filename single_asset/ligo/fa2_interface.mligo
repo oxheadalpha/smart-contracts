@@ -54,19 +54,22 @@ type balance_of_param_aux = {
 
 type balance_of_param_michelson = balance_of_param_aux michelson_pair_right_comb
 
-type total_supply_response = {
-  token_id : token_id;
-  total_supply : nat;
+type operator_param = {
+  owner : address;
+  operator : address;
 }
 
-type total_supply_response_michelson = total_supply_response michelson_pair_right_comb
+type operator_param_michelson = operator_param michelson_pair_right_comb
 
-type total_supply_param = {
-  token_ids : token_id list;
-  callback : (total_supply_response_michelson list) contract;
-}
+type update_operator =
+  | Add_operator_p of operator_param
+  | Remove_operator_p of operator_param
 
-type total_supply_param_michelson = total_supply_param michelson_pair_right_comb
+type update_operator_aux =
+  | Add_operator of operator_param_michelson
+  | Remove_operator of operator_param_michelson
+
+type update_operator_michelson = update_operator_aux michelson_or_right_comb
 
 type token_metadata = {
   token_id : token_id;
@@ -85,22 +88,12 @@ type token_metadata_param = {
 
 type token_metadata_param_michelson = token_metadata_param michelson_pair_right_comb
 
-type operator_param = {
-  owner : address;
-  operator : address;
-}
+type fa2_entry_points =
+  | Transfer of transfer_michelson list
+  | Balance_of of balance_of_param_michelson
+  | Update_operators of update_operator_michelson list
+  | Token_metadata of token_metadata_param_michelson
 
-type operator_param_michelson = operator_param michelson_pair_right_comb
-
-type update_operator =
-  | Add_operator_p of operator_param
-  | Remove_operator_p of operator_param
-
-type update_operator_aux =
-  | Add_operator of operator_param_michelson
-  | Remove_operator of operator_param_michelson
-
-type update_operator_michelson = update_operator_aux michelson_or_right_comb
 
 (* permission policy definition *)
 
@@ -140,13 +133,6 @@ type permissions_descriptor_aux = {
 }
 
 type permissions_descriptor_michelson = permissions_descriptor_aux michelson_pair_right_comb
-
-type fa2_entry_points =
-  | Transfer of transfer_michelson list
-  | Balance_of of balance_of_param_michelson
-  | Token_metadata of token_metadata_param_michelson  
-  | Update_operators of update_operator_michelson list
-
 
 type fa2_entry_points_custom =
   | Permissions_descriptor of permissions_descriptor_michelson contract

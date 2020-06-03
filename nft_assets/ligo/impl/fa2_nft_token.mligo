@@ -120,13 +120,6 @@ let fa2_main (param, storage : fa2_entry_points * nft_token_storage)
     let op = get_balance (p, storage.ledger) in
     [op], storage
 
-  | Token_metadata pm ->
-    let p : token_metadata_param = Layout.convert_from_right_comb pm in
-    let metas = get_metadata (p.token_ids, storage.metadata) in
-    let metas_michelson = token_metas_to_michelson metas in
-    let op = Operation.transaction metas_michelson 0mutez p.callback in
-    [op], storage
-
   | Update_operators updates_michelson ->
     let updates = operator_updates_from_michelson updates_michelson in
     let updater = Tezos.sender in
@@ -138,5 +131,12 @@ let fa2_main (param, storage : fa2_entry_points * nft_token_storage)
       List.fold process_update updates storage.operators in
     let new_storage = { storage with operators = new_ops; } in
     ([] : operation list), new_storage
+
+  | Token_metadata pm ->
+    let p : token_metadata_param = Layout.convert_from_right_comb pm in
+    let metas = get_metadata (p.token_ids, storage.metadata) in
+    let metas_michelson = token_metas_to_michelson metas in
+    let op = Operation.transaction metas_michelson 0mutez p.callback in
+    [op], storage
 
 #endif

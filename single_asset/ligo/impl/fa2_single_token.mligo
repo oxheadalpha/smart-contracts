@@ -158,11 +158,6 @@ let fa2_main (param, storage : fa2_entry_points * single_token_storage)
     let op = get_balance (p, storage.ledger) in
     [op], storage
 
-  | Token_metadata pm ->
-    let p : token_metadata_param = Layout.convert_from_right_comb pm in
-    let op = get_token_metadata (p, storage.metadata) in
-    [op], storage
-
   | Update_operators updates_michelson ->
     let updates = operator_updates_from_michelson updates_michelson in
     let updater = Tezos.sender in
@@ -174,6 +169,11 @@ let fa2_main (param, storage : fa2_entry_points * single_token_storage)
       List.fold process_update updates storage.operators in
     let new_storage = { storage with operators = new_ops; } in
     ([] : operation list), new_storage
+
+  | Token_metadata pm ->
+    let p : token_metadata_param = Layout.convert_from_right_comb pm in
+    let op = get_token_metadata (p, storage.metadata) in
+    [op], storage
 
 
 #endif

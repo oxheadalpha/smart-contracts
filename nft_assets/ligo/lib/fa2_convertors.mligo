@@ -146,14 +146,6 @@ let balance_of_response_from_michelson (rm : balance_of_response_michelson) : ba
     balance = aux.balance;
   }
 
-let total_supply_responses_to_michelson (rs : total_supply_response list)
-    : total_supply_response_michelson list =
-  List.map
-    (fun (r : total_supply_response) ->
-      let rm : total_supply_response_michelson = Layout.convert_to_right_comb r in
-      rm
-    ) rs
-
 let token_metas_to_michelson (ms : token_metadata list) : token_metadata_michelson list =
   List.map
     ( fun (m : token_metadata) ->
