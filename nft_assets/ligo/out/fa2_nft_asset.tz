@@ -39,8 +39,8 @@
                                      (nat %token_id))))
                       (set %token_defs (pair nat nat))))
              (big_map %operators (pair address address) unit))) ;
-  code { PUSH string "TOKEN_UNDEFINED" ;
-         PUSH string "INSUFFICIENT_BALANCE" ;
+  code { PUSH string "FA2_TOKEN_UNDEFINED" ;
+         PUSH string "FA2_INSUFFICIENT_BALANCE" ;
          LAMBDA
            (pair (address %owner) (address %operator))
            (pair (address %operator) (address %owner))
@@ -511,7 +511,7 @@
                                   DUG 3 ;
                                   PAIR ;
                                   MEM ;
-                                  IF { UNIT } { PUSH string "NOT_OPERATOR" ; FAILWITH } } ;
+                                  IF { UNIT } { PUSH string "FA2_NOT_OPERATOR" ; FAILWITH } } ;
                              DIP { DROP 3 } } ;
                          SWAP ;
                          APPLY ;
@@ -700,7 +700,7 @@
                                 CDR ;
                                 COMPARE ;
                                 EQ ;
-                                IF { UNIT } { PUSH string "NOT_OWNER" ; FAILWITH } ;
+                                IF { UNIT } { PUSH string "FA2_NOT_OWNER" ; FAILWITH } ;
                                 DIP { DROP } ;
                                 DIG 2 ;
                                 DUP ;

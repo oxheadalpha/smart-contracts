@@ -37,7 +37,7 @@ let validate_update_operators_by_owner (update, updater : update_operator * addr
   | Add_operator_p op -> op
   | Remove_operator_p op -> op
   in
-  if op.owner = updater then unit else failwith not_owner
+  if op.owner = updater then unit else failwith fa2_not_owner
 
 (**
 Create an operator validator function based on provided operator policy.
@@ -46,7 +46,7 @@ Create an operator validator function based on provided operator policy.
 let make_operator_validator (tx_policy : operator_transfer_policy)
     : (address * operator_storage)-> unit =
   let can_owner_tx, can_operator_tx = match tx_policy with
-  | No_transfer -> (failwith tx_denied : bool * bool)
+  | No_transfer -> (failwith fa2_tx_denied : bool * bool)
   | Owner_transfer -> true, false
   | Owner_or_operator_transfer -> true, true
   in
@@ -56,10 +56,10 @@ let make_operator_validator (tx_policy : operator_transfer_policy)
       then unit
       else
         if not can_operator_tx
-        then failwith not_owner
+        then failwith fa2_not_owner
         else
           if Big_map.mem  (owner, operator) ops_storage
-          then unit else failwith not_operator
+          then unit else failwith fa2_not_operator
   )
 
 (**
@@ -73,7 +73,7 @@ let make_default_operator_validator (operator : address)
       then unit
       else
         if Big_map.mem  (owner, operator) ops_storage
-        then unit else failwith not_operator
+        then unit else failwith fa2_not_operator
   )
 
 (** 

@@ -31,7 +31,7 @@ let transfers_to_descriptors (txs : transfer list) : transfer_descriptor list =
       let txs = List.map 
         (fun (dst : transfer_destination) ->
           if dst.token_id <> 0n
-          then (failwith token_undefined : transfer_destination_descriptor)
+          then (failwith fa2_token_undefined : transfer_destination_descriptor)
           else {
             to_ = Some dst.to_;
             token_id = dst.token_id;
@@ -61,7 +61,7 @@ let dec_balance (owner, amt, ledger
     : address * nat * ledger) : ledger =
   let bal = get_balance_amt (owner, ledger) in
   match Michelson.is_nat (bal - amt) with
-  | None -> (failwith insufficient_balance : ledger)
+  | None -> (failwith fa2_insufficient_balance : ledger)
   | Some new_bal ->
     if new_bal = 0n
     then Big_map.remove owner ledger
@@ -84,7 +84,7 @@ let transfer (txs, owner_validator, ops_storage, ledger
     List.fold 
       (fun (ll, dst : ledger * transfer_destination_descriptor) ->
         if dst.token_id <> 0n
-        then (failwith token_undefined : ledger)
+        then (failwith fa2_token_undefined : ledger)
         else
           let lll = match tx.from_ with
           | None -> ll (* this is a mint transfer. do not need to update `from_` balance *)
@@ -104,7 +104,7 @@ Retrieve the balances for the specified tokens and owners
 let get_balance (p, ledger : balance_of_param * ledger) : operation =
   let to_balance = fun (r : balance_of_request) ->
     if r.token_id <> 0n
-    then (failwith token_undefined : balance_of_response_michelson)
+    then (failwith fa2_token_undefined : balance_of_response_michelson)
     else
       let bal = get_balance_amt (r.owner, ledger) in
       let response = { request = r; balance = bal; } in
@@ -116,7 +116,7 @@ let get_balance (p, ledger : balance_of_param * ledger) : operation =
 (** Validate if all provided token_ids are `0n` and correspond to a single token ID *)
 let validate_token_ids (tokens : token_id list) : unit =
   List.iter (fun (id : nat) ->
-    if id = 0n then unit else failwith token_undefined
+    if id = 0n then unit else failwith fa2_token_undefined
   ) tokens
 
 (** Creates a callback operation that provides token metadata to the caller *)

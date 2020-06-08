@@ -38,7 +38,6 @@ let transfer_descriptor_to_michelson (p : transfer_descriptor) : transfer_descri
 let transfer_descriptor_param_to_michelson (p : transfer_descriptor_param)
     : transfer_descriptor_param_michelson =
   let aux : transfer_descriptor_param_aux = {
-    fa2 = p.fa2;
     operator = p.operator;
     batch = List.map  transfer_descriptor_to_michelson p.batch;
   } in
@@ -64,7 +63,6 @@ let transfer_descriptor_param_from_michelson (p : transfer_descriptor_param_mich
     List.map transfer_descriptor_from_michelson aux.batch
   in
   {
-    fa2 = aux.fa2;
     operator = aux.operator;
     batch = b;
   }

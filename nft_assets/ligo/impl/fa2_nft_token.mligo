@@ -39,7 +39,7 @@ let get_balance (p, ledger : balance_of_param * ledger) : operation =
   let to_balance = fun (r : balance_of_request) ->
     let owner = Big_map.find_opt r.token_id ledger in
     let response = match owner with
-    | None -> (failwith token_undefined : balance_of_response)
+    | None -> (failwith fa2_token_undefined : balance_of_response)
     | Some o ->
       let bal = if o = r.owner then 1n else 0n in
       { request = r; balance = bal; }
@@ -65,14 +65,14 @@ let transfer (txs, owner_validator, ops_storage, ledger
         if dst.amount = 0n
         then ll
         else if dst.amount <> 1n
-        then (failwith insufficient_balance : ledger)
+        then (failwith fa2_insufficient_balance : ledger)
         else
           let owner = Big_map.find_opt dst.token_id ll in
           match owner with
-          | None -> (failwith token_undefined : ledger)
+          | None -> (failwith fa2_token_undefined : ledger)
           | Some o -> 
             if o <> tx.from_
-            then (failwith insufficient_balance : ledger)
+            then (failwith fa2_insufficient_balance : ledger)
             else Big_map.update dst.token_id (Some dst.to_) ll
       ) tx.txs l
   )
@@ -92,7 +92,7 @@ let find_token_def (tid, token_defs : token_id * (token_def set)) : token_def =
   ) token_defs (None : token_def option)
   in
   match tdef with
-  | None -> (failwith token_undefined : token_def)
+  | None -> (failwith fa2_token_undefined : token_def)
   | Some d -> d
 
 let get_metadata (tokens, meta : (token_id list) * token_storage )

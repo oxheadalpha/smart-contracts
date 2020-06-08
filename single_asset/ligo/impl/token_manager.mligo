@@ -39,7 +39,6 @@ let burn_param_to_hook_param (ts : mint_burn_tx list) : transfer_descriptor_para
   {
     batch = batch;
     operator = Current.sender;
-    fa2 = Current.self_address;
   }
 
 let mint_param_to_hook_param (ts : mint_burn_tx list) : transfer_descriptor_param =
@@ -57,7 +56,6 @@ let mint_param_to_hook_param (ts : mint_burn_tx list) : transfer_descriptor_para
   {
     batch = batch;
     operator = Current.sender;
-    fa2 = Current.self_address;
   }
 
 let get_total_supply_change (txs : mint_burn_tx list) : nat =
@@ -86,7 +84,7 @@ let burn_tokens (txs, storage : mint_burn_tokens_param * single_token_storage)
     let supply_change = get_total_supply_change txs in
     let new_supply_opt = Michelson.is_nat (storage.total_supply - supply_change) in
     let new_supply = match new_supply_opt with
-    | None -> (failwith "INSUFFICIENT_BALANCE" : nat)
+    | None -> (failwith fa2_insufficient_balance : nat)
     | Some s -> s
     in
     let new_s = { storage with

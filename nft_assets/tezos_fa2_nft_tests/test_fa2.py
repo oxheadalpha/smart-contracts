@@ -151,7 +151,7 @@ class TestMintBurn(TestFa2SetUp):
             self.util.wait_for_ops(op)
 
         failedwith = cm.exception.args[0]["with"]["string"]
-        self.assertEqual("TOKEN_UNDEFINED", failedwith)
+        self.assertEqual("FA2_TOKEN_UNDEFINED", failedwith)
 
 
 class TestOperator(TestFa2SetUp):

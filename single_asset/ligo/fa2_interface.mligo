@@ -160,13 +160,11 @@ type transfer_descriptor_aux = {
 type transfer_descriptor_michelson = transfer_descriptor_aux michelson_pair_right_comb
 
 type transfer_descriptor_param = {
-  fa2 : address;
   batch : transfer_descriptor list;
   operator : address;
 }
 
 type transfer_descriptor_param_aux = {
-  fa2 : address;
   batch : transfer_descriptor_michelson list;
   operator : address;
 }

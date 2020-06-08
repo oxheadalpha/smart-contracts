@@ -30,8 +30,12 @@
                                   (pair (string %name) (string %symbol)))
                             (nat %token_id))))
              (pair (big_map %operators (pair address address) unit) (nat %total_supply)))) ;
-  code { PUSH string "TOKEN_UNDEFINED" ;
+  code { PUSH string "FA2_TOKEN_UNDEFINED" ;
          DUP ;
+         PUSH string "FA2_INSUFFICIENT_BALANCE" ;
+         DUP ;
+         DIP { PAIR } ;
+         SWAP ;
          LAMBDA
            (pair (address %owner) (address %operator))
            (pair (address %operator) (address %owner))
@@ -53,7 +57,7 @@
          DIP { PAIR } ;
          SWAP ;
          LAMBDA
-           (pair (pair (lambda (pair address (big_map address nat)) nat) string)
+           (pair (pair (lambda (pair address (big_map address nat)) nat) (pair string string))
                  (pair (pair (list (pair (option %from_ address)
                                          (list %txs (pair (pair (nat %amount) (option %to_ address)) (nat %token_id)))))
                              (lambda (pair address (big_map (pair address address) unit)) unit))
@@ -63,7 +67,7 @@
              CAR ;
              SWAP ;
              CDR ;
-             DIP { DUP ; CDR ; SWAP ; CAR } ;
+             DIP { DUP ; CDR ; SWAP ; CAR ; DIP { DUP ; CDR ; SWAP ; CAR } } ;
              DUP ;
              CDR ;
              CDR ;
@@ -120,7 +124,7 @@
                            CDR ;
                            COMPARE ;
                            NEQ ;
-                           IF { DIG 8 ; DUP ; DUG 9 ; FAILWITH }
+                           IF { DIG 9 ; DUP ; DUG 10 ; FAILWITH }
                               { DIG 4 ;
                                 DUP ;
                                 DUG 5 ;
@@ -168,7 +172,7 @@
                                     SUB ;
                                     ISNAT ;
                                     IF_NONE
-                                      { PUSH string "INSUFFICIENT_BALANCE" ; FAILWITH }
+                                      { DIG 13 ; DUP ; DUG 14 ; FAILWITH }
                                       { PUSH nat 0 ;
                                         DIG 1 ;
                                         DUP ;
@@ -250,7 +254,7 @@
                                 DIP { DROP } } ;
                            DIP { DROP 3 } } ;
                     DIP { DROP 3 } } ;
-             DIP { DROP 3 } } ;
+             DIP { DROP 4 } } ;
          SWAP ;
          APPLY ;
          LAMBDA
@@ -284,13 +288,13 @@
              NEQ ;
              IF { PUSH string "NOT_AN_ADMIN" ; FAILWITH } { UNIT } ;
              DIP { DROP } } ;
-         DIG 7 ;
-         DUP ;
-         DUG 8 ;
-         CDR ;
          DIG 8 ;
          DUP ;
          DUG 9 ;
+         CDR ;
+         DIG 9 ;
+         DUP ;
+         DUG 10 ;
          CAR ;
          IF_LEFT
            { DUP ;
@@ -481,7 +485,7 @@
                                CDR ;
                                COMPARE ;
                                NEQ ;
-                               IF { DIG 18 ; DUP ; DUG 19 ; FAILWITH }
+                               IF { DIG 19 ; DUP ; DUG 20 ; FAILWITH }
                                   { DIG 2 ;
                                     DUP ;
                                     DUG 3 ;
@@ -571,7 +575,7 @@
                                 DUG 2 ;
                                 COMPARE ;
                                 EQ ;
-                                IF { UNIT } { DIG 17 ; DUP ; DUG 18 ; FAILWITH } ;
+                                IF { UNIT } { DIG 18 ; DUP ; DUG 19 ; FAILWITH } ;
                                 DROP 2 } ;
                          PUSH unit Unit ;
                          DIG 2 ;
@@ -677,7 +681,7 @@
                                      CDR ;
                                      COMPARE ;
                                      NEQ ;
-                                     IF { DIG 17 ; DUP ; DUG 18 ; FAILWITH }
+                                     IF { DIG 18 ; DUP ; DUG 19 ; FAILWITH }
                                         { DUP ;
                                           CDR ;
                                           DIG 1 ;
@@ -734,7 +738,7 @@
                                   DUG 3 ;
                                   PAIR ;
                                   MEM ;
-                                  IF { UNIT } { PUSH string "NOT_OPERATOR" ; FAILWITH } } ;
+                                  IF { UNIT } { PUSH string "FA2_NOT_OPERATOR" ; FAILWITH } } ;
                              DIP { DROP 3 } } ;
                          SWAP ;
                          APPLY ;
@@ -829,7 +833,7 @@
                                 CDR ;
                                 COMPARE ;
                                 EQ ;
-                                IF { UNIT } { PUSH string "NOT_OWNER" ; FAILWITH } ;
+                                IF { UNIT } { PUSH string "FA2_NOT_OWNER" ; FAILWITH } ;
                                 DIP { DROP } ;
                                 DIG 2 ;
                                 DUP ;
@@ -969,12 +973,9 @@
                        PAIR ;
                        DIP { DROP } } ;
                  SENDER ;
-                 SELF ;
-                 ADDRESS ;
-                 DIG 2 ;
+                 DIG 1 ;
                  DUP ;
-                 DUG 3 ;
-                 PAIR ;
+                 DUG 2 ;
                  PAIR ;
                  DIP { DROP } ;
                  DIG 1 ;
@@ -994,7 +995,6 @@
                  DIG 2 ;
                  DUP ;
                  DUG 3 ;
-                 CAR ;
                  CAR ;
                  PAIR ;
                  PAIR ;
@@ -1020,9 +1020,7 @@
                  SUB ;
                  ISNAT ;
                  DUP ;
-                 IF_NONE
-                   { PUSH string "INSUFFICIENT_BALANCE" ; FAILWITH }
-                   { DUP ; DIP { DROP } } ;
+                 IF_NONE { DIG 19 ; DUP ; DUG 20 ; FAILWITH } { DUP ; DIP { DROP } } ;
                  DIG 5 ;
                  DUP ;
                  DUG 6 ;
@@ -1077,12 +1075,9 @@
                        PAIR ;
                        DIP { DROP } } ;
                  SENDER ;
-                 SELF ;
-                 ADDRESS ;
-                 DIG 2 ;
+                 DIG 1 ;
                  DUP ;
-                 DUG 3 ;
-                 PAIR ;
+                 DUG 2 ;
                  PAIR ;
                  DIP { DROP } ;
                  DIG 1 ;
@@ -1102,7 +1097,6 @@
                  DIG 2 ;
                  DUP ;
                  DUG 3 ;
-                 CAR ;
                  CAR ;
                  PAIR ;
                  PAIR ;
@@ -1163,5 +1157,5 @@
              CAR ;
              PAIR ;
              DIP { DROP 3 } } ;
-         DIP { DROP 9 } } }
+         DIP { DROP 10 } } }
 
