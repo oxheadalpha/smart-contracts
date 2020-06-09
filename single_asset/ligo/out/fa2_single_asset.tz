@@ -972,12 +972,6 @@
                        SOME ;
                        PAIR ;
                        DIP { DROP } } ;
-                 SENDER ;
-                 DIG 1 ;
-                 DUP ;
-                 DUG 2 ;
-                 PAIR ;
-                 DIP { DROP } ;
                  DIG 1 ;
                  DUP ;
                  DUG 2 ;
@@ -995,7 +989,6 @@
                  DIG 2 ;
                  DUP ;
                  DUG 3 ;
-                 CAR ;
                  PAIR ;
                  PAIR ;
                  DIG 14 ;
@@ -1074,12 +1067,6 @@
                        NONE address ;
                        PAIR ;
                        DIP { DROP } } ;
-                 SENDER ;
-                 DIG 1 ;
-                 DUP ;
-                 DUG 2 ;
-                 PAIR ;
-                 DIP { DROP } ;
                  DIG 1 ;
                  DUP ;
                  DUG 2 ;
@@ -1097,7 +1084,6 @@
                  DIG 2 ;
                  DUP ;
                  DUG 3 ;
-                 CAR ;
                  PAIR ;
                  PAIR ;
                  DIG 14 ;
