@@ -1,18 +1,16 @@
 # Multi Asset Contract
 
-Specification for Tezos multi-asset contract adapted from the corresponding
-specification for [Ethereum](https://eips.ethereum.org/EIPS/eip-1155).
+Implementation of the FA2 token contract (TZIP-12) for multiple fungible assets.
 
 ## Project Structure
 
-* [`multi_asset.md`](multi_asset.md) - standard specification
-* [`multi_token_interface.mligo`](multi_token_interface.mligo) - multi-asset
-contract interfaces defined in
-[LIGO](https://ligolang.org/), smart-contract language for Tezos
-* [`impl`](impl/) folder - reference implementation of the multi-asset contract,
-test helper contracts and code.
-* [`out`](out/) folder - multi-asset contract and helper contract compiled into
-Michelson
+* [`multi_asset.md`](multi_asset.md) - description
+* [`fa2_interface.mligo`](ligo/fa2_interface.mligo) - FA2 contract interfaces
+defined in [LIGO](https://ligolang.org/), smart-contract language for Tezos.
+* [`impl`](ligo/impl/) folder - reference implementation of the multi-asset FA2
+contract, test helper contracts and code.
+* [`out`](ligo/out/) folder - multi-asset FA2 contract and helper contract compiled
+into Michelson.
 * [`tezos_mac_tests`](tezos_mac_tests/) folder - Python multi_asset contract tests
 implemented with
 [Pytezos](https://github.com/baking-bad/pytezos) and
