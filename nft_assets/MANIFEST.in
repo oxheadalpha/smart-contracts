@@ -1,5 +1,6 @@
 include README.md
-include *.mligo
-include impl/*.mligo
+include ligo/*.mligo
+include ligo/lib/*.mligo
+include ligo/impl/*.mligo
 include tezos_fa2_nft_tests/start-sandbox.sh
 include tezos_fa2_nft_tests/kill-sandbox.sh

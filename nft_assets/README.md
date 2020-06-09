@@ -4,11 +4,11 @@ Implementation of the FA2 token contract (TZIP-12) for a NFT asset.
 
 ## Project Structure
 
-* [`fa2_interface.mligo`](fa2_interface.mligo) - FA2 contract interfaces defined
+* [`fa2_interface.mligo`](ligo/fa2_interface.mligo) - FA2 contract interfaces defined
 in [LIGO](https://ligolang.org/), smart-contract language for Tezos
-* [`impl`](impl/) folder - reference implementation of the NFT-asset FA2 contract,
+* [`impl`](ligo/impl/) folder - reference implementation of the NFT-asset FA2 contract,
 test helper contracts and code.
-* [`out`](out/) folder - NFT-asset FA2 contract and helper contract compiled
+* [`out`](ligo/out/) folder - NFT-asset FA2 contract and helper contract compiled
 into Michelson
 * [`tezos_fa2_nft_tests`](tezos_fa2_nft_tests/) folder - Python NFT asset
 FA2  contract tests implemented with
