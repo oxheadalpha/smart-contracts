@@ -100,25 +100,32 @@ let transfer (txs, owner_validator, storage
       ) tx.txs l
   in
   List.fold make_transfer txs storage.ledger
-(* 
-let get_balance (p, ledger : balance_of_param * ledger) : operation =
+ 
+let get_balance (p, ledger, tokens : balance_of_param * ledger * token_storage) : operation =
   let to_balance = fun (r : balance_of_request) ->
-    let key = r.owner, r.token_id in
-    let bal = get_balance_amt (key, ledger) in
-    { request = r; balance = bal; } 
+    if not Big_map.mem r.token_id tokens
+    then (failwith fa2_token_undefined : balance_of_response_michelson)
+    else
+      let key = r.owner, r.token_id in
+      let bal = get_balance_amt (key, ledger) in
+      let response = { request = r; balance = bal; } in
+      balance_of_response_to_michelson response
   in
   let responses = List.map to_balance p.requests in
   Operation.transaction responses 0mutez p.callback
 
+
 let get_metadata (p, tokens : token_metadata_param * token_storage) : operation =
   let get_meta = fun (tid : token_id) ->
     let info = Big_map.find_opt tid tokens in
-    match info with
-    | None -> (failwith "token id not found" : token_metadata)
+    let meta = match info with
+    | None -> (failwith fa2_token_undefined : token_metadata)
     | Some i -> i.metadata
+    in
+    Layout.convert_to_right_comb meta
   in
   let metas = List.map get_meta p.token_ids in
-  Operation.transaction metas 0mutez p.callback *)
+  Operation.transaction metas 0mutez p.callback
 
 let fa2_main (param, storage : fa2_entry_points * multi_token_storage)
     : (operation  list) * multi_token_storage =
@@ -136,21 +143,27 @@ let fa2_main (param, storage : fa2_entry_points * multi_token_storage)
     let new_storage = { storage with ledger = new_ledger; }
     in ([] : operation list), new_storage
 
-  | Balance_of p -> 
-    (* let op = get_balance (p, storage.ledger) in
-    [op], storage *)
-    ([] : operation list), storage
+  | Balance_of pm -> 
+    let p = balance_of_param_from_michelson pm in
+    let op = get_balance (p, storage.ledger, storage.tokens) in
+    [op], storage
 
-  | Token_metadata p -> 
-    (* let op = get_metadata (p, storage.tokens) in
-    [op], storage *)
-    ([] : operation list), storage
-
-  | Update_operators updates ->
-    (* let new_ops = update_operators (updates, storage.operators) in
+  | Update_operators updates_michelson ->
+    let updates = operator_updates_from_michelson updates_michelson in
+    let updater = Tezos.sender in
+    let process_update = (fun (ops, update : operator_storage * update_operator) ->
+      let u = validate_update_operators_by_owner (update, updater) in
+      update_operators (update, ops)
+    ) in
+    let new_ops =
+      List.fold process_update updates storage.operators in
     let new_storage = { storage with operators = new_ops; } in
-    ([] : operation list), new_storage *)
-    ([] : operation list), storage
+    ([] : operation list), new_storage
+
+  | Token_metadata pm ->
+    let p : token_metadata_param = Layout.convert_from_right_comb pm in
+    let op = get_metadata (p, storage.tokens) in
+    [op], storage
 
 
 #endif
