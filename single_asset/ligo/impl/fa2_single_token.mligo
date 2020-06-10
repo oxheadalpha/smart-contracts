@@ -15,7 +15,7 @@ type ledger = (address, nat) big_map
 type single_token_storage = {
   ledger : ledger;
   operators : operator_storage;
-  metadata : (nat, token_metadata) big_map;
+  token_metadata : (nat, token_metadata_michelson) big_map;
   total_supply : nat;
 }
 
