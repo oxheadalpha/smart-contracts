@@ -5,12 +5,7 @@
                       (list %requests (pair (address %owner) (nat %token_id)))
                       (contract %callback
                          (list (pair (pair %request (address %owner) (nat %token_id)) (nat %balance)))))
-                   (pair %token_metadata
-                      (list %token_ids nat)
-                      (contract %callback
-                         (list (pair (nat %token_id)
-                                     (pair (string %symbol)
-                                           (pair (string %name) (pair (nat %decimals) (map %extras string string)))))))))
+                   (contract %token_metadata_registry address))
                (or (list %transfer
                       (pair (address %from_)
                             (list %txs (pair (address %to_) (pair (nat %token_id) (nat %amount))))))
@@ -29,13 +24,12 @@
           (pair %assets
              (pair (big_map %ledger (pair address nat) nat)
                    (big_map %operators (pair address address) unit))
-             (big_map %tokens
-                nat
-                (pair (pair %metadata
-                         (pair (pair (nat %decimals) (map %extras string string))
-                               (pair (string %name) (string %symbol)))
-                         (nat %token_id))
-                      (nat %total_supply))))) ;
+             (pair (big_map %token_metadata
+                      nat
+                      (pair (nat %token_id)
+                            (pair (string %symbol)
+                                  (pair (string %name) (pair (nat %decimals) (map %extras string string))))))
+                   (big_map %token_total_supply nat nat)))) ;
   code { PUSH string "FA2_TOKEN_UNDEFINED" ;
          PUSH string "FA2_INSUFFICIENT_BALANCE" ;
          LAMBDA
@@ -375,6 +369,7 @@
                          DUP ;
                          DUG 4 ;
                          CDR ;
+                         CDR ;
                          DIG 4 ;
                          DUP ;
                          DUG 5 ;
@@ -465,76 +460,11 @@
                          CONS ;
                          PAIR ;
                          DIP { DROP 3 } }
-                       { DIG 2 ;
-                         DUP ;
-                         DUG 3 ;
-                         CDR ;
-                         DIG 1 ;
-                         DUP ;
-                         DUG 2 ;
-                         CAR ;
-                         DIG 2 ;
-                         DUP ;
-                         DUG 3 ;
-                         CDR ;
-                         PAIR ;
-                         PAIR ;
-                         DUP ;
-                         CAR ;
-                         DUP ;
-                         CDR ;
-                         MAP { DIG 2 ;
-                               DUP ;
-                               DUG 3 ;
-                               CDR ;
-                               DIG 1 ;
-                               DUP ;
-                               DUG 2 ;
-                               GET ;
-                               IF_NONE
-                                 { DIG 17 ; DUP ; DUG 18 ; FAILWITH }
-                                 { DUP ; CAR ; DIP { DROP } } ;
-                               DUP ;
-                               CAR ;
-                               CAR ;
-                               CDR ;
-                               DIG 1 ;
-                               DUP ;
-                               DUG 2 ;
-                               CAR ;
-                               CAR ;
-                               CAR ;
-                               PAIR ;
-                               DIG 1 ;
-                               DUP ;
-                               DUG 2 ;
-                               CAR ;
-                               CDR ;
-                               CAR ;
-                               PAIR ;
-                               DIG 1 ;
-                               DUP ;
-                               DUG 2 ;
-                               CAR ;
-                               CDR ;
-                               CDR ;
-                               PAIR ;
-                               DIG 1 ;
-                               DUP ;
-                               DUG 2 ;
-                               CDR ;
-                               PAIR ;
-                               DIP { DROP 2 } } ;
-                         DIG 1 ;
-                         DUP ;
-                         DUG 2 ;
-                         CAR ;
+                       { DUP ;
                          PUSH mutez 0 ;
-                         DIG 2 ;
-                         DUP ;
-                         DUG 3 ;
+                         SELF ;
+                         ADDRESS ;
                          TRANSFER_TOKENS ;
-                         DIP { DROP 3 } ;
                          DIG 3 ;
                          DUP ;
                          DUG 4 ;
@@ -667,6 +597,7 @@
                                        DUP ;
                                        DUG 6 ;
                                        CDR ;
+                                       CAR ;
                                        DIG 1 ;
                                        DUP ;
                                        DUG 2 ;
@@ -962,6 +893,7 @@
                      DUP ;
                      DUG 2 ;
                      CDR ;
+                     CDR ;
                      DIG 3 ;
                      DUP ;
                      DUG 4 ;
@@ -998,22 +930,15 @@
                                 DIG 1 ;
                                 DUP ;
                                 DUG 2 ;
-                                CDR ;
                                 SUB ;
                                 ISNAT ;
                                 IF_NONE { DIG 21 ; DUP ; DUG 22 ; FAILWITH } { DUP ; DIP { DROP } } ;
                                 DIG 3 ;
                                 DUP ;
                                 DUG 4 ;
-                                DIG 2 ;
+                                DIG 1 ;
                                 DUP ;
-                                DUG 3 ;
-                                DIG 2 ;
-                                DUP ;
-                                DUG 3 ;
-                                SWAP ;
-                                CAR ;
-                                PAIR ;
+                                DUG 2 ;
                                 SOME ;
                                 DIG 4 ;
                                 DUP ;
@@ -1035,8 +960,10 @@
                      DIG 1 ;
                      DUP ;
                      DUG 2 ;
+                     DIP { DUP ; CAR ; SWAP ; CDR ; CAR } ;
                      SWAP ;
-                     CAR ;
+                     PAIR ;
+                     SWAP ;
                      PAIR ;
                      DIP { DROP 5 } ;
                      DUP ;
@@ -1046,40 +973,9 @@
                    { DIG 2 ;
                      DUP ;
                      DUG 3 ;
-                     CDR ;
                      DIG 1 ;
                      DUP ;
                      DUG 2 ;
-                     CAR ;
-                     DIG 2 ;
-                     DUP ;
-                     DUG 3 ;
-                     CDR ;
-                     CAR ;
-                     DIG 3 ;
-                     DUP ;
-                     DUG 4 ;
-                     CDR ;
-                     CDR ;
-                     CAR ;
-                     PAIR ;
-                     DIG 3 ;
-                     DUP ;
-                     DUG 4 ;
-                     CDR ;
-                     CDR ;
-                     CDR ;
-                     CDR ;
-                     DIG 4 ;
-                     DUP ;
-                     DUG 5 ;
-                     CDR ;
-                     CDR ;
-                     CDR ;
-                     CAR ;
-                     PAIR ;
-                     PAIR ;
-                     PAIR ;
                      PAIR ;
                      DUP ;
                      CAR ;
@@ -1087,38 +983,63 @@
                      DUP ;
                      DUG 2 ;
                      CDR ;
+                     DIG 1 ;
                      DUP ;
-                     DIG 2 ;
+                     DUG 2 ;
+                     CAR ;
+                     DIG 1 ;
                      DUP ;
-                     DUG 3 ;
+                     DUG 2 ;
                      CDR ;
+                     CAR ;
+                     DIG 1 ;
+                     DUP ;
+                     DUG 2 ;
                      GET ;
                      IF_NONE
-                       { DUP ;
+                       { DIG 1 ;
+                         DUP ;
+                         DUG 2 ;
+                         DIG 2 ;
+                         DUP ;
+                         DUG 3 ;
+                         CDR ;
+                         CAR ;
+                         DIG 4 ;
+                         DUP ;
+                         DUG 5 ;
+                         DIG 3 ;
+                         DUP ;
+                         DUG 4 ;
+                         SWAP ;
+                         SOME ;
+                         SWAP ;
+                         UPDATE ;
+                         DIP { DUP ; CAR ; SWAP ; CDR ; CDR } ;
+                         PAIR ;
+                         SWAP ;
+                         PAIR ;
+                         DIG 2 ;
+                         DUP ;
+                         DUG 3 ;
+                         CDR ;
+                         CDR ;
                          PUSH nat 0 ;
                          DIG 3 ;
                          DUP ;
                          DUG 4 ;
-                         PAIR ;
-                         DIG 3 ;
-                         DUP ;
-                         DUG 4 ;
-                         CDR ;
                          SWAP ;
                          SOME ;
                          SWAP ;
-                         UPDATE }
+                         UPDATE ;
+                         DIP { DUP ; CAR ; SWAP ; CDR ; CAR } ;
+                         SWAP ;
+                         PAIR ;
+                         SWAP ;
+                         PAIR }
                        { PUSH string "FA2_DUP_TOKEN_ID" ; FAILWITH } ;
-                     DIP { DROP 3 } ;
-                     DIG 3 ;
+                     DIP { DROP 4 } ;
                      DUP ;
-                     DUG 4 ;
-                     DIG 1 ;
-                     DUP ;
-                     DUG 2 ;
-                     SWAP ;
-                     CAR ;
-                     PAIR ;
                      NIL operation ;
                      PAIR ;
                      DIP { DROP 2 } } ;
@@ -1185,6 +1106,7 @@
                  DUP ;
                  DUG 2 ;
                  CDR ;
+                 CDR ;
                  DIG 3 ;
                  DUP ;
                  DUG 4 ;
@@ -1221,20 +1143,13 @@
                             DIG 1 ;
                             DUP ;
                             DUG 2 ;
-                            CDR ;
                             ADD ;
                             DIG 3 ;
                             DUP ;
                             DUG 4 ;
-                            DIG 2 ;
+                            DIG 1 ;
                             DUP ;
-                            DUG 3 ;
-                            DIG 2 ;
-                            DUP ;
-                            DUG 3 ;
-                            SWAP ;
-                            CAR ;
-                            PAIR ;
+                            DUG 2 ;
                             SOME ;
                             DIG 4 ;
                             DUP ;
@@ -1256,8 +1171,10 @@
                  DIG 1 ;
                  DUP ;
                  DUG 2 ;
+                 DIP { DUP ; CAR ; SWAP ; CDR ; CAR } ;
                  SWAP ;
-                 CAR ;
+                 PAIR ;
+                 SWAP ;
                  PAIR ;
                  DIP { DROP 5 } ;
                  DUP ;
