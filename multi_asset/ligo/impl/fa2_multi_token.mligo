@@ -8,17 +8,17 @@
 (* (owner,token_id) -> balance *)
 type ledger = ((address * token_id), nat) big_map
 
-type token_info = {
-  metadata : token_metadata;
-  total_supply : nat;
-}
-(* token_id -> metadata *)
-type token_storage = (token_id, token_info) big_map
+(* token_id -> total_supply *)
+type token_total_supply = (token_id, nat) big_map
+
+(* token_id -> token_metadata *)
+type token_metadata_storage = (token_id, token_metadata_michelson) big_map
 
 type multi_token_storage = {
   ledger : ledger;
   operators : operator_storage;
-  tokens : token_storage;
+  token_total_supply : token_total_supply;
+  token_metadata : token_metadata_storage;
 }
 
 let get_balance_amt (key, ledger : (address * nat) * ledger) : nat =
@@ -58,7 +58,7 @@ let transfer (txs, owner_validator, storage
     let u = owner_validator (tx.from_, storage.operators) in
     List.fold 
       (fun (ll, dst : ledger * transfer_destination) ->
-        if not Big_map.mem dst.token_id storage.tokens
+        if not Big_map.mem dst.token_id storage.token_metadata
         then (failwith fa2_token_undefined : ledger)
         else
           let lll = dec_balance (tx.from_, dst.token_id, dst.amount, ll) in
@@ -67,7 +67,8 @@ let transfer (txs, owner_validator, storage
   in
   List.fold make_transfer txs storage.ledger
  
-let get_balance (p, ledger, tokens : balance_of_param * ledger * token_storage) : operation =
+let get_balance (p, ledger, tokens
+    : balance_of_param * ledger * token_total_supply) : operation =
   let to_balance = fun (r : balance_of_request) ->
     if not Big_map.mem r.token_id tokens
     then (failwith fa2_token_undefined : balance_of_response_michelson)
@@ -80,18 +81,6 @@ let get_balance (p, ledger, tokens : balance_of_param * ledger * token_storage) 
   let responses = List.map to_balance p.requests in
   Operation.transaction responses 0mutez p.callback
 
-
-let get_metadata (p, tokens : token_metadata_param * token_storage) : operation =
-  let get_meta = fun (tid : token_id) ->
-    let info = Big_map.find_opt tid tokens in
-    let meta = match info with
-    | None -> (failwith fa2_token_undefined : token_metadata)
-    | Some i -> i.metadata
-    in
-    Layout.convert_to_right_comb meta
-  in
-  let metas = List.map get_meta p.token_ids in
-  Operation.transaction metas 0mutez p.callback
 
 let fa2_main (param, storage : fa2_entry_points * multi_token_storage)
     : (operation  list) * multi_token_storage =
@@ -110,7 +99,7 @@ let fa2_main (param, storage : fa2_entry_points * multi_token_storage)
 
   | Balance_of pm -> 
     let p = balance_of_param_from_michelson pm in
-    let op = get_balance (p, storage.ledger, storage.tokens) in
+    let op = get_balance (p, storage.ledger, storage.token_total_supply) in
     [op], storage
 
   | Update_operators updates_michelson ->
