@@ -23,7 +23,7 @@ type nft_asset_storage = {
 }
 
 type nft_asset_param =
-  | Assets of fa2_entry_points
+  | Assets of nft_entry_points
   | Admin of simple_admin
   | Tokens of token_manager
 
@@ -46,7 +46,7 @@ let nft_asset_main
   | Assets p -> 
     let u2 = fail_if_paused s.admin in
 
-    let ops, assets = fa2_main (p, s.assets) in
+    let ops, assets = nft_token_main (p, s.assets) in
     let new_s = { s with assets = assets; } in
     (ops, new_s)
 
