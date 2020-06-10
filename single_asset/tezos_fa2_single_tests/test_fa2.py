@@ -62,16 +62,16 @@ class TestFa2SetUp(TestCase):
             assets = {
                 ledger = (Big_map.empty : (address, nat) big_map);
                 operators = (Big_map.empty : ((address * address), unit) big_map);
-                metadata = Big_map.literal [
+                token_metadata = Big_map.literal [
                   (
                     0n, 
-                    {
+                    Layout.convert_to_right_comb ({
                       token_id = 0n;
                       symbol = "TK1";
                       name = "Test Token";
                       decimals = 0n;
                       extras = (Map.empty : (string, string) map);
-                    }
+                    } : token_metadata)
                   );
                 ];
                 total_supply = 0n;
@@ -114,6 +114,7 @@ class TestFa2SetUp(TestCase):
             msg,
         )
 
+
 class TestMintBurn(TestFa2SetUp):
     def setUp(self):
         super().setUp()
@@ -154,7 +155,6 @@ class TestOperator(TestFa2SetUp):
         self.util.wait_for_ops(op_add)
 
 
-
 class TestTransfer(TestFa2SetUp):
     def setUp(self):
         super().setUp()
@@ -181,7 +181,7 @@ class TestTransfer(TestFa2SetUp):
         op_tx = self.fa2.transfer(
             [
                 {
-                    "from_": from_address, 
+                    "from_": from_address,
                     "txs": [{"to_": to_address, "token_id": 0, "amount": 3}],
                 },
             ]
