@@ -31,17 +31,22 @@ type token_manager =
   | Burn_tokens of mint_burn_tokens_param
 
 
-let create_token 
-    (metadata, tokens : token_metadata * token_storage) : token_storage =
-  let token_info = Map.find_opt metadata.token_id tokens in
-  match token_info with
-  | Some ti -> (failwith "FA2_DUP_TOKEN_ID" : token_storage)
+let create_token (metadata, storage
+    : token_metadata_michelson * multi_token_storage) : multi_token_storage =
+  (* extract token id *)
+  let meta : token_metadata = Layout.convert_from_right_comb metadata in
+  let new_token_id = meta.token_id in
+
+  let existing_meta = Map.find_opt new_token_id storage.token_metadata in
+  match existing_meta with
+  | Some m -> (failwith "FA2_DUP_TOKEN_ID" : multi_token_storage)
   | None ->
-      let ti = {
-        metadata = metadata;
-        total_supply = 0n;
-      } in
-      Big_map.add metadata.token_id ti tokens
+    let meta = Big_map.add new_token_id metadata storage.token_metadata in
+    let supply = Big_map.add new_token_id 0n storage.token_total_supply in
+    { storage with
+      token_metadata = meta;
+      token_total_supply = supply;
+    }
 
 
 let  mint_update_balances (txs, ledger : (mint_burn_tx list) * ledger) : ledger =
@@ -50,25 +55,25 @@ let  mint_update_balances (txs, ledger : (mint_burn_tx list) * ledger) : ledger 
 
   List.fold mint txs ledger
 
-let mint_update_total_supply (txs, tokens : (mint_burn_tx list) * token_storage) : token_storage =
-  let update = fun (tokens, tx : token_storage * mint_burn_tx) ->
-    let info_opt = Big_map.find_opt tx.token_id tokens in
-    match info_opt with
-    | None -> (failwith fa2_token_undefined : token_storage)
-    | Some ti ->
-      let new_s = ti.total_supply + tx.amount in
-      let new_ti = { ti with total_supply = new_s } in
-      Big_map.update tx.token_id (Some new_ti) tokens in
+let mint_update_total_supply (txs, total_supplies
+    : (mint_burn_tx list) * token_total_supply) : token_total_supply =
+  let update = fun (supplies, tx : token_total_supply * mint_burn_tx) ->
+    let supply_opt = Big_map.find_opt tx.token_id supplies in
+    match supply_opt with
+    | None -> (failwith fa2_token_undefined : token_total_supply)
+    | Some ts ->
+      let new_s = ts + tx.amount in
+      Big_map.update tx.token_id (Some new_s) supplies in
 
-  List.fold update txs tokens
+  List.fold update txs total_supplies
 
 let mint_tokens (param, storage : mint_burn_tokens_param * multi_token_storage) 
     : multi_token_storage =
     let new_ledger = mint_update_balances (param, storage.ledger) in
-    let new_tokens = mint_update_total_supply (param, storage.tokens) in
+    let new_supply = mint_update_total_supply (param, storage.token_total_supply) in
     let new_s = { storage with
       ledger = new_ledger;
-      tokens = new_tokens;
+      token_total_supply = new_supply;
     } in
     new_s
 
@@ -78,29 +83,29 @@ let burn_update_balances(txs, ledger : (mint_burn_tx list) * ledger) : ledger =
 
   List.fold burn txs ledger
 
-let burn_update_total_supply (txs, tokens : (mint_burn_tx list) * token_storage) : token_storage =
-  let update = fun (tokens, tx : token_storage * mint_burn_tx) ->
-    let info_opt = Big_map.find_opt tx.token_id tokens in
-    match info_opt with
-    | None -> (failwith fa2_token_undefined : token_storage)
-    | Some ti ->
-      let new_s = match Michelson.is_nat (ti.total_supply - tx.amount) with
+let burn_update_total_supply (txs, total_supplies
+    : (mint_burn_tx list) * token_total_supply) : token_total_supply =
+  let update = fun (supplies, tx : token_total_supply * mint_burn_tx) ->
+    let supply_opt = Big_map.find_opt tx.token_id supplies in
+    match supply_opt with
+    | None -> (failwith fa2_token_undefined : token_total_supply)
+    | Some ts ->
+      let new_s = match Michelson.is_nat (ts - tx.amount) with
       | None -> (failwith fa2_insufficient_balance : nat)
       | Some s -> s
       in
-      let new_ti = { ti with total_supply = new_s } in
-      Big_map.update tx.token_id (Some new_ti) tokens in
+      Big_map.update tx.token_id (Some new_s) supplies in
 
-  List.fold update txs tokens
+  List.fold update txs total_supplies
 
 let burn_tokens (param, storage : mint_burn_tokens_param * multi_token_storage) 
     : multi_token_storage =
 
     let new_ledger = burn_update_balances (param, storage.ledger) in
-    let new_tokens = burn_update_total_supply (param, storage.tokens) in
+    let new_supply = burn_update_total_supply (param, storage.token_total_supply) in
     let new_s = { storage with
       ledger = new_ledger;
-      tokens = new_tokens;
+      token_total_supply = new_supply;
     } in
     new_s
 
@@ -109,9 +114,7 @@ let token_manager (param, s : token_manager * multi_token_storage)
   match param with
 
   | Create_token metadata_michelson ->
-    let metadata : token_metadata = Layout.convert_from_right_comb metadata_michelson in
-    let new_tokens = create_token (metadata, s.tokens) in
-    let new_s = { s with tokens = new_tokens } in
+    let new_s = create_token (metadata_michelson, s) in
     (([]: operation list), new_s)
 
   | Mint_tokens param -> 
