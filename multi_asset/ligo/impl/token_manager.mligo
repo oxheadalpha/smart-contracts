@@ -15,11 +15,6 @@
 
 #include "fa2_multi_token.mligo"
 
-type create_token_param = {
-  token_id : nat;
-  metadata : token_metadata;
-}
-
 type mint_burn_tx = {
   owner : address;
   token_id : token_id;
@@ -31,22 +26,22 @@ type mint_burn_tokens_param = mint_burn_tx list
 
 (* `token_manager` entry points *)
 type token_manager =
-  | Create_token of create_token_param
+  | Create_token of token_metadata_michelson
   | Mint_tokens of mint_burn_tokens_param
   | Burn_tokens of mint_burn_tokens_param
 
 
 let create_token 
-    (param, tokens : create_token_param * token_storage) : token_storage =
-  let token_info = Map.find_opt param.token_id tokens in
+    (metadata, tokens : token_metadata * token_storage) : token_storage =
+  let token_info = Map.find_opt metadata.token_id tokens in
   match token_info with
   | Some ti -> (failwith "FA2_DUP_TOKEN_ID" : token_storage)
   | None ->
       let ti = {
-        metadata = param.metadata;
+        metadata = metadata;
         total_supply = 0n;
       } in
-      Big_map.add param.token_id ti tokens
+      Big_map.add metadata.token_id ti tokens
 
 
 let  mint_update_balances (txs, ledger : (mint_burn_tx list) * ledger) : ledger =
@@ -113,8 +108,9 @@ let token_manager (param, s : token_manager * multi_token_storage)
     : (operation list) * multi_token_storage =
   match param with
 
-  | Create_token param ->
-    let new_tokens = create_token (param, s.tokens) in
+  | Create_token metadata_michelson ->
+    let metadata : token_metadata = Layout.convert_from_right_comb metadata_michelson in
+    let new_tokens = create_token (metadata, s.tokens) in
     let new_s = { s with tokens = new_tokens } in
     (([]: operation list), new_s)
 

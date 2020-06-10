@@ -9,8 +9,6 @@ from pytezos.operation.result import OperationResult
 from pytezos.rpc.errors import RpcError
 from pytezos.operation import fees
 
-fees.hard_gas_limit_per_operation = 800000
-
 
 class LigoEnv:
     def __init__(self, src_dir, out_dir):
@@ -134,14 +132,29 @@ class LigoContract:
         return util.client.contract(contract_id)
 
 
+def get_consumed_gas(op_res):
+    gs = (r["consumed_gas"] for r in OperationResult.iter_results(op_res))
+    return [int(g) for g in gs]
+
+
+def pformat_consumed_gas(op_res):
+    gs = get_consumed_gas(op_res)
+    if len(gs) == 1:
+        return f"operation consumed gas: {gs[0]:,}"
+    else:
+        total = sum(gs)
+        internal_ops_gas = [f"{g:,}" for g in gs]
+        return f"operation consumed gas: {total:,} {internal_ops_gas}"
+
+
 class PtzUtils:
-    def __init__(self, client, block_time=60, block_depth=5, num_blocks_wait=2):
+    def __init__(self, client, block_depth=5, num_blocks_wait=3):
         """
         :param client: PyTezosClient
-        :param block_time: block baking time in seconds
+        :param block_depth number of recent blocks to test when checking for operation status
+        :param num_blocks_wait number of backed blocks to retry wait until failing with timeout
         """
         self.client = client
-        self.block_time = block_time
         self.block_depth = block_depth
         self.num_blocks_wait = num_blocks_wait
 
@@ -151,7 +164,6 @@ class PtzUtils:
         )
         return PtzUtils(
             new_client,
-            block_time=self.block_time,
             block_depth=self.block_depth,
             num_blocks_wait=self.num_blocks_wait,
         )
@@ -169,7 +181,7 @@ class PtzUtils:
             if len(ops) == len(res):
                 return res
             try:
-                self.client.shell.wait_next_block(block_time=self.block_time)
+                self.client.shell.wait_next_block()
             except AssertionError:
                 print("block waiting timed out")
 
@@ -194,28 +206,14 @@ class PtzUtils:
             res = blocks.find_operation(op_hash)
             if not OperationResult.is_applied(res):
                 raise RpcError.from_errors(OperationResult.errors(res)) from op_hash
-            print(self.pformat_consumed_gas(res))
+            print(pformat_consumed_gas(res))
             return res
         except StopIteration:
             # not found
             return None
-
-    def get_consumed_gas(self, op_res):
-        gs = (r["consumed_gas"] for r in OperationResult.iter_results(op_res))
-        return [int(g) for g in gs]
-
-    def pformat_consumed_gas(self, op_res):
-        gs = self.get_consumed_gas(op_res)
-        if len(gs) == 1:
-            return f"operation consumed gas: {gs[0]:,}"
-        else:
-            total = sum(gs)
-            internal_ops_gas = [f"{g:,}" for g in gs]
-            return f"operation consumed gas: {total:,} {internal_ops_gas}"
 
 
 flextesa_sandbox = pytezos.using(
     shell="http://localhost:20000",
     key=Key.from_encoded_key("edsk3RFgDiCt7tWB2oe96w1eRw72iYiiqZPLu9nnEY23MYRp2d8Kkx"),
 )
-
