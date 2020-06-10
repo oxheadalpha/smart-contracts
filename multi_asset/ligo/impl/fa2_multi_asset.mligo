@@ -46,3 +46,20 @@ let multi_asset_main
       let ops, assets = fa2_main (p, s.assets) in
       let new_s = { s with assets = assets } in
       (ops, new_s)
+
+(**
+This is a sample initial fa2_single_asset storage.
+ *)
+
+let store : multi_asset_storage = {
+  admin = {
+    admin = ("tz1YPSCGWXwBdTncK2aCctSZAXWvGsGwVJqU" : address);
+    pending_admin = (None : address option);
+    paused = true;
+  };
+  assets = {
+    ledger = (Big_map.empty : ((address * token_id), nat) big_map);
+    operators = (Big_map.empty : ((address * address), unit) big_map);
+    tokens = (Big_map.empty : (token_id, token_info) big_map);
+  };
+}
