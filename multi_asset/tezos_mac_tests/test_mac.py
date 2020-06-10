@@ -60,9 +60,10 @@ class TestMacSetUp(TestCase):
                 paused = true;
             };
             assets = {
-                ledger = (Big_map.empty : ((address * token_id), nat) big_map);
-                operators = (Big_map.empty : ((address * address), unit) big_map);
-                tokens = (Big_map.empty : (token_id, token_info) big_map);
+                ledger = (Big_map.empty : ledger);
+                operators = (Big_map.empty : operator_storage);
+                token_total_supply = (Big_map.empty : token_total_supply);
+                token_metadata = (Big_map.empty : token_metadata_storage);
             };
         }
         """
