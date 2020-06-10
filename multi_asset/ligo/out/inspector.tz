@@ -1,114 +1,100 @@
 { parameter
-    (or (or (or (pair %assert_is_operator
-                   (address %mac)
-                   (pair %request (address %operator) (address %owner)))
-                (unit %default))
-            (or (pair %is_operator_response (pair (address %operator) (address %owner)) bool)
-                (pair %query (pair (address %mac) (address %owner)) (nat %token_id))))
-        (list %response (pair (pair (address %owner) (nat %token_id)) nat))) ;
+    (or (or (unit %default)
+            (pair %query (pair (address %fa2) (address %owner)) (nat %token_id)))
+        (list %response
+           (pair (pair %request (address %owner) (nat %token_id)) (nat %balance)))) ;
   storage
-    (or (unit %empty) (pair %state (pair (nat %balance) (address %owner)) (nat %token_id))) ;
+    (or (unit %empty)
+        (pair %state (nat %balance) (pair %request (address %owner) (nat %token_id)))) ;
   code { DUP ;
          CDR ;
-         DIP { DUP } ;
-         SWAP ;
+         DIG 1 ;
+         DUP ;
+         DUG 2 ;
          CAR ;
          IF_LEFT
            { DUP ;
              IF_LEFT
-               { DUP ;
-                 IF_LEFT
-                   { DUP ;
-                     DUP ;
-                     CAR ;
-                     CONTRACT %is_operator
-                       (pair (pair %is_operator_request (address %operator) (address %owner))
-                             (contract %is_operator_view (pair (pair (address %operator) (address %owner)) bool))) ;
-                     IF_NONE
-                       { PUSH string "bad address for get_entrypoint (%is_operator)" ; FAILWITH }
-                       {} ;
-                     SELF ;
-                     ADDRESS ;
-                     CONTRACT %is_operator_response
-                       (pair (pair (address %operator) (address %owner)) bool) ;
-                     IF_NONE
-                       { PUSH string "bad address for get_entrypoint (%is_operator_response)" ;
-                         FAILWITH }
-                       {} ;
-                     DIP 2 { DUP } ;
-                     DIG 2 ;
-                     CDR ;
-                     DIP { DUP } ;
-                     PAIR ;
-                     DIP { DIP { DUP } ; SWAP ; PUSH mutez 0 } ;
-                     TRANSFER_TOKENS ;
-                     DUP ;
-                     NIL operation ;
-                     SWAP ;
-                     CONS ;
-                     DIP { DIP 7 { DUP } ; DIG 7 } ;
-                     PAIR ;
-                     DIP { DROP 5 } }
-                   { DIP 3 { DUP } ; DIG 3 ; NIL operation ; PAIR ; DIP { DROP } } ;
-                 DIP { DROP } }
-               { DUP ;
-                 IF_LEFT
-                   { DUP ;
-                     CDR ;
-                     IF { UNIT } { PUSH string "not an operator response" ; FAILWITH } ;
-                     DIP 4 { DUP } ;
-                     DIG 4 ;
-                     NIL operation ;
-                     PAIR ;
-                     DIP { DROP 2 } }
-                   { DUP ;
-                     DUP ;
-                     CAR ;
-                     CDR ;
-                     DIP { DUP ; CDR } ;
-                     PAIR ;
-                     NIL (pair (address %owner) (nat %token_id)) ;
-                     SWAP ;
-                     CONS ;
-                     DIP { SELF ;
-                           ADDRESS ;
-                           CONTRACT %response (list (pair (pair (address %owner) (nat %token_id)) nat)) ;
-                           IF_NONE
-                             { PUSH string "bad address for get_entrypoint (%response)" ; FAILWITH }
-                             {} } ;
-                     PAIR ;
-                     DIP { DUP } ;
-                     SWAP ;
-                     CAR ;
-                     CAR ;
-                     CONTRACT %balance_of
-                       (pair (list %balance_requests (pair (address %owner) (nat %token_id)))
-                             (contract %balance_view (list (pair (pair (address %owner) (nat %token_id)) nat)))) ;
-                     IF_NONE
-                       { PUSH string "bad address for get_entrypoint (%balance_of)" ; FAILWITH }
-                       {} ;
-                     DIP { DUP } ;
-                     SWAP ;
-                     DIP { DUP ; PUSH mutez 0 } ;
-                     TRANSFER_TOKENS ;
-                     DUP ;
-                     NIL operation ;
-                     SWAP ;
-                     CONS ;
-                     DIP { DIP 7 { DUP } ; DIG 7 } ;
-                     PAIR ;
-                     DIP { DROP 5 } } ;
-                 DIP { DROP } } ;
+               { DIG 2 ; DUP ; DUG 3 ; NIL operation ; PAIR ; DIP { DROP } }
+               { NIL (pair (address %owner) (nat %token_id)) ;
+                 DIG 1 ;
+                 DUP ;
+                 DUG 2 ;
+                 CDR ;
+                 DIG 2 ;
+                 DUP ;
+                 DUG 3 ;
+                 CAR ;
+                 CDR ;
+                 PAIR ;
+                 CONS ;
+                 SELF ;
+                 ADDRESS ;
+                 CONTRACT %response
+                   (list (pair (pair %request (address %owner) (nat %token_id)) (nat %balance))) ;
+                 IF_NONE
+                   { PUSH string "bad address for get_entrypoint (%response)" ; FAILWITH }
+                   {} ;
+                 PAIR ;
+                 DIG 1 ;
+                 DUP ;
+                 DUG 2 ;
+                 CAR ;
+                 CAR ;
+                 CONTRACT %balance_of
+                   (pair (list %requests (pair (address %owner) (nat %token_id)))
+                         (contract %callback
+                            (list (pair (pair %request (address %owner) (nat %token_id)) (nat %balance))))) ;
+                 IF_NONE
+                   { PUSH string "bad address for get_entrypoint (%balance_of)" ; FAILWITH }
+                   {} ;
+                 DUP ;
+                 PUSH mutez 0 ;
+                 DIG 3 ;
+                 DUP ;
+                 DUG 4 ;
+                 CAR ;
+                 DIG 4 ;
+                 DUP ;
+                 DUG 5 ;
+                 CDR ;
+                 PAIR ;
+                 TRANSFER_TOKENS ;
+                 DIG 5 ;
+                 DUP ;
+                 DUG 6 ;
+                 NIL operation ;
+                 DIG 2 ;
+                 DUP ;
+                 DUG 3 ;
+                 CONS ;
+                 PAIR ;
+                 DIP { DROP 4 } } ;
              DIP { DROP } }
            { DUP ;
              IF_CONS
                { DUP ;
+                 CAR ;
+                 DIG 1 ;
+                 DUP ;
+                 DUG 2 ;
                  CDR ;
-                 DIP { DUP ; CAR ; CAR } ;
                  PAIR ;
-                 DIP { DUP ; CAR ; CDR } ;
+                 DUP ;
+                 CDR ;
+                 CDR ;
+                 DIG 1 ;
+                 DUP ;
+                 DUG 2 ;
+                 CDR ;
+                 CAR ;
                  PAIR ;
-                 DIP { DROP 2 } }
+                 DIG 1 ;
+                 DUP ;
+                 DUG 2 ;
+                 CAR ;
+                 PAIR ;
+                 DIP { DROP 3 } }
                { PUSH string "invalid response" ; FAILWITH } ;
              DUP ;
              RIGHT unit ;
@@ -116,3 +102,4 @@
              PAIR ;
              DIP { DROP 2 } } ;
          DIP { DROP 2 } } }
+

@@ -34,7 +34,7 @@ class TestMacSetUp(TestCase):
     def orig_contracts(self):
         print("loading ligo contracts...")
         ligo_fa2 = ligo_env.contract_from_file(
-            "fa2_single_asset.mligo", "single_asset_main"
+            "fa2_multi_asset.mligo", "multi_asset_main"
         )
         ligo_receiver = ligo_env.contract_from_file("token_owner.mligo", "main")
         ligo_inspector = ligo_env.contract_from_file("inspector.mligo", "main")
@@ -98,7 +98,7 @@ class TestMacSetUp(TestCase):
         self.assertEqual(
             {
                 "balance": expected_balance,
-                "request": {"token_id": 0, "owner": owner_address},
+                "request": {"token_id": token_id, "owner": owner_address},
             },
             b,
             msg,
@@ -106,7 +106,7 @@ class TestMacSetUp(TestCase):
 
     def create_token(self, id, symbol):
         op = self.fa2.create_token(
-            token_id=id, symbol=symbol, name=symbol, decimals=0, extra={}
+            token_id=id, symbol=symbol, name=symbol, decimals=0, extras={}
         ).inject()
         self.util.wait_for_ops(op)
 
@@ -129,14 +129,14 @@ class TestMintBurn(TestMacSetUp):
     def mint_burn(self, owner_address):
         print("minting")
         mint_op = self.fa2.mint_tokens(
-            owner=owner_address, batch=[{"amount": 10, "token_id": 1}]
+            [{"owner": owner_address, "amount": 10, "token_id": 1}]
         ).inject()
         self.util.wait_for_ops(mint_op)
         self.assertBalance(owner_address, 1, 10, "invalid mint balance")
 
         print("burning")
         burn_op = self.fa2.burn_tokens(
-            owner=owner_address, batch=[{"amount": 3, "token_id": 1}]
+            [{"owner": owner_address, "amount": 3, "token_id": 1}]
         ).inject()
         self.util.wait_for_ops(burn_op)
 
@@ -150,16 +150,10 @@ class TestOperator(TestMacSetUp):
 
     def test_add_operator_to_receiver(self):
 
-        op_add = self.alice_receiver.add_operator(
-            mac=self.fa2.address, operator=self.admin_key.public_key_hash()
-        ).inject()
-        self.util.wait_for_ops(op_add)
-
-        op_check = self.inspector.assert_is_operator(
+        op_add = self.alice_receiver.owner_add_operator(
             fa2=self.fa2.address, operator=self.admin_key.public_key_hash()
         ).inject()
-
-        self.util.wait_for_ops(op_check)
+        self.util.wait_for_ops(op_add)
 
 
 class TestTransfer(TestMacSetUp):
@@ -167,7 +161,7 @@ class TestTransfer(TestMacSetUp):
         super().setUp()
         self.pause_fa2(False)
 
-        op_op = self.alice_receiver.add_operator(
+        op_op = self.alice_receiver.owner_add_operator(
             fa2=self.fa2.address, operator=self.admin_key.public_key_hash()
         ).inject()
         self.util.wait_for_ops(op_op)
@@ -179,13 +173,12 @@ class TestTransfer(TestMacSetUp):
 
     def test_transfer_to_implicit(self):
         self.create_token(2, "TK2")
-        self.util.wait_for_ops(op)
         self.transfer(2, self.alice_receiver.address, self.mike_key.public_key_hash())
 
     def transfer(self, token_id, from_address, to_address):
 
         mint_op = self.fa2.mint_tokens(
-            owner=from_address, batch=[{"amount": 10, "token_id": token_id}], data="00",
+            [{"owner": from_address, "amount": 10, "token_id": token_id}]
         ).inject()
         self.util.wait_for_ops(mint_op)
 
@@ -201,3 +194,39 @@ class TestTransfer(TestMacSetUp):
 
         self.assertBalance(to_address, token_id, 3, "invalid recipient balance")
         self.assertBalance(from_address, token_id, 7, "invalid source balance")
+
+    def test_batch_transfer(self):
+        self.create_token(1, "TK1")
+        self.create_token(2, "TK2")
+
+        alice_address = self.alice_receiver.address
+        bob_address = self.bob_receiver.address
+        mike_address = self.mike_key.public_key_hash()
+
+        mint_op = self.fa2.mint_tokens(
+            [
+                {"owner": alice_address, "amount": 10, "token_id": 1},
+                {"owner": alice_address, "amount": 10, "token_id": 2},
+            ]
+        ).inject()
+        self.util.wait_for_ops(mint_op)
+
+        op_tx = self.fa2.transfer(
+            [
+                {
+                    "from_": alice_address,
+                    "txs": [
+                        {"to_": bob_address, "token_id": 1, "amount": 3},
+                        {"to_": mike_address, "token_id": 2, "amount": 5},
+                    ],
+                }
+            ]
+        ).inject()
+        self.util.wait_for_ops(op_tx)
+
+        self.assertBalance(alice_address, 1, 7, "invalid TK1 reminder balance")
+        self.assertBalance(alice_address, 2, 5, "invalid TK1 reminder balance")
+        self.assertBalance(bob_address, 1, 3, "invalid TK1 received balance")
+        self.assertBalance(bob_address, 2, 0, "invalid TK2 received balance")
+        self.assertBalance(mike_address, 1, 0, "invalid TK1 received balance")
+        self.assertBalance(mike_address, 2, 5, "invalid TK2 received balance")
