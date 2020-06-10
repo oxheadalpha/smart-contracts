@@ -92,8 +92,11 @@ type fa2_entry_points =
   | Transfer of transfer_michelson list
   | Balance_of of balance_of_param_michelson
   | Update_operators of update_operator_michelson list
-  | Token_metadata of token_metadata_param_michelson
+  | Token_metadata_registry of address contract
 
+
+type fa2_token_metadata =
+  | Token_metadata of token_metadata_param_michelson
 
 (* permission policy definition *)
 
