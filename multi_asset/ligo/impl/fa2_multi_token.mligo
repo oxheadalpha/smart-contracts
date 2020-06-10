@@ -125,10 +125,9 @@ let fa2_main (param, storage : fa2_entry_points * multi_token_storage)
     let new_storage = { storage with operators = new_ops; } in
     ([] : operation list), new_storage
 
-  | Token_metadata pm ->
-    let p : token_metadata_param = Layout.convert_from_right_comb pm in
-    let op = get_metadata (p, storage.tokens) in
-    [op], storage
-
+  | Token_metadata_registry callback ->
+    (* the contract maintains token metadata in its storage - `token_metadata` big_map *)
+    let callback_op = Operation.transaction Tezos.self_address 0mutez callback in
+    [callback_op], storage
 
 #endif
