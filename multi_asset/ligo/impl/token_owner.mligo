@@ -3,7 +3,7 @@ A simple token owner which works with FA2 instance which supports operators perm
 and can manage its own operators.
  *)
 
-#include "../fa2_interface.mligo"
+#include "../lib/fa2_convertors.mligo"
 
 type owner_operator_param = {
   fa2 : address;
@@ -11,91 +11,36 @@ type owner_operator_param = {
 }
 
 type token_owner =
-  | Add_operator of owner_operator_param
-  | Remove_operator of owner_operator_param
-  | Continue_config_action of permission_policy_config list
+  | Owner_add_operator of owner_operator_param
+  | Owner_remove_operator of owner_operator_param
   | Default of unit
 
-type pending_config_action = 
-| Nothing_pending
-| Pending_add_operator of address
-| Pending_remove_operator of address
 
-
-let get_config_op (fa2: address) (own_address : address) : operation =
-  let fa2_get_config : ((permission_policy_config list) contract) contract = 
-      Operation.get_entrypoint "%get_permissions_policy" fa2 in
-  let continued : (permission_policy_config list) contract =
-    Operation.get_entrypoint "%Continue_config_action" own_address in
-  Operation.transaction continued 0mutez fa2_get_config
-
-let is_pending_action (a : pending_config_action) : bool =
-  match a with
-  | Nothing_pending -> false
-  | Pending_add_operator o -> true
-  | Pending_remove_operator o -> true
-
-
-let get_operator_config (configs : permission_policy_config list)
-    : fa2_operators_config_entry_points contract =
-  let f = fun (res, cfg : (address option) * permission_policy_config) -> 
-    match cfg with
-      | Allowances_config a -> res
-      | Operators_config a -> Some a
-      | Whitelist_config a -> res
-      | Custom_config c -> res
-  in
-  let op_config = List.fold f configs (None : address option) in
-  match op_config with
-  | None ->
-    (failwith "No operators config for FA2 available" :
-    fa2_operators_config_entry_points contract)
-  | Some a -> 
-    let c : fa2_operators_config_entry_points contract = Operation.get_contract a in
-    c
-
-let continue_config_op (configs : permission_policy_config list) 
-    (a : pending_config_action) : operation =
-  let cfg = get_operator_config configs in
-  match a with
-  | Nothing_pending -> 
-    (failwith "there is no pending config operation to continue" : operation)
-  | Pending_add_operator o ->
-    let param : operator_param = {
-      operator = o;
-      owner = Current.self_address;
-    } in
-    Operation.transaction (Add_operators [param]) 0mutez cfg
-  | Pending_remove_operator o ->
-      let param : operator_param = {
-      operator = o;
-      owner = Current.self_address;
-    } in
-    Operation.transaction (Remove_operators [param]) 0mutez cfg
-
-let main (param, s : token_owner * pending_config_action) 
-    : (operation list) * pending_config_action =
+let main (param, s : token_owner * unit) : (operation list) * unit =
   match param with
 
-  | Add_operator p ->
-    if is_pending_action (s)
-    then
-      (failwith "pending config action" : (operation list) * pending_config_action)
-    else
-      let cont_op = get_config_op p.fa2 Current.self_address in
-      [cont_op], (Pending_add_operator p.operator)
+  | Owner_add_operator p ->
+    (* calls specified FA2 contract to add operator *)
+    let param : operator_param = {
+      operator = p.operator;
+      owner = Current.self_address;
+    } in
+    let param_michelson = operator_update_to_michelson (Add_operator_p param) in
+    let fa2_update : (update_operator_michelson list) contract =
+      Operation.get_entrypoint "%update_operators" p.fa2 in
+    let update_op = Operation.transaction [param_michelson] 0mutez fa2_update in
+    [update_op], unit
 
-  | Remove_operator p ->
-    if is_pending_action (s)
-    then
-      (failwith "pending config action" : (operation list) * pending_config_action)
-    else
-      let cont_op = get_config_op p.fa2 Current.self_address in
-      [cont_op], (Pending_remove_operator p.operator)
-
-  | Continue_config_action configs ->
-    let op = continue_config_op configs s in
-    [op], Nothing_pending
-
-  | Default u -> ([] : operation list), s
+  | Owner_remove_operator p ->
+    (* calls specified FA2 contract to remove operator *)
+    let param : operator_param = {
+      operator = p.operator;
+      owner = Current.self_address;
+    } in
+    let param_michelson = operator_update_to_michelson (Remove_operator_p param) in
+    let fa2_update : (update_operator_michelson list) contract =
+      Operation.get_entrypoint "%update_operators" p.fa2 in
+    let update_op = Operation.transaction [param_michelson] 0mutez fa2_update in
+    [update_op], unit
   
+  | Default u -> ([] : operation list), unit
