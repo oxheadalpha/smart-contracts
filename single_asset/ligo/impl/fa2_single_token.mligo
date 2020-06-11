@@ -119,24 +119,6 @@ let validate_token_ids (tokens : token_id list) : unit =
     if id = 0n then unit else failwith fa2_token_undefined
   ) tokens
 
-(** Creates a callback operation that provides token metadata to the caller *)
-let get_token_metadata (p, meta
-    : token_metadata_param * ((nat, token_metadata) big_map)) : operation =
-  let u = validate_token_ids p.token_ids in
-  let token_meta = Big_map.find_opt 0n meta in
-  match token_meta with
-  | Some m ->
-    let metadata_michelson : token_metadata_michelson = 
-      Layout.convert_to_right_comb m in
-    (* in case of multiple requests, just replicate the same response *)
-    let responses = List.map 
-      (fun (tid: token_id) -> metadata_michelson)
-      p.token_ids in
-    
-    Operation.transaction responses 0mutez p.callback
-
-  | None -> (failwith "NO_META" : operation)
-
 let fa2_main (param, storage : fa2_entry_points * single_token_storage)
     : (operation  list) * single_token_storage =
   match param with

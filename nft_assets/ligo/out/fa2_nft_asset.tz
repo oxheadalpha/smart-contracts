@@ -15,10 +15,11 @@
                              (pair %remove_operator (address %owner) (address %operator))))))
                (pair %metadata
                   (list %token_ids nat)
-                  (contract %callback
+                  (lambda %handler
                      (list (pair (nat %token_id)
                                  (pair (string %symbol)
-                                       (pair (string %name) (pair (nat %decimals) (map %extras string string))))))))))
+                                       (pair (string %name) (pair (nat %decimals) (map %extras string string))))))
+                     unit))))
         (or %tokens
            (pair %burn_tokens (nat %from_) (nat %to_))
            (pair %mint_tokens
@@ -776,23 +777,17 @@
                            CDR ;
                            PAIR ;
                            DIP { DROP } } ;
-                     DIG 2 ;
                      DUP ;
-                     DUG 3 ;
+                     DIG 3 ;
+                     DUP ;
+                     DUG 4 ;
                      CAR ;
-                     PUSH mutez 0 ;
-                     DIG 2 ;
-                     DUP ;
-                     DUG 3 ;
-                     TRANSFER_TOKENS ;
+                     SWAP ;
+                     EXEC ;
                      DIG 5 ;
                      DUP ;
                      DUG 6 ;
                      NIL operation ;
-                     DIG 2 ;
-                     DUP ;
-                     DUG 3 ;
-                     CONS ;
                      PAIR ;
                      DIP { DROP 5 } } ;
                  DIP { DROP 2 } ;
