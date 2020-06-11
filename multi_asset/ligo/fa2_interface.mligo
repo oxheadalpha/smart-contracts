@@ -83,7 +83,7 @@ type token_metadata_michelson = token_metadata michelson_pair_right_comb
 
 type token_metadata_param = {
   token_ids : token_id list;
-  callback : (token_metadata_michelson list) contract;
+  handler : (token_metadata_michelson list) -> unit;
 }
 
 type token_metadata_param_michelson = token_metadata_param michelson_pair_right_comb
