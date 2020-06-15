@@ -48,7 +48,7 @@ let multi_asset_main
       (ops, new_s)
 
 (**
-This is a sample initial fa2_single_asset storage.
+This is a sample initial fa2_multi_asset storage.
  *)
 
 let store : multi_asset_storage = {
