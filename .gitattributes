@@ -1,0 +1,2 @@
+*.mligo linguist-language=OCaml
+*.rligo linguist-language=OCaml
