@@ -31,7 +31,7 @@ let update_balance (pm, storage
       ) tx.txs s
     ) p.batch storage
 
-let dummy_receiver_hook_main (param, storage : dummy_entry_points * received_storage) =
+let token_owner_with_hooks_main (param, storage : dummy_entry_points * received_storage) =
   match param with
   | Owner op -> 
     let ops, u = token_owner_main (op, unit) in

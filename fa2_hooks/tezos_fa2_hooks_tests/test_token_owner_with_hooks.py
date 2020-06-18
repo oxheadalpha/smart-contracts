@@ -1,14 +1,14 @@
 from tezos_fa2_hooks_tests.test_mac import TestMacSetUp, ligo_env
 
 
-class TestDummyReceiver(TestMacSetUp):
+class TestHooks(TestMacSetUp):
     def orig_contracts(self):
         print("loading ligo contracts...")
         ligo_fa2 = ligo_env.contract_from_file(
             "fa2_multi_asset.mligo", "multi_asset_main"
         )
         ligo_receiver = ligo_env.contract_from_file(
-            "dummy_receiver_hook.mligo", "dummy_receiver_hook_main"
+            "token_owner_with_hooks.mligo", "token_owner_with_hooks_main"
         )
         ligo_inspector = ligo_env.contract_from_file("inspector.mligo", "main")
 

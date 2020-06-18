@@ -48,6 +48,39 @@ let create_token (metadata, storage
       token_total_supply = supply;
     }
 
+let mint_tx_to_transfer_descriptor (tx : mint_burn_tx) : transfer_descriptor =
+  {
+    from_ = (None : address option);
+    txs = [{
+      to_ = Some tx.owner;
+      amount = tx.amount;
+      token_id = tx.token_id;
+    }]
+  }
+
+let burn_tx_to_transfer_descriptor (tx : mint_burn_tx) : transfer_descriptor =
+  {
+    from_ = Some tx.owner;
+    txs = [{
+      to_ = (None : address option);
+      amount = tx.amount;
+      token_id = tx.token_id;
+    }]
+  }
+
+let mint_txs_to_transfer_descriptor_param (txs, operator
+    : (mint_burn_tx list) * address) : transfer_descriptor_param =
+  {
+    operator = operator;
+    batch = List.map mint_tx_to_transfer_descriptor txs;
+  }
+
+let burn_txs_to_transfer_descriptor_param (txs, operator
+    : (mint_burn_tx list) * address) : transfer_descriptor_param =
+  {
+    operator = operator;
+    batch = List.map burn_tx_to_transfer_descriptor txs;
+  }
 
 let  mint_update_balances (txs, ledger : (mint_burn_tx list) * ledger) : ledger =
   let mint = fun (l, tx : ledger * mint_burn_tx) ->
@@ -119,10 +152,14 @@ let token_manager (param, s : token_manager * multi_token_storage)
 
   | Mint_tokens param -> 
     let new_s = mint_tokens (param, s) in
-    ([] : operation list), new_s
+    let tx_param = mint_txs_to_transfer_descriptor_param (param, Tezos.self_address) in
+    let ops = get_owner_hook_ops_for_descriptor (tx_param, s.permissions_descriptor) in
+    ops, new_s
 
   | Burn_tokens param -> 
     let new_s = burn_tokens (param, s) in
-    ([] : operation list), new_s
+    let tx_param = burn_txs_to_transfer_descriptor_param (param, Tezos.self_address) in
+    let ops = get_owner_hook_ops_for_descriptor (tx_param, s.permissions_descriptor) in
+    ops, new_s
 
 #endif
