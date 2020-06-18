@@ -82,6 +82,20 @@ let transfer_from_michelson (txm : transfer_michelson) : transfer =
 let transfers_from_michelson (txsm : transfer_michelson list) : transfer list =
   List.map transfer_from_michelson txsm
 
+let transfer_to_michelson (tx : transfer) : transfer_michelson =
+  let aux : transfer_aux = {
+    from_ = tx.from_;
+    txs = List.map 
+      (fun (tx: transfer_destination) -> 
+        let t : transfer_destination_michelson = Layout.convert_to_right_comb tx in
+        t
+      ) tx.txs;
+  } in
+  Layout.convert_to_right_comb aux   
+
+let transfers_to_michelson (txs : transfer list) : transfer_michelson list =
+  List.map transfer_to_michelson txs
+
 let operator_param_from_michelson (p : operator_param_michelson) : operator_param =
   let op : operator_param = Layout.convert_from_right_comb p in
   op
