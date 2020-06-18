@@ -1,0 +1,141 @@
+{ parameter
+    (or (or (unit %default) (pair %owner_add_operator (address %fa2) (address %operator)))
+        (pair %owner_remove_operator (address %fa2) (address %operator))) ;
+  storage unit ;
+  code { LAMBDA
+           (pair (address %operator) (address %owner))
+           (pair (address %owner) (address %operator))
+           { DUP ; CAR ; DIG 1 ; DUP ; DUG 2 ; CDR ; PAIR ; DIP { DROP } } ;
+         DUP ;
+         LAMBDA
+           (pair (lambda
+                    (pair (address %operator) (address %owner))
+                    (pair (address %owner) (address %operator)))
+                 (or (pair %add_operator_p (address %operator) (address %owner))
+                     (pair %remove_operator_p (address %operator) (address %owner))))
+           (or (pair %add_operator (address %owner) (address %operator))
+               (pair %remove_operator (address %owner) (address %operator)))
+           { DUP ;
+             CAR ;
+             SWAP ;
+             CDR ;
+             DUP ;
+             IF_LEFT
+               { DUP ;
+                 DIG 3 ;
+                 DUP ;
+                 DUG 4 ;
+                 SWAP ;
+                 EXEC ;
+                 LEFT (pair (address %owner) (address %operator)) ;
+                 DIP { DROP } }
+               { DUP ;
+                 DIG 3 ;
+                 DUP ;
+                 DUG 4 ;
+                 SWAP ;
+                 EXEC ;
+                 RIGHT (pair (address %owner) (address %operator)) ;
+                 DIP { DROP } } ;
+             DUP ;
+             IF_LEFT
+               { DUP ; LEFT (pair (address %owner) (address %operator)) ; DIP { DROP } }
+               { DUP ; RIGHT (pair (address %owner) (address %operator)) ; DIP { DROP } } ;
+             DIP { DROP 3 } } ;
+         SWAP ;
+         APPLY ;
+         DIG 2 ;
+         DUP ;
+         DUG 3 ;
+         CAR ;
+         IF_LEFT
+           { DUP ;
+             IF_LEFT
+               { UNIT ; NIL operation ; PAIR ; DIP { DROP } }
+               { SELF ;
+                 ADDRESS ;
+                 DIG 1 ;
+                 DUP ;
+                 DUG 2 ;
+                 CDR ;
+                 PAIR ;
+                 DUP ;
+                 LEFT (pair (address %operator) (address %owner)) ;
+                 DIG 4 ;
+                 DUP ;
+                 DUG 5 ;
+                 SWAP ;
+                 EXEC ;
+                 DIG 2 ;
+                 DUP ;
+                 DUG 3 ;
+                 CAR ;
+                 CONTRACT %update_operators
+                   (list (or (pair %add_operator (address %owner) (address %operator))
+                             (pair %remove_operator (address %owner) (address %operator)))) ;
+                 IF_NONE
+                   { PUSH string "bad address for get_entrypoint (%update_operators)" ;
+                     FAILWITH }
+                   {} ;
+                 DUP ;
+                 PUSH mutez 0 ;
+                 NIL (or (pair %add_operator (address %owner) (address %operator))
+                         (pair %remove_operator (address %owner) (address %operator))) ;
+                 DIG 4 ;
+                 DUP ;
+                 DUG 5 ;
+                 CONS ;
+                 TRANSFER_TOKENS ;
+                 UNIT ;
+                 NIL operation ;
+                 DIG 2 ;
+                 DUP ;
+                 DUG 3 ;
+                 CONS ;
+                 PAIR ;
+                 DIP { DROP 5 } } ;
+             DIP { DROP } }
+           { SELF ;
+             ADDRESS ;
+             DIG 1 ;
+             DUP ;
+             DUG 2 ;
+             CDR ;
+             PAIR ;
+             DUP ;
+             RIGHT (pair (address %operator) (address %owner)) ;
+             DIG 3 ;
+             DUP ;
+             DUG 4 ;
+             SWAP ;
+             EXEC ;
+             DIG 2 ;
+             DUP ;
+             DUG 3 ;
+             CAR ;
+             CONTRACT %update_operators
+               (list (or (pair %add_operator (address %owner) (address %operator))
+                         (pair %remove_operator (address %owner) (address %operator)))) ;
+             IF_NONE
+               { PUSH string "bad address for get_entrypoint (%update_operators)" ;
+                 FAILWITH }
+               {} ;
+             DUP ;
+             PUSH mutez 0 ;
+             NIL (or (pair %add_operator (address %owner) (address %operator))
+                     (pair %remove_operator (address %owner) (address %operator))) ;
+             DIG 4 ;
+             DUP ;
+             DUG 5 ;
+             CONS ;
+             TRANSFER_TOKENS ;
+             UNIT ;
+             NIL operation ;
+             DIG 2 ;
+             DUP ;
+             DUG 3 ;
+             CONS ;
+             PAIR ;
+             DIP { DROP 5 } } ;
+         DIP { DROP 3 } } }
+
