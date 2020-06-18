@@ -69,7 +69,7 @@ class TestMacSetUp(TestCase):
                 permissions_descriptor = {
                     operator = Owner_or_operator_transfer;
                     receiver = Optional_owner_hook;
-                    sender = Owner_no_hook;
+                    sender = Optional_owner_hook;
                     custom = (None : custom_permission_policy option);
                 };
             };
