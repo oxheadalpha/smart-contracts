@@ -90,13 +90,13 @@ source tezos_mac_tests_env/bin/activate
 
 ```
 git clone https://github.com/tqtezos/smart-contracts.git
-cd smart-contracts/multi_asset
+cd smart-contracts/fa2_hooks
 pip install -e .
 ```
 
 Alternatively, you can install it directly from Github:
 
-`pip3 install -e "git+https://github.com/tqtezos/smart-contracts.git#subdirectory=multi_asset&egg=tezos_mac_tests"`
+`pip3 install -e "git+https://github.com/tqtezos/smart-contracts.git#subdirectory=mfa2_hooks&egg=tezos_fa2_hooks_tests"`
 
 It will install Pytezos dependencies as well.
 

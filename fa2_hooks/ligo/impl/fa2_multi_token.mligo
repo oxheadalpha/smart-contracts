@@ -141,19 +141,18 @@ let fa2_main (param, storage : fa2_entry_points * multi_token_storage)
 
 type fa2_multi_token_entry_points =
   | FA2 of fa2_entry_points
-  | Permissions of fa2_entry_points_custom
+  | Permissions_descriptor of permissions_descriptor_michelson contract
 
-let fa2_custom (param, storage : fa2_entry_points_custom * multi_token_storage)
+let get_permissions_descriptor (callback, storage
+    : permissions_descriptor_michelson contract * multi_token_storage)
     : (operation  list) * multi_token_storage =
-  match param with
-  | Permissions_descriptor callback ->
-    let pdm = permissions_descriptor_to_michelson storage.permissions_descriptor in
-    let callback_op = Operation.transaction pdm 0mutez callback in
-    [callback_op], storage
+  let pdm = permissions_descriptor_to_michelson storage.permissions_descriptor in
+  let callback_op = Operation.transaction pdm 0mutez callback in
+  [callback_op], storage
 
 let fa2_multi_token_main (param, storage : fa2_multi_token_entry_points * multi_token_storage)
     : (operation  list) * multi_token_storage =
   match param with
   | FA2 fa2_param -> fa2_main (fa2_param, storage)
-  | Permissions fa2_custom_param -> fa2_custom(fa2_custom_param, storage)
+  | Permissions_descriptor callback -> get_permissions_descriptor(callback, storage)
 #endif

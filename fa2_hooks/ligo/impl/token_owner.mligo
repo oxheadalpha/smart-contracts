@@ -16,7 +16,7 @@ type token_owner =
   | Default of unit
 
 
-let main (param, s : token_owner * unit) : (operation list) * unit =
+let token_owner_main (param, s : token_owner * unit) : (operation list) * unit =
   match param with
 
   | Owner_add_operator p ->
