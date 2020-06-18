@@ -1,0 +1,8 @@
+include README.md
+include multi_asset.md
+include ligo/*.mligo
+include ligo/lib/*.mligo
+include ligo/impl/*.mligo
+include tezos_fa2_hooks_tests/start-sandbox.sh
+include tezos_fa2_hooks_tests/kill-sandbox.sh
+include tezos_fa2_hooks_tests/pytezos_mac_schema.txt
