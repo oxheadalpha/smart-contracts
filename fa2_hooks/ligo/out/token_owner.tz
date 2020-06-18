@@ -3,18 +3,14 @@
         (pair %owner_remove_operator (address %fa2) (address %operator))) ;
   storage unit ;
   code { LAMBDA
-           (pair (address %operator) (address %owner))
-           (pair (address %owner) (address %operator))
+           (pair address address)
+           (pair address address)
            { DUP ; CAR ; DIG 1 ; DUP ; DUG 2 ; CDR ; PAIR ; DIP { DROP } } ;
          DUP ;
          LAMBDA
-           (pair (lambda
-                    (pair (address %operator) (address %owner))
-                    (pair (address %owner) (address %operator)))
-                 (or (pair %add_operator_p (address %operator) (address %owner))
-                     (pair %remove_operator_p (address %operator) (address %owner))))
-           (or (pair %add_operator (address %owner) (address %operator))
-               (pair %remove_operator (address %owner) (address %operator)))
+           (pair (lambda (pair address address) (pair address address))
+                 (or (pair address address) (pair address address)))
+           (or (pair address address) (pair address address))
            { DUP ;
              CAR ;
              SWAP ;
@@ -79,8 +75,7 @@
                    {} ;
                  DUP ;
                  PUSH mutez 0 ;
-                 NIL (or (pair %add_operator (address %owner) (address %operator))
-                         (pair %remove_operator (address %owner) (address %operator))) ;
+                 NIL (or (pair address address) (pair address address)) ;
                  DIG 4 ;
                  DUP ;
                  DUG 5 ;
@@ -122,8 +117,7 @@
                {} ;
              DUP ;
              PUSH mutez 0 ;
-             NIL (or (pair %add_operator (address %owner) (address %operator))
-                     (pair %remove_operator (address %owner) (address %operator))) ;
+             NIL (or (pair address address) (pair address address)) ;
              DIG 4 ;
              DUP ;
              DUG 5 ;

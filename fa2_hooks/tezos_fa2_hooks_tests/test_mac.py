@@ -4,7 +4,7 @@ from unittest import TestCase
 
 from pytezos import Key, pytezos
 
-from tezos_mac_tests.ligo import (
+from tezos_fa2_hooks_tests.ligo import (
     LigoEnv,
     LigoContract,
     PtzUtils,
@@ -64,6 +64,12 @@ class TestMacSetUp(TestCase):
                 operators = (Big_map.empty : operator_storage);
                 token_total_supply = (Big_map.empty : token_total_supply);
                 token_metadata = (Big_map.empty : token_metadata_storage);
+                permissions_descriptor = {
+                    operator = Owner_or_operator_transfer;
+                    receiver = Optional_owner_hook;
+                    sender = Owner_no_hook;
+                    custom = (None : custom_permission_policy option);
+                };
             };
         }
         """

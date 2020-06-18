@@ -19,7 +19,7 @@ type multi_asset_storage = {
 }
 
 type multi_asset_param =
-  | Assets of fa2_entry_points
+  | Assets of fa2_multi_token_entry_points
   | Admin of simple_admin
   | Tokens of token_manager
 
@@ -43,7 +43,7 @@ let multi_asset_main
   | Assets p -> 
       let u2 = fail_if_paused s.admin in
         
-      let ops, assets = fa2_main (p, s.assets) in
+      let ops, assets = fa2_multi_token_main (p, s.assets) in
       let new_s = { s with assets = assets } in
       (ops, new_s)
 
@@ -62,5 +62,11 @@ let store : multi_asset_storage = {
     operators = (Big_map.empty : operator_storage);
     token_total_supply = (Big_map.empty : token_total_supply);
     token_metadata = (Big_map.empty : token_metadata_storage);
+    permissions_descriptor = {
+       operator = Owner_or_operator_transfer;
+      receiver = Optional_owner_hook;
+      sender = Owner_no_hook;
+      custom = (None : custom_permission_policy option);
+    };
   };
 }
