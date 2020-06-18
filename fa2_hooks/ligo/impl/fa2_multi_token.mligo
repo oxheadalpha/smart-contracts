@@ -4,6 +4,7 @@
 #include "../fa2_interface.mligo"
 #include "../fa2_errors.mligo"
 #include "../lib/fa2_operator_lib.mligo"
+#include "../lib/fa2_owner_hooks_lib.mligo"
 
 (* (owner,token_id) -> balance *)
 type ledger = ((address * token_id), nat) big_map
@@ -95,8 +96,23 @@ let fa2_main (param, storage : fa2_entry_points * multi_token_storage)
     *)
     let validator = make_default_operator_validator Tezos.sender in
     let new_ledger = transfer (txs, validator, storage) in
-    let new_storage = { storage with ledger = new_ledger; }
-    in ([] : operation list), new_storage
+    let new_storage = { storage with ledger = new_ledger; } in
+    (*
+      Call sender/receiver hooks
+    *)
+    let tx_descriptors = transfers_to_descriptors txs in
+    let tx_descriptor : transfer_descriptor_param = {
+      operator = Tezos.sender;
+      batch = tx_descriptors; 
+    } in
+    let tx_descriptor_michelson = transfer_descriptor_param_to_michelson tx_descriptor in
+    let hook_ops = owners_transfer_hook (
+      {
+        ligo_param = tx_descriptor;
+        michelson_param = tx_descriptor_michelson;
+      }, 
+      storage.permissions_descriptor) in
+    (hook_ops), new_storage
 
   | Balance_of pm -> 
     let p = balance_of_param_from_michelson pm in
