@@ -84,6 +84,21 @@ let get_balance (p, ledger, tokens
   Operation.transaction responses 0mutez p.callback
 
 
+let get_owner_hook_ops (txs, pd : (transfer list) * permissions_descriptor) : operation list =
+  let tx_descriptors = transfers_to_descriptors txs in
+  let tx_descriptor : transfer_descriptor_param = {
+    operator = Tezos.sender;
+    batch = tx_descriptors; 
+  } in
+  let hook_calls = owners_transfer_hook (tx_descriptor, pd) in
+  match hook_calls with
+  | [] -> ([] : operation list)
+  | h :: t -> 
+    let tx_descriptor_michelson = transfer_descriptor_param_to_michelson tx_descriptor in 
+    List.map (fun(call: hook_entry_point) -> 
+      Operation.transaction tx_descriptor_michelson 0mutez call) 
+      hook_calls
+
 let fa2_main (param, storage : fa2_entry_points * multi_token_storage)
     : (operation  list) * multi_token_storage =
   match param with
@@ -97,23 +112,9 @@ let fa2_main (param, storage : fa2_entry_points * multi_token_storage)
     let validator = make_default_operator_validator Tezos.sender in
     let new_ledger = transfer (txs, validator, storage) in
     let new_storage = { storage with ledger = new_ledger; } in
-    (*
-      Call sender/receiver hooks
-    *)
-    let tx_descriptors = transfers_to_descriptors txs in
-    let tx_descriptor : transfer_descriptor_param = {
-      operator = Tezos.sender;
-      batch = tx_descriptors; 
-    } in
-    let hook_calls = owners_transfer_hook (tx_descriptor,storage.permissions_descriptor) in
-    let hook_ops = match hook_calls with
-    | [] -> ([] : operation list)
-    | h :: t -> 
-      let tx_descriptor_michelson = transfer_descriptor_param_to_michelson tx_descriptor in 
-      List.map (fun(call: hook_entry_point) -> 
-        Operation.transaction tx_descriptor_michelson 0mutez call) 
-        hook_calls
-    in
+
+    let hook_ops = get_owner_hook_ops (txs, storage.permissions_descriptor) in
+    
     (hook_ops), new_storage
 
   | Balance_of pm -> 
