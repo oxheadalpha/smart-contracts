@@ -13,7 +13,7 @@
                       (list %update_operators
                          (or (pair %add_operator (address %owner) (address %operator))
                              (pair %remove_operator (address %owner) (address %operator))))))
-               (contract %permissions
+               (contract %permissions_descriptor
                   (pair (or %operator
                            (unit %no_transfer)
                            (or (unit %owner_transfer) (unit %owner_or_operator_transfer)))
@@ -1057,13 +1057,71 @@
                                     CONS ;
                                     DIP { DROP } } ;
                              DIP { DROP 5 } ;
-                             PUSH nat 77 ;
+                             DUP ;
+                             IF_CONS
+                               { DIG 3 ;
+                                 DUP ;
+                                 DUG 4 ;
+                                 CDR ;
+                                 DIG 4 ;
+                                 DUP ;
+                                 DUG 5 ;
+                                 CAR ;
+                                 MAP { DUP ;
+                                       CDR ;
+                                       MAP { DUP ;
+                                             CAR ;
+                                             CAR ;
+                                             DIG 1 ;
+                                             DUP ;
+                                             DUG 2 ;
+                                             CDR ;
+                                             PAIR ;
+                                             DIG 1 ;
+                                             DUP ;
+                                             DUG 2 ;
+                                             CAR ;
+                                             CDR ;
+                                             PAIR ;
+                                             DIP { DROP } } ;
+                                       DIG 1 ;
+                                       DUP ;
+                                       DUG 2 ;
+                                       CAR ;
+                                       PAIR ;
+                                       DUP ;
+                                       DIP { DROP 2 } } ;
+                                 PAIR ;
+                                 DUP ;
+                                 DIP { DROP } ;
+                                 DIG 3 ;
+                                 DUP ;
+                                 DUG 4 ;
+                                 MAP { DUP ;
+                                       PUSH mutez 0 ;
+                                       DIG 3 ;
+                                       DUP ;
+                                       DUG 4 ;
+                                       TRANSFER_TOKENS ;
+                                       DIP { DROP } } ;
+                                 DIP { DROP 3 } }
+                               { NIL operation } ;
+                             DIP { DROP 4 } ;
+                             DIG 6 ;
+                             DUP ;
+                             DUG 7 ;
+                             DIG 2 ;
+                             DUP ;
+                             DUG 3 ;
+                             DIP { DUP ; CDR ; SWAP ; CAR ; DUP ; CDR ; SWAP ; CAR ; CDR } ;
+                             PAIR ;
+                             PAIR ;
+                             PAIR ;
                              DIG 1 ;
                              DUP ;
                              DUG 2 ;
-                             SIZE ;
-                             ADD ;
-                             FAILWITH }
+                             PAIR ;
+                             DIP { DROP 5 } }
                            { DUP ;
                              MAP { DUP ;
                                    IF_LEFT

@@ -36,7 +36,9 @@ class TestMacSetUp(TestCase):
         ligo_fa2 = ligo_env.contract_from_file(
             "fa2_multi_asset.mligo", "multi_asset_main"
         )
-        ligo_receiver = ligo_env.contract_from_file("token_owner.mligo", "main")
+        ligo_receiver = ligo_env.contract_from_file(
+            "token_owner.mligo", "token_owner_main"
+        )
         ligo_inspector = ligo_env.contract_from_file("inspector.mligo", "main")
 
         print("originating contracts...")
