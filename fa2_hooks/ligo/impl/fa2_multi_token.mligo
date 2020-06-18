@@ -105,13 +105,15 @@ let fa2_main (param, storage : fa2_entry_points * multi_token_storage)
       operator = Tezos.sender;
       batch = tx_descriptors; 
     } in
-    let tx_descriptor_michelson = transfer_descriptor_param_to_michelson tx_descriptor in
-    let hook_ops = owners_transfer_hook (
-      {
-        ligo_param = tx_descriptor;
-        michelson_param = tx_descriptor_michelson;
-      }, 
-      storage.permissions_descriptor) in
+    let hook_calls = owners_transfer_hook (tx_descriptor,storage.permissions_descriptor) in
+    let hook_ops = match hook_calls with
+    | [] -> ([] : operation list)
+    | h :: t -> 
+      let tx_descriptor_michelson = transfer_descriptor_param_to_michelson tx_descriptor in 
+      List.map (fun(call: hook_entry_point) -> 
+        Operation.transaction tx_descriptor_michelson 0mutez call) 
+        hook_calls
+    in
     (hook_ops), new_storage
 
   | Balance_of pm -> 
