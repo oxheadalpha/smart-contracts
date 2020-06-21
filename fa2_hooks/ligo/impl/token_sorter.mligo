@@ -72,3 +72,10 @@ let token_sorter_main (param, storage : sorter_entry_points * dispatch_table) =
   | Tokens_received pm -> 
     let ops = forward_tokens (pm, storage) in
     ops, storage
+
+
+let sample_storage : dispatch_table = Big_map.literal [
+            ((("KT1WLmDye4maMYon7DJnYmJbRkxEkvf8nau3" : address), 0n), ("KT1MZe2n9oyX5TgytXGqGZCvbYSH7w25Pbhm" : address));
+            ((("KT1WLmDye4maMYon7DJnYmJbRkxEkvf8nau3" : address), 1n), ("KT1SQ6tX4farjq6LWwYj3csXbEeEu64ufdB2" : address));
+            ((("KT1WLmDye4maMYon7DJnYmJbRkxEkvf8nau3" : address), 2n), ("KT1PxWRymF52hLjTGsAhtfYpFi7trBY77Gaz" : address));
+                    ]
