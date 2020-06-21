@@ -39,10 +39,21 @@ class TestTokenSorter(TestMacSetUp):
         self.inspector = self.orig_inspector(ligo_inspector)
 
     def orig_sorter(self, ligo_sorter):
+        storage_entry = (
+            lambda fa2_a, token_id, receiver_a: f"""
+            (
+              (("{fa2_a}" : address), {token_id}n), 
+              {{
+                destination = ("{receiver_a}" : address);
+                pending_balance = 0n;
+              }}
+            )"""
+        )
+
         ligo_storage = f"""Big_map.literal [
-          ((("{self.fa2.address}" : address), {GREEN}n), ("{self.green_receiver.address}" : address));
-          ((("{self.fa2.address}" : address), {YELLOW}n), ("{self.yellow_receiver.address}" : address));
-          ((("{self.fa2.address}" : address), {RED}n), ("{self.red_receiver.address}" : address));
+          {storage_entry(self.fa2.address, GREEN, self.green_receiver.address)};
+          {storage_entry(self.fa2.address, YELLOW, self.yellow_receiver.address)};
+          {storage_entry(self.fa2.address, RED, self.red_receiver.address)};
         ]"""
 
         ptz_storage = ligo_sorter.compile_storage(ligo_storage)
@@ -92,6 +103,12 @@ class TestTokenSorter(TestMacSetUp):
         ).inject()
         self.util.wait_for_ops(op_tx)
         print("transferred")
+
+        op_forward = self.sorter.forward(
+            fa2=self.fa2.address, tokens=[GREEN, YELLOW, RED]
+        ).inject()
+        self.util.wait_for_ops(op_forward)
+        print("forwarded")
 
         # assert alice reminders
         self.assertBalance(alice_a, GREEN, 7, "alice green")
