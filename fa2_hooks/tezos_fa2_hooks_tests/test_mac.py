@@ -29,7 +29,7 @@ class TestMacSetUp(TestCase):
         self.kyle_key = Key.generate(export=False)
 
         # self.transfer_init_funds()
-        print("test setup completed")
+        print("basic test setup completed")
 
     def orig_contracts(self):
         print("loading ligo contracts...")
