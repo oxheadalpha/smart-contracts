@@ -93,3 +93,29 @@ class TestTokenSorter(TestMacSetUp):
         self.util.wait_for_ops(op_tx)
         print("transferred")
 
+        # assert alice reminders
+        self.assertBalance(alice_a, GREEN, 7, "alice green")
+        self.assertBalance(alice_a, YELLOW, 6, "alice yellow")
+        self.assertBalance(alice_a, RED, 4, "alice red")
+
+        # assert sorter does not hold any balances
+        self.assertBalance(sorter_a, GREEN, 0, "sorter green")
+        self.assertBalance(sorter_a, YELLOW, 0, "sorter yellow")
+        self.assertBalance(sorter_a, RED, 0, "sorter red")
+
+        # assert each token receiver
+        green_a = self.green_receiver.address
+        self.assertBalance(green_a, GREEN, 3, "receiver green")
+        self.assertBalance(green_a, YELLOW, 0, "receiver green has yellow tokens")
+        self.assertBalance(green_a, RED, 0, "receiver green has red tokens")
+
+        yellow_a = self.yellow_receiver.address
+        self.assertBalance(yellow_a, GREEN, 0, "receiver yellow has green tokens")
+        self.assertBalance(yellow_a, YELLOW, 4, "receiver yellow")
+        self.assertBalance(yellow_a, RED, 0, "receiver yellow has red tokens")
+
+        red_a = self.red_receiver.address
+        self.assertBalance(red_a, GREEN, 0, "receiver red has green tokens")
+        self.assertBalance(red_a, YELLOW, 0, "receiver red has yellow tokens")
+        self.assertBalance(red_a, RED, 6, "receiver red")
+
