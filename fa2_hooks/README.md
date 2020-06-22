@@ -1,7 +1,15 @@
 # Multi Asset Contract
 
 Implementation of the FA2 token contract (TZIP-12) for multiple fungible assets
-that supports sender/receiver hooks.
+that supports sender/receiver hooks. Receiver/sender hooks behavior is controlled
+by the `permission_descriptor.sender` and `permissions_descriptor.receiver` field
+values initialized when the FA2 contract is originated.
+
+There are two example contracts that implement a receiver hook:
+
+* `token_owner_with_hooks.mligo` tracks its own token balances within its own storage
+* `token_sorter.mligo` forwards received tokens to other accounts according to its
+dispatch table.
 
 ## Project Structure
 
