@@ -1,4 +1,4 @@
-#include "../lib/fa2_convertors.mligo"
+#include "../dependencies/fa2/ligo/lib/fa2_convertors.mligo"
 
 
 type forward_param = {
