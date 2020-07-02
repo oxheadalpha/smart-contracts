@@ -1,4 +1,4 @@
-#include "../dependencies/fa2/ligo/lib/fa2_convertors.mligo"
+#include "../fa2/ligo/lib/fa2_convertors.mligo"
 
 type storage =
   | State of balance_of_response
