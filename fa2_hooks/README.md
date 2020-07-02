@@ -117,4 +117,4 @@ It may take a few seconds until sandbox is bootstrapped.
 
 ### Run The Tests
 
-`python -m unittest discover tezos_mac_tests`
+`python -m unittest discover tezos_fa2_hooks_tests`

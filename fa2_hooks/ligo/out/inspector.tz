@@ -1,6 +1,6 @@
 { parameter
     (or (or (unit %default)
-            (pair %query (pair (address %fa2) (address %owner)) (nat %token_id)))
+            (pair %query (address %fa2) (pair %request (address %owner) (nat %token_id))))
         (list %response
            (pair (pair %request (address %owner) (nat %token_id)) (nat %balance)))) ;
   storage
@@ -21,12 +21,6 @@
                  DUP ;
                  DUG 2 ;
                  CDR ;
-                 DIG 2 ;
-                 DUP ;
-                 DUG 3 ;
-                 CAR ;
-                 CDR ;
-                 PAIR ;
                  CONS ;
                  SELF ;
                  ADDRESS ;
@@ -39,7 +33,6 @@
                  DIG 1 ;
                  DUP ;
                  DUG 2 ;
-                 CAR ;
                  CAR ;
                  CONTRACT %balance_of
                    (pair (list %requests (pair (address %owner) (nat %token_id)))
@@ -72,34 +65,36 @@
                  DIP { DROP 4 } } ;
              DIP { DROP } }
            { DUP ;
+             MAP { DUP ;
+                   CAR ;
+                   DIG 1 ;
+                   DUP ;
+                   DUG 2 ;
+                   CDR ;
+                   PAIR ;
+                   DUP ;
+                   CDR ;
+                   CDR ;
+                   DIG 1 ;
+                   DUP ;
+                   DUG 2 ;
+                   CDR ;
+                   CAR ;
+                   PAIR ;
+                   DIG 1 ;
+                   DUP ;
+                   DUG 2 ;
+                   CAR ;
+                   PAIR ;
+                   DIP { DROP 2 } } ;
+             DUP ;
              IF_CONS
-               { DUP ;
-                 CAR ;
-                 DIG 1 ;
-                 DUP ;
-                 DUG 2 ;
-                 CDR ;
-                 PAIR ;
-                 DUP ;
-                 CDR ;
-                 CDR ;
-                 DIG 1 ;
-                 DUP ;
-                 DUG 2 ;
-                 CDR ;
-                 CAR ;
-                 PAIR ;
-                 DIG 1 ;
-                 DUP ;
-                 DUG 2 ;
-                 CAR ;
-                 PAIR ;
-                 DIP { DROP 3 } }
+               { DUP ; DIP { DROP 2 } }
                { PUSH string "invalid response" ; FAILWITH } ;
              DUP ;
              RIGHT unit ;
              NIL operation ;
              PAIR ;
-             DIP { DROP 2 } } ;
+             DIP { DROP 3 } } ;
          DIP { DROP 2 } } }
 

@@ -1,4 +1,4 @@
-from tezos_fa2_hooks_tests.test_mac import TestMacSetUp, ligo_env
+from tezos_fa2_hooks_tests.test_mac import TestMacSetUp, ligo_env, ligo_client_env
 
 
 class TestHooks(TestMacSetUp):
@@ -10,7 +10,7 @@ class TestHooks(TestMacSetUp):
         ligo_receiver = ligo_env.contract_from_file(
             "token_owner_with_hooks.mligo", "token_owner_with_hooks_main"
         )
-        ligo_inspector = ligo_env.contract_from_file("inspector.mligo", "main")
+        ligo_inspector = ligo_client_env.contract_from_file("inspector.mligo", "main")
 
         print("originating contracts...")
         self.fa2 = self.orig_mac(ligo_fa2)
