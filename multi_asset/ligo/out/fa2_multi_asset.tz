@@ -33,8 +33,8 @@
   code { PUSH string "FA2_TOKEN_UNDEFINED" ;
          PUSH string "FA2_INSUFFICIENT_BALANCE" ;
          LAMBDA
-           (pair (address %owner) (address %operator))
-           (pair (address %operator) (address %owner))
+           (pair address address)
+           (pair address address)
            { DUP ; CAR ; DIG 1 ; DUP ; DUG 2 ; CDR ; PAIR ; DIP { DROP } } ;
          LAMBDA
            (pair (pair address nat) (big_map (pair address nat) nat))
@@ -178,7 +178,7 @@
          SWAP ;
          APPLY ;
          LAMBDA
-           (pair (pair (address %admin) (bool %paused)) (option %pending_admin address))
+           (pair (pair address bool) (option address))
            unit
            { DUP ;
              CAR ;

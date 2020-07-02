@@ -1,5 +1,5 @@
 include README.md
 include multi_asset.md
-recursive-include ligo/src *.mligo
+recursive-include ligo/ *.mligo
 graft shared
 

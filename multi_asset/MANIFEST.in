@@ -1,8 +1,4 @@
 include README.md
 include multi_asset.md
-include ligo/*.mligo
-include ligo/lib/*.mligo
-include ligo/impl/*.mligo
-include tezos_mac_tests/start-sandbox.sh
-include tezos_mac_tests/kill-sandbox.sh
-include tezos_mac_tests/pytezos_mac_schema.txt
+recursive-include ligo/*.mligo
+graft shared
