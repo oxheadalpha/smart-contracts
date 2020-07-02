@@ -3,7 +3,7 @@ A simple token owner which works with FA2 instance which supports operators perm
 and can manage its own operators.
  *)
 
-#include "../dependencies/fa2/ligo/lib/fa2_convertors.mligo"
+#include "../fa2/ligo/lib/fa2_convertors.mligo"
 
 type owner_operator_param = {
   fa2 : address;
