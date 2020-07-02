@@ -15,7 +15,7 @@
            { DUP ;
              IF_LEFT
                { DIG 2 ; DUP ; DUG 3 ; NIL operation ; PAIR ; DIP { DROP } }
-               { NIL (pair (address %owner) (nat %token_id)) ;
+               { NIL (pair address nat) ;
                  PUSH nat 0 ;
                  DIG 2 ;
                  DUP ;
