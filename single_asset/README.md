@@ -100,11 +100,7 @@ It will install Pytezos dependencies as well.
 
 ### Start Tezos Sandbox
 
-`./tezos_fa2_single_tests/start-sandbox.sh`
-
-Alternative command:
-
-`docker run --rm --name flextesa-sandbox --detach -p 20000:20000 registry.gitlab.com/tezos/flextesa:image-babylonbox-run babylonbox start`
+`./flextesa/start-sandbox.sh`
 
 When running for the first time, it will download sandbox docker image.
 It may take a few seconds until sandbox is bootstrapped.
