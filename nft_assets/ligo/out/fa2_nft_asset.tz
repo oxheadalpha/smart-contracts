@@ -45,11 +45,11 @@
   code { PUSH string "FA2_TOKEN_UNDEFINED" ;
          PUSH string "FA2_INSUFFICIENT_BALANCE" ;
          LAMBDA
-           (pair (address %owner) (address %operator))
-           (pair (address %operator) (address %owner))
+           (pair address address)
+           (pair address address)
            { DUP ; CAR ; DIG 1 ; DUP ; DUG 2 ; CDR ; PAIR ; DIP { DROP } } ;
          LAMBDA
-           (pair (pair (address %admin) (bool %paused)) (option %pending_admin address))
+           (pair (pair address bool) (option address))
            unit
            { DUP ;
              CAR ;
@@ -691,7 +691,7 @@
                            PAIR ;
                            DUP ;
                            CAR ;
-                           NONE (pair (nat %from_) (nat %to_)) ;
+                           NONE (pair nat nat) ;
                            DIG 2 ;
                            DUP ;
                            DUG 3 ;
@@ -725,7 +725,7 @@
                                       COMPARE ;
                                       GE ;
                                       AND ;
-                                      IF { DUP ; SOME } { NONE (pair (nat %from_) (nat %to_)) } }
+                                      IF { DUP ; SOME } { NONE (pair nat nat) } }
                                     { DIG 2 ; DUP ; DUG 3 ; DIP { DROP } } ;
                                   DIP { DROP 3 } } ;
                            DUP ;
@@ -883,9 +883,7 @@
                       DIG 3 ;
                       DUP ;
                       DUG 4 ;
-                      NONE (pair (pair (pair (nat %decimals) (map %extras string string))
-                                       (pair (string %name) (string %symbol)))
-                                 (nat %token_id)) ;
+                      NONE (pair (pair (pair nat (map string string)) (pair string string)) nat) ;
                       SWAP ;
                       UPDATE ;
                       DIP { DUP ; CDR ; SWAP ; CAR ; CAR } ;

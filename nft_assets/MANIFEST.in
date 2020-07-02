@@ -1,6 +1,3 @@
 include README.md
-include ligo/*.mligo
-include ligo/lib/*.mligo
-include ligo/impl/*.mligo
-include tezos_fa2_nft_tests/start-sandbox.sh
-include tezos_fa2_nft_tests/kill-sandbox.sh
+recursive-include ligo/*.mligo
+graft flextesa
