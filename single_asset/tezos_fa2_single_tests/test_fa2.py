@@ -13,7 +13,7 @@ from tezos_fa2_single_tests.ligo import (
 
 
 root_dir = Path(__file__).parent.parent / "ligo"
-ligo_env = LigoEnv(root_dir / "impl", root_dir / "out")
+ligo_env = LigoEnv(root_dir / "src", root_dir / "out")
 
 
 class TestFa2SetUp(TestCase):
