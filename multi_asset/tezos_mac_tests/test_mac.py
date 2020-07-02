@@ -1,5 +1,4 @@
 from pathlib import Path
-from decimal import *
 from unittest import TestCase
 
 from pytezos import Key, pytezos
@@ -13,7 +12,7 @@ from tezos_mac_tests.ligo import (
 
 
 root_dir = Path(__file__).parent.parent / "ligo"
-ligo_env = LigoEnv(root_dir / "impl", root_dir / "out")
+ligo_env = LigoEnv(root_dir / "src", root_dir / "out")
 
 
 class TestMacSetUp(TestCase):
