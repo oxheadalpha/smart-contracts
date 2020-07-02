@@ -1,5 +1,5 @@
 include README.md
 include multi_asset.md
 recursive-include ligo/src *.mligo
-graft fa2
-graft flextesa
+graft shared
+
