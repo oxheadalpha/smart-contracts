@@ -14,6 +14,7 @@ from tezos_fa2_hooks_tests.ligo import (
 
 root_dir = Path(__file__).parent.parent / "ligo"
 ligo_env = LigoEnv(root_dir / "src", root_dir / "out")
+ligo_client_env = LigoEnv(root_dir / "fa2_clients", root_dir / "out")
 
 
 class TestMacSetUp(TestCase):
@@ -36,10 +37,10 @@ class TestMacSetUp(TestCase):
         ligo_fa2 = ligo_env.contract_from_file(
             "fa2_multi_asset.mligo", "multi_asset_main"
         )
-        ligo_receiver = ligo_env.contract_from_file(
+        ligo_receiver = ligo_client_env.contract_from_file(
             "token_owner.mligo", "token_owner_main"
         )
-        ligo_inspector = ligo_env.contract_from_file("inspector.mligo", "main")
+        ligo_inspector = ligo_client_env.contract_from_file("inspector.mligo", "main")
 
         print("originating contracts...")
         self.fa2 = self.orig_mac(ligo_fa2)
@@ -99,7 +100,7 @@ class TestMacSetUp(TestCase):
 
     def assertBalance(self, owner_address, token_id, expected_balance, msg=None):
         op = self.inspector.query(
-            fa2=self.fa2.address, token_id=token_id, owner=owner_address
+            fa2=self.fa2.address, request={"owner": owner_address, "token_id": token_id}
         ).inject()
         self.util.wait_for_ops(op)
         b = self.inspector.storage()["state"]

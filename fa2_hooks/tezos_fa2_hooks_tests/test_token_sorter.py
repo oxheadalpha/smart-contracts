@@ -1,4 +1,4 @@
-from tezos_fa2_hooks_tests.test_mac import TestMacSetUp, ligo_env
+from tezos_fa2_hooks_tests.test_mac import TestMacSetUp, ligo_env, ligo_client_env
 
 GREEN = 0
 YELLOW = 1
@@ -11,13 +11,13 @@ class TestTokenSorter(TestMacSetUp):
         ligo_fa2 = ligo_env.contract_from_file(
             "fa2_multi_asset.mligo", "multi_asset_main"
         )
-        ligo_receiver = ligo_env.contract_from_file(
+        ligo_receiver = ligo_client_env.contract_from_file(
             "token_owner.mligo", "token_owner_main"
         )
         ligo_sorter = ligo_env.contract_from_file(
             "token_sorter.mligo", "token_sorter_main"
         )
-        ligo_inspector = ligo_env.contract_from_file("inspector.mligo", "main")
+        ligo_inspector = ligo_client_env.contract_from_file("inspector.mligo", "main")
 
         print("originating contracts...")
         self.fa2 = self.orig_mac(ligo_fa2)

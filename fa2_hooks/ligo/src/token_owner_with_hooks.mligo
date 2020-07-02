@@ -1,4 +1,4 @@
-#include "token_owner.mligo"
+#include "../fa2_clients/token_owner.mligo"
 
 (* just keeps balances of received tokens *)
 type dummy_entry_points =
