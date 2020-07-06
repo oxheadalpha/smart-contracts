@@ -9,10 +9,10 @@ The implementation may support sender/receiver hooks
 #if ! FA2_FIXED_COLLECTION_TOKEN
 #define FA2_FIXED_COLLECTION_TOKEN
 
-#include "../fa2/ligo/fa2_interface.mligo"
-#include "../fa2/ligo/fa2_errors.mligo"
-#include "../fa2/ligo/lib/fa2_operator_lib.mligo"
-#include "../fa2/ligo/lib/fa2_owner_hooks_lib.mligo"
+#include "../fa2/fa2_interface.mligo"
+#include "../fa2/fa2_errors.mligo"
+#include "../fa2/lib/fa2_operator_lib.mligo"
+#include "../fa2/lib/fa2_owner_hooks_lib.mligo"
 
 (* token_id -> token_metadata *)
 type token_metadata_storage = (token_id, token_metadata_michelson) big_map
