@@ -120,7 +120,7 @@ the policies defined by the permissions descriptor.
 To be used in FA2 and/or FA2 transfer hook contract implementation which supports
 sender/receiver hooks.
  *)
-let owners_transfer_hook (p, descriptor : transfer_descriptor_param * permissions_descriptor)
+let get_owner_transfer_hooks (p, descriptor : transfer_descriptor_param * permissions_descriptor)
     : hook_entry_point list =
   let sender_entries = validate_senders (p, descriptor.sender) in
   let receiver_entries = validate_receivers (p, descriptor.receiver) in
@@ -145,5 +145,27 @@ let transfers_to_descriptors (txs : transfer list) : transfer_descriptor list =
           txs = txs;
         }
     ) txs 
+
+let transfers_to_transfer_descriptor_param
+    (txs, operator : (transfer list) * address) : transfer_descriptor_param =
+  {
+    batch = transfers_to_descriptors txs;
+    operator = operator;
+  }
+
+(**
+ Gets operations to call sender/receiver hook for the specified transfer and
+ permission descriptor
+ *)
+let get_owner_hook_ops_for (tx_descriptor, pd
+    : transfer_descriptor_param * permissions_descriptor) : operation list =
+  let hook_calls = get_owner_transfer_hooks (tx_descriptor, pd) in
+  match hook_calls with
+  | [] -> ([] : operation list)
+  | h :: t -> 
+    let tx_descriptor_michelson = transfer_descriptor_param_to_michelson tx_descriptor in 
+    List.map (fun(call: hook_entry_point) -> 
+      Operation.transaction tx_descriptor_michelson 0mutez call) 
+      hook_calls
 
 #endif

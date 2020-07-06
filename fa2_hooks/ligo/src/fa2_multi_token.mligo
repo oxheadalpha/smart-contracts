@@ -83,24 +83,11 @@ let get_balance (p, ledger, tokens
   let responses = List.map to_balance p.requests in
   Operation.transaction responses 0mutez p.callback
 
-let get_owner_hook_ops_for_descriptor (tx_descriptor, pd
-    : transfer_descriptor_param * permissions_descriptor) : operation list =
-  let hook_calls = owners_transfer_hook (tx_descriptor, pd) in
-  match hook_calls with
-  | [] -> ([] : operation list)
-  | h :: t -> 
-    let tx_descriptor_michelson = transfer_descriptor_param_to_michelson tx_descriptor in 
-    List.map (fun(call: hook_entry_point) -> 
-      Operation.transaction tx_descriptor_michelson 0mutez call) 
-      hook_calls
 
-let get_owner_hook_ops (txs, pd : (transfer list) * permissions_descriptor) : operation list =
-  let tx_descriptors = transfers_to_descriptors txs in
-  let tx_descriptor : transfer_descriptor_param = {
-    operator = Tezos.sender;
-    batch = tx_descriptors; 
-  } in
-  get_owner_hook_ops_for_descriptor (tx_descriptor, pd)
+
+let get_owner_hook_ops (txs, p_descriptor : (transfer list) * permissions_descriptor) : operation list =
+  let tx_descriptor = transfers_to_transfer_descriptor_param (txs, Tezos.sender) in
+  get_owner_hook_ops_for (tx_descriptor, p_descriptor)
 
 let fa2_main (param, storage : fa2_entry_points * multi_token_storage)
     : (operation  list) * multi_token_storage =

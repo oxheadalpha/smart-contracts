@@ -62,6 +62,10 @@ let transfer (txs, owner_validator, ops_storage, ledger
     
   List.fold make_transfer txs ledger
 
+let get_owner_hook_ops (txs, p_descriptor : (transfer list) * permissions_descriptor) : operation list =
+  let tx_descriptor = transfers_to_transfer_descriptor_param (txs, Tezos.sender) in
+  get_owner_hook_ops_for (tx_descriptor, p_descriptor)
+
 (** 
 Retrieve the balances for the specified tokens and owners
 @return callback operation
@@ -88,7 +92,10 @@ let fa2_collection_main (param, storage : fa2_entry_points * collection_storage)
     let validator = make_default_operator_validator Tezos.sender in
     let new_ledger = transfer (txs, validator, storage.operators, storage.ledger) in
     let new_storage = { storage with ledger = new_ledger; } in
-    ([] : operation list), new_storage
+
+    let hook_ops = get_owner_hook_ops (txs, storage.permissions_descriptor) in
+
+    hook_ops, new_storage
   
   | Balance_of pm ->
     let p = balance_of_param_from_michelson pm in
