@@ -112,8 +112,8 @@ let fa2_main (param, storage : fa2_entry_points * nft_token_storage)
     let txs = transfers_from_michelson txs_michelson in
     let validator = make_default_operator_validator Tezos.sender in
     let new_ledger = transfer (txs, validator, storage.operators, storage.ledger) in
-    let new_storage = { storage with ledger = new_ledger; }
-    in ([] : operation list), new_storage
+    let new_storage = { storage with ledger = new_ledger; } in
+    ([] : operation list), new_storage
 
   | Balance_of pm ->
     let p = balance_of_param_from_michelson pm in
