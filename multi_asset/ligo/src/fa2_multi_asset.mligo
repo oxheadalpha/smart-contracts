@@ -11,7 +11,7 @@
 *)
 
 #include "token_manager.mligo"
-#include "simple_admin.mligo"
+#include "../fa2_modules/simple_admin.mligo"
 
 type multi_asset_storage = {
   admin : simple_admin_storage;

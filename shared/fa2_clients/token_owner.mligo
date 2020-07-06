@@ -3,7 +3,7 @@ A simple token owner which works with FA2 instance and supports operators permis
 and can manage its own operators.
  *)
 
-#include "../fa2/ligo/lib/fa2_convertors.mligo"
+#include "../fa2/lib/fa2_convertors.mligo"
 
 type owner_operator_param = {
   fa2 : address;
@@ -15,7 +15,7 @@ type token_owner =
   | Owner_remove_operator of owner_operator_param
   | Default of unit
 
-let main (param, s : token_owner * unit) 
+let token_owner_main (param, s : token_owner * unit) 
     : (operation list) * unit =
   match param with
 

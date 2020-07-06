@@ -15,6 +15,7 @@ from tezos_fa2_nft_tests.ligo import (
 
 root_dir = Path(__file__).parent.parent / "ligo"
 ligo_env = LigoEnv(root_dir / "src", root_dir / "out")
+ligo_client_env = LigoEnv(root_dir / "fa2_clients", root_dir / "out")
 
 
 class TestFa2SetUp(TestCase):
@@ -35,8 +36,10 @@ class TestFa2SetUp(TestCase):
     def orig_contracts(self):
         print("loading ligo contracts...")
         ligo_fa2 = ligo_env.contract_from_file("fa2_nft_asset.mligo", "nft_asset_main")
-        ligo_receiver = ligo_env.contract_from_file("token_owner.mligo", "main")
-        ligo_inspector = ligo_env.contract_from_file("inspector.mligo", "main")
+        ligo_receiver = ligo_client_env.contract_from_file(
+            "token_owner.mligo", "token_owner_main"
+        )
+        ligo_inspector = ligo_client_env.contract_from_file("inspector.mligo", "main")
 
         print("originating contracts...")
         self.fa2 = self.orig_fa2(ligo_fa2)
