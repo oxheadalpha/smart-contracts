@@ -98,3 +98,10 @@ let generate_rainbow_collection_storage (owner_admin : address) : collection_ass
     custom = (None : custom_permission_policy option);
   } in
   generate_asset_storage (tokens, owner_admin, permissions)
+
+
+(*
+CLI:
+ligo compile-storage collectibles/ligo/src/fa2_fixed_collection_asset.mligo collection_asset_main 
+  'generate_rainbow_collection_storage ("tz1YPSCGWXwBdTncK2aCctSZAXWvGsGwVJqU" : address)'
+*)
