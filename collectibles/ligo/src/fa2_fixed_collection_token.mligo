@@ -12,6 +12,7 @@ The implementation may support sender/receiver hooks
 #include "../fa2/fa2_interface.mligo"
 #include "../fa2/fa2_errors.mligo"
 #include "../fa2/lib/fa2_operator_lib.mligo"
+#include "../fa2/lib/fa2_owner_hooks_lib.mligo"
 
 (* token_id -> token_metadata *)
 type token_metadata_storage = (token_id, token_metadata_michelson) big_map
@@ -25,6 +26,10 @@ type collection_storage = {
   token_metadata : token_metadata_storage;
   permissions_descriptor : permissions_descriptor;
 }
+
+type fa2_collection_entry_points =
+  | FA2 of fa2_entry_points
+  | Permissions_descriptor of permissions_descriptor_michelson contract
 
 (**
 Update leger balances according to the specified transfers. Fails if any of the
@@ -75,16 +80,15 @@ let get_balance (p, ledger : balance_of_param * ledger) : operation =
   let responses = List.map to_balance p.requests in
   Operation.transaction responses 0mutez p.callback
 
-
-let fixed_collection_token_main (param, storage : fa2_entry_points * collection_storage)
-    : (operation list) * collection_storage =
+let fa2_collection_main (param, storage : fa2_entry_points * collection_storage)
+    :  (operation list) * collection_storage =
   match param with
   | Transfer txs_michelson ->
     let txs = transfers_from_michelson txs_michelson in
     let validator = make_default_operator_validator Tezos.sender in
     let new_ledger = transfer (txs, validator, storage.operators, storage.ledger) in
-
-    ([] : operation list), storage
+    let new_storage = { storage with ledger = new_ledger; } in
+    ([] : operation list), new_storage
   
   | Balance_of pm ->
     let p = balance_of_param_from_michelson pm in
@@ -107,5 +111,19 @@ let fixed_collection_token_main (param, storage : fa2_entry_points * collection_
     (* the contract stores its own token metadata and exposes `token_metadata` entry point *)
     let callback_op = Operation.transaction Tezos.self_address 0mutez callback in
     [callback_op], storage
+
+let get_permissions_descriptor (callback, storage
+    : permissions_descriptor_michelson contract * collection_storage)
+    : (operation  list) * collection_storage =
+  let pdm = permissions_descriptor_to_michelson storage.permissions_descriptor in
+  let callback_op = Operation.transaction pdm 0mutez callback in
+  [callback_op], storage
+
+let fixed_collection_token_main (param, storage : fa2_collection_entry_points * collection_storage)
+    : (operation list) * collection_storage =
+  match param with
+  | FA2 fa2 -> fa2_collection_main (fa2, storage)
+  | Permissions_descriptor callback -> get_permissions_descriptor (callback, storage)
+
 
 #endif
