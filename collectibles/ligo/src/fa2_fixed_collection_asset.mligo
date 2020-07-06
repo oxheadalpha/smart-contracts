@@ -24,3 +24,77 @@ let collection_asset_main (param, storage
     let ops, new_admin = simple_admin (p, storage.admin) in
     let new_s = { storage with admin = new_admin; } in
     (ops, new_s)
+
+
+(* helper storage generator *)
+
+type token_descriptor = {
+  id : token_id;
+  symbol : string;
+  name : string;
+  token_uri : string option;
+  owner : address;
+}
+
+let generate_asset_storage (tokens, admin, permissions
+    : (token_descriptor list) * address * permissions_descriptor) 
+    : collection_asset_storage =
+  let ledger = List.fold (
+    fun (ledger, td : ledger * token_descriptor) ->
+      Big_map.add td.id td.owner ledger
+  ) tokens (Big_map.empty : ledger) in
+
+  let metadata = List.fold (
+    fun (meta, td : token_metadata_storage * token_descriptor) ->
+      let m0 : token_metadata = {
+        token_id = td.id;
+        symbol = td.symbol;
+        name = td.name;
+        decimals = 0n;
+        extras = (Map.empty : (string, string) map);
+      } in
+      let m1 = match td.token_uri with
+      | None -> m0
+      | Some uri -> { m0 with
+          extras = Map.add "token_uri" uri m0.extras;
+        }
+      in
+      let m_michelson = Layout.convert_to_right_comb m1 in
+      Big_map.add td.id m_michelson meta
+  ) tokens (Big_map.empty : token_metadata_storage) in
+
+  let admin : simple_admin_storage = {
+    admin = admin;
+    pending_admin = (None : address option);
+    paused = true;
+  } in
+
+  {
+    assets = {
+      ledger = ledger;
+      operators = (Big_map.empty : operator_storage);
+      token_metadata = metadata;
+      permissions_descriptor = permissions;
+    };
+    admin = admin;
+  }
+
+
+let generate_rainbow_collection_storage (owner_admin : address) : collection_asset_storage =
+  let uri : string option = None in
+  let tokens : token_descriptor list = [
+    { id = 0n; symbol="RED"; name="RAINBOW_TOKEN"; owner = owner_admin; token_uri = uri };
+    { id = 1n; symbol="ORANGE"; name="RAINBOW_TOKEN"; owner = owner_admin; token_uri = uri };
+    { id = 2n; symbol="YELLOW"; name="RAINBOW_TOKEN"; owner = owner_admin; token_uri = uri };
+    { id = 3n; symbol="GREEN"; name="RAINBOW_TOKEN"; owner = owner_admin; token_uri = uri };
+    { id = 4n; symbol="BLUE"; name="RAINBOW_TOKEN"; owner = owner_admin; token_uri = uri };
+    { id = 5n; symbol="INDIGO"; name="RAINBOW_TOKEN"; owner = owner_admin; token_uri = uri };
+    { id = 6n; symbol="VIOLET"; name="RAINBOW_TOKEN"; owner = owner_admin; token_uri = uri };
+  ] in
+  let permissions : permissions_descriptor = {
+    operator = Owner_or_operator_transfer;
+    receiver = Optional_owner_hook;
+    sender = Optional_owner_hook;
+    custom = (None : custom_permission_policy option);
+  } in
+  generate_asset_storage (tokens, owner_admin, permissions)

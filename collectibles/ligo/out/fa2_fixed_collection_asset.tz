@@ -299,11 +299,6 @@
                               CAR ;
                               NONE address ;
                               SWAP ;
-                              PAIR ;
-                              DUP ;
-                              CDR ;
-                              SWAP ;
-                              CAR ;
                               CDR ;
                               SENDER ;
                               PAIR ;
