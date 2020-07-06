@@ -27,7 +27,7 @@ type collection_storage = {
   permissions_descriptor : permissions_descriptor;
 }
 
-type fa2_collection_entry_points =
+type fa2_collection_entrypoints =
   | FA2 of fa2_entry_points
   | Permissions_descriptor of permissions_descriptor_michelson contract
 
@@ -126,7 +126,7 @@ let get_permissions_descriptor (callback, storage
   let callback_op = Operation.transaction pdm 0mutez callback in
   [callback_op], storage
 
-let fixed_collection_token_main (param, storage : fa2_collection_entry_points * collection_storage)
+let fixed_collection_token_main (param, storage : fa2_collection_entrypoints * collection_storage)
     : (operation list) * collection_storage =
   match param with
   | FA2 fa2 -> fa2_collection_main (fa2, storage)
