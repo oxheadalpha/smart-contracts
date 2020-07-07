@@ -28,43 +28,59 @@ type token_manager =
 let get_total_supply_change (txs : mint_burn_tx list) : nat =
   List.fold (fun (total, tx : nat * mint_burn_tx) -> total + tx.amount) txs 0n
 
-let  mint_update_balances (txs, ledger : (mint_burn_tx list) * ledger) : ledger =
-  let mint = fun (l, tx : ledger * mint_burn_tx) ->
-    inc_balance (tx.owner, tx.amount, l) 
-  in
+let mint_params_to_descriptors(txs : mint_burn_tokens_param)
+    : transfer_descriptor list =
+  let param_to_descriptor = fun (p : mint_burn_tx) -> {
+      from_ = (None : address option);
+      txs = [{
+        to_ = Some p.owner;
+        token_id = 0n;
+        amount = p.amount;
+      }]
+    } in
+  List.map param_to_descriptor txs
 
-  List.fold mint txs ledger
+let burn_params_to_descriptors(txs : mint_burn_tokens_param)
+    : transfer_descriptor list =
+  let param_to_descriptor = fun (p : mint_burn_tx) -> {
+      from_ = Some p.owner;
+      txs = [{
+        to_ = (None : address option);
+        token_id = 0n;
+        amount = p.amount;
+      }]
+    } in
+  List.map param_to_descriptor txs
 
 let mint_tokens (txs, storage : mint_burn_tokens_param * single_token_storage) 
     : (operation list) * single_token_storage =
-  let new_ledger = mint_update_balances (txs, storage.ledger) in
+  let tx_descriptors = mint_params_to_descriptors txs in
+  let nop_operator_validator = fun (p : address * operator_storage) -> unit in
+  let ops, new_s1 = fa2_transfer (tx_descriptors, nop_operator_validator, storage) in 
+
   let supply_change = get_total_supply_change txs in
-  let new_s = { storage with
-    ledger = new_ledger;
+  let new_s2 = { new_s1 with
     total_supply = storage.total_supply + supply_change;
   } in
-  ([] : operation list), new_s
 
-let burn_update_balances(txs, ledger : (mint_burn_tx list) * ledger) : ledger =
-  let burn = fun (l, tx : ledger * mint_burn_tx) ->
-    dec_balance (tx.owner, tx.amount, l) in
-
-  List.fold burn txs ledger
-    
+  ops, new_s2
+  
 let burn_tokens (txs, storage : mint_burn_tokens_param * single_token_storage) 
     : (operation list) * single_token_storage =
-  let new_ledger = burn_update_balances (txs, storage.ledger) in 
+  let tx_descriptors = burn_params_to_descriptors txs in
+  let nop_operator_validator = fun (p : address * operator_storage) -> unit in
+  let ops, new_s1 = fa2_transfer (tx_descriptors, nop_operator_validator, storage) in 
+
   let supply_change = get_total_supply_change txs in
   let new_supply_opt = Michelson.is_nat (storage.total_supply - supply_change) in
   let new_supply = match new_supply_opt with
   | None -> (failwith fa2_insufficient_balance : nat)
   | Some s -> s
   in
-  let new_s = { storage with
-    ledger = new_ledger;
+  let new_s2 = { new_s1 with
     total_supply = new_supply;
   } in
-  ([] : operation list), new_s
+  ops, new_s2
 
 let token_manager (param, s : token_manager * single_token_storage)
     : (operation list) * single_token_storage =

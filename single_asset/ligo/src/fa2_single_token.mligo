@@ -8,9 +8,13 @@ Implementation of the FA2 interface for the single token contract.
 
 #include "../fa2/fa2_interface.mligo"
 #include "../fa2/fa2_errors.mligo"
+#include "../fa2/lib/fa2_convertors.mligo"
 #include "../fa2/lib/fa2_operator_lib.mligo"
+#include "../fa2/lib/fa2_owner_hooks_lib.mligo"
 
 type ledger = (address, nat) big_map
+
+#if !OWNER_HOOKS
 
 type single_token_storage = {
   ledger : ledger;
@@ -19,31 +23,17 @@ type single_token_storage = {
   total_supply : nat;
 }
 
-(**
-Converts transfer parameters to `transfer_descriptors.
+#else
 
-Helps to reuse the same transfer logic for `transfer`, `min` and `burn` implementation.
-Can be used to support optional sender/receiver hooks in future.
- *)
-let transfers_to_descriptors (txs : transfer list) : transfer_descriptor list =
-  List.map 
-    (fun (tx : transfer) ->
-      let txs = List.map 
-        (fun (dst : transfer_destination) ->
-          if dst.token_id <> 0n
-          then (failwith fa2_token_undefined : transfer_destination_descriptor)
-          else {
-            to_ = Some dst.to_;
-            token_id = dst.token_id;
-            amount = dst.amount;
-          }
-        ) tx.txs in
-        {
-          from_ = Some tx.from_;
-          txs = txs;
-        }
-    ) txs 
+type single_token_storage = {
+  ledger : ledger;
+  operators : operator_storage;
+  token_metadata : (nat, token_metadata_michelson) big_map;
+  total_supply : nat;
+  permissions_descriptor : permissions_descriptor;
+}
 
+#endif
 
 let get_balance_amt (owner, ledger : address  * ledger) : nat =
   let bal_opt = Big_map.find_opt owner ledger in
@@ -119,6 +109,46 @@ let validate_token_ids (tokens : token_id list) : unit =
     if id = 0n then unit else failwith fa2_token_undefined
   ) tokens
 
+
+#if !OWNER_HOOKS
+
+let get_owner_hook_ops (tx_descriptors, storage
+    : (transfer_descriptor list) * single_token_storage) : operation list =
+  ([] : operation list)
+
+#else 
+
+let get_owner_hook_ops (tx_descriptors, storage
+    : (transfer_descriptor list) * single_token_storage) : operation list =
+  let tx_descriptor_param : transfer_descriptor_param = {
+    batch = tx_descriptors;
+    operator = Tezos.sender;
+  } in
+  get_owner_hook_ops_for (tx_descriptor_param, storage.permissions_descriptor)
+
+#endif
+
+let fa2_transfer (tx_descriptors, validator, storage
+    : (transfer_descriptor list) * ((address * operator_storage)-> unit) * single_token_storage)
+    : (operation list) * single_token_storage =
+  
+  let new_ledger = transfer (tx_descriptors, validator, storage.operators, storage.ledger) in
+  let new_storage = { storage with ledger = new_ledger; } in
+  let ops = get_owner_hook_ops (tx_descriptors, storage) in
+  ops, new_storage
+
+let fa2_update_operators (updates_michelson, storage
+    : (update_operator_michelson list) * single_token_storage) : single_token_storage =
+  let updates = operator_updates_from_michelson updates_michelson in
+  let updater = Tezos.sender in
+  let process_update = (fun (ops, update : operator_storage * update_operator) ->
+    let u = validate_update_operators_by_owner (update, updater) in
+    update_operators (update, ops)
+  ) in
+  let new_ops =
+    List.fold process_update updates storage.operators in
+  { storage with operators = new_ops; }
+
 let fa2_main (param, storage : fa2_entry_points * single_token_storage)
     : (operation  list) * single_token_storage =
   match param with
@@ -131,9 +161,8 @@ let fa2_main (param, storage : fa2_entry_points * single_token_storage)
     or a permitted operator for the owner `from_` address.
     *)
     let validator = make_default_operator_validator Tezos.sender in
-    let new_ledger = transfer (tx_descriptors, validator, storage.operators, storage.ledger) in
-    let new_storage = { storage with ledger = new_ledger; }
-    in ([] : operation list), new_storage
+
+    fa2_transfer (tx_descriptors, validator, storage)
 
   | Balance_of pm ->
     let p = balance_of_param_from_michelson pm in
@@ -141,15 +170,7 @@ let fa2_main (param, storage : fa2_entry_points * single_token_storage)
     [op], storage
 
   | Update_operators updates_michelson ->
-    let updates = operator_updates_from_michelson updates_michelson in
-    let updater = Tezos.sender in
-    let process_update = (fun (ops, update : operator_storage * update_operator) ->
-      let u = validate_update_operators_by_owner (update, updater) in
-      update_operators (update, ops)
-    ) in
-    let new_ops =
-      List.fold process_update updates storage.operators in
-    let new_storage = { storage with operators = new_ops; } in
+    let new_storage = fa2_update_operators (updates_michelson, storage) in
     ([] : operation list), new_storage
 
   | Token_metadata_registry callback ->

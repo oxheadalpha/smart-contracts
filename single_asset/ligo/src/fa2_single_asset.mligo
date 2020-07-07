@@ -10,6 +10,7 @@
   Only current admin can access `simple_admin` and `token_manager` entry points.
 *)
 
+
 #include "token_manager.mligo"
 #include "../fa2_modules/simple_admin.mligo"
 
@@ -51,6 +52,7 @@ let single_asset_main
 (**
 This is a sample initial fa2_single_asset storage.
  *)
+#if !OWNER_HOOKS
 
 let store : single_asset_storage = {
             admin = {
@@ -75,4 +77,6 @@ let store : single_asset_storage = {
                 ];
                 total_supply = 0n;
             };
-        }
+        } 
+
+#endif
