@@ -37,7 +37,7 @@ let create_token (metadata, storage
   let meta : token_metadata = Layout.convert_from_right_comb metadata in
   let new_token_id = meta.token_id in
 
-  let existing_meta = Map.find_opt new_token_id storage.token_metadata in
+  let existing_meta = Big_map.find_opt new_token_id storage.token_metadata in
   match existing_meta with
   | Some m -> (failwith "FA2_DUP_TOKEN_ID" : multi_token_storage)
   | None ->
