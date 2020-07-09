@@ -35,7 +35,7 @@ let confirm_new_admin (s : simple_admin_storage) : simple_admin_storage =
       pending_admin = (None : address option);
       admin = Tezos.sender;
     }
-    else (failwith "NOT_AN_ADMIN" : simple_admin_storage)
+    else (failwith "NOT_A_PENDING_ADMIN" : simple_admin_storage)
 
 
 let pause (paused, s: bool * simple_admin_storage) : simple_admin_storage =
