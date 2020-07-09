@@ -32,7 +32,9 @@ let inc_balance (owner, token_id, amt, ledger
   let key = owner, token_id in
   let bal = get_balance_amt (key, ledger) in
   let updated_bal = bal + amt in
-  Big_map.update key (Some updated_bal) ledger 
+  if updated_bal = 0n
+  then Big_map.remove key ledger
+  else Big_map.update key (Some updated_bal) ledger 
 
 let dec_balance (owner, token_id, amt, ledger
     : address * token_id * nat * ledger) : ledger =
