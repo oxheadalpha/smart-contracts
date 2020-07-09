@@ -45,7 +45,9 @@ let inc_balance (owner, amt, ledger
     : address * nat * ledger) : ledger =
   let bal = get_balance_amt (owner, ledger) in
   let updated_bal = bal + amt in
-  Big_map.update owner (Some updated_bal) ledger 
+  if updated_bal = 0n
+  then Big_map.remove owner ledger
+  else Big_map.update owner (Some updated_bal) ledger 
 
 let dec_balance (owner, amt, ledger
     : address * nat * ledger) : ledger =
@@ -55,7 +57,7 @@ let dec_balance (owner, amt, ledger
   | Some new_bal ->
     if new_bal = 0n
     then Big_map.remove owner ledger
-    else Map.update owner (Some new_bal) ledger
+    else Big_map.update owner (Some new_bal) ledger
 
 (**
 Update leger balances according to the specified transfers. Fails if any of the

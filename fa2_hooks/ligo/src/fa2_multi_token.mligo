@@ -34,7 +34,9 @@ let inc_balance (owner, token_id, amt, ledger
   let key = owner, token_id in
   let bal = get_balance_amt (key, ledger) in
   let updated_bal = bal + amt in
-  Big_map.update key (Some updated_bal) ledger 
+  if updated_bal = 0n
+  then Big_map.remove key ledger
+  else Big_map.update key (Some updated_bal) ledger 
 
 let dec_balance (owner, token_id, amt, ledger
     : address * token_id * nat * ledger) : ledger =
@@ -45,7 +47,7 @@ let dec_balance (owner, token_id, amt, ledger
   | Some new_bal ->
     if new_bal = 0n
     then Big_map.remove key ledger
-    else Map.update key (Some new_bal) ledger
+    else Big_map.update key (Some new_bal) ledger
 
 (**
 Update leger balances according to the specified transfers. Fails if any of the
@@ -70,7 +72,7 @@ let transfer (txs, owner_validator, storage
   List.fold make_transfer txs storage.ledger
  
 let get_balance (p, ledger, tokens
-    : balance_of_param * ledger * token_total_supply) : operation =
+    : balance_of_param * ledger * token_metadata_storage) : operation =
   let to_balance = fun (r : balance_of_request) ->
     if not Big_map.mem r.token_id tokens
     then (failwith fa2_token_undefined : balance_of_response_michelson)
@@ -109,7 +111,7 @@ let fa2_main (param, storage : fa2_entry_points * multi_token_storage)
 
   | Balance_of pm -> 
     let p = balance_of_param_from_michelson pm in
-    let op = get_balance (p, storage.ledger, storage.token_total_supply) in
+    let op = get_balance (p, storage.ledger, storage.token_metadata) in
     [op], storage
 
   | Update_operators updates_michelson ->

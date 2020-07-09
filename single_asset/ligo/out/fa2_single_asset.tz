@@ -87,15 +87,44 @@
              DUP ;
              DUG 4 ;
              CAR ;
-             CAR ;
-             PAIR ;
-             PAIR ;
-             DUP ;
-             CDR ;
              CDR ;
              DIG 1 ;
              DUP ;
              DUG 2 ;
+             ADD ;
+             PUSH nat 0 ;
+             DIG 1 ;
+             DUP ;
+             DUG 2 ;
+             COMPARE ;
+             EQ ;
+             IF { DIG 2 ; DUP ; DUG 3 ; DIG 4 ; DUP ; DUG 5 ; NONE nat ; SWAP ; UPDATE }
+                { DIG 2 ;
+                  DUP ;
+                  DUG 3 ;
+                  DIG 1 ;
+                  DUP ;
+                  DUG 2 ;
+                  SOME ;
+                  DIG 5 ;
+                  DUP ;
+                  DUG 6 ;
+                  UPDATE } ;
+             DIP { DROP 6 } } ;
+         SWAP ;
+         APPLY ;
+         DIP { DIP { DIP { DUP } ; SWAP } ; DUP ; DIP { PAIR } ; SWAP } ;
+         SWAP ;
+         LAMBDA
+           (pair (pair (lambda (pair address (big_map address nat)) nat) string)
+                 (pair (pair address nat) (big_map address nat)))
+           (big_map address nat)
+           { DUP ;
+             CAR ;
+             SWAP ;
+             CDR ;
+             DIP { DUP ; CDR ; SWAP ; CAR } ;
+             DUP ;
              CAR ;
              CAR ;
              ITER { SWAP ;
@@ -372,7 +401,7 @@
                                   SENDER ;
                                   PAIR ;
                                   PAIR }
-                                { PUSH string "NOT_AN_ADMIN" ; FAILWITH } ;
+                                { PUSH string "NOT_A_PENDING_ADMIN" ; FAILWITH } ;
                              DIP { DROP } } ;
                          DUP ;
                          NIL operation ;
