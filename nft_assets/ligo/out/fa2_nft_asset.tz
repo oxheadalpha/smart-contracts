@@ -103,16 +103,11 @@
                                   CAR ;
                                   NONE address ;
                                   SWAP ;
-                                  PAIR ;
-                                  DUP ;
-                                  CDR ;
-                                  SWAP ;
-                                  CAR ;
                                   CDR ;
                                   SENDER ;
                                   PAIR ;
                                   PAIR }
-                                { PUSH string "NOT_AN_ADMIN" ; FAILWITH } ;
+                                { PUSH string "NOT_A_PENDING_ADMIN" ; FAILWITH } ;
                              DIP { DROP } } ;
                          DUP ;
                          NIL operation ;
