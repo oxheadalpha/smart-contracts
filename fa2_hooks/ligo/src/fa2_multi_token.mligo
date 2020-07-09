@@ -45,7 +45,7 @@ let dec_balance (owner, token_id, amt, ledger
   | Some new_bal ->
     if new_bal = 0n
     then Big_map.remove key ledger
-    else Map.update key (Some new_bal) ledger
+    else Big_map.update key (Some new_bal) ledger
 
 (**
 Update leger balances according to the specified transfers. Fails if any of the
