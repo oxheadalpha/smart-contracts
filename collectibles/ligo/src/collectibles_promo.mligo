@@ -46,6 +46,38 @@ type promotion_entrypoints =
   | Disburse_collectibles
   | Cancel_promotion
 
+let retrieve_collectibles (txs : transfer_destination_descriptor list)
+    : token_id list =
+  List.fold
+    (fun (acc, tx : (token_id list) * transfer_destination_descriptor)->
+      if tx.amount = 0n
+      then acc
+      else if tx.amount > 1n
+      then (failwith "NON_NFT_RECEIVED" : token_id list)
+      else
+        match tx.to_ with
+        | None -> acc
+        | Some a ->
+          if a = Tezos.self_address
+          then tx.token_id :: acc
+          else acc
+        
+    ) txs ([] : token_id list)
+
+let validate_no_tokens_received (txs : transfer_destination_descriptor list) : unit =
+  List.iter 
+    (fun (tx : transfer_destination_descriptor) ->
+      if tx.amount = 0n
+      then unit
+      else
+        match tx.to_ with
+        | None -> unit
+        | Some a -> 
+          if a = Tezos.self_address
+          then failwith ("CANNOT_ACCEPT_TOKENS")
+          else unit
+    ) txs
+
 let accept_collectibles (tx_param_michelson, pdef
     : transfer_descriptor_param_michelson * promotion_def) : promotion_state =
   if Tezos.sender <> pdef.collectible_fa2
@@ -53,8 +85,20 @@ let accept_collectibles (tx_param_michelson, pdef
   else
     let tx_param = transfer_descriptor_param_from_michelson tx_param_michelson in
     let collectibles = List.fold 
-      (fun (acc, tx : (token_id list) * transfer_descriptor) ->
-        acc
+      (fun (acc, td : (token_id list) * transfer_descriptor) ->
+        let is_from_promoter = match td.from_ with
+        | None -> false
+        | Some a -> if a = pdef.promoter then true else false
+        in
+        if is_from_promoter
+        then 
+          let cc = retrieve_collectibles (td.txs) in
+          List.fold (fun (a, c : (token_id list) * token_id) ->
+            c :: a
+          ) cc acc
+        else
+          let u = validate_no_tokens_received td.txs in
+          acc
       ) tx_param.batch ([] : token_id list) in
     In_progress {
       def = pdef;
