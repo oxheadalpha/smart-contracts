@@ -16,22 +16,26 @@ type promotion_def = {
   price : nat;
 }
 
+(* owner -> money token amount *)
+type money_deposits = (address, nat) map
+
+(* owner -> collectible token ids*)
+type allocated_collectibles = (address, token_id list) map
+
 type promotion_in_progress = {
   def : promotion_def;
   (* collectibles to promote *)
   collectibles : token_id list;
-  (* buyer -> money token amount *)
-  money_deposits : (address, nat) map;
-  (* collectible token id ->  buyer*)
-  allocated_collectibles : (token_id, address) map;
+  (* transferred money reminders *)
+  money_deposits : money_deposits;
+  allocated_collectibles : allocated_collectibles;
 }
 
 type finished_promotion = {
   def : promotion_def;
-  (* owner -> money token amount *)
-  money_deposits : (address, nat) map;
-  (* collectible token id -> owner *)
-  allocated_collectibles : (token_id, address) map;
+  (* transferred money reminders *)
+  money_deposits : money_deposits;
+  allocated_collectibles : allocated_collectibles;
 }
 
 type promotion_state =
@@ -44,7 +48,9 @@ type promotion_entrypoints =
   | Tokens_received of transfer_descriptor_param_michelson
   | Refund_money 
   | Disburse_collectibles
-  | Cancel_promotion
+  | Stop_promotion
+
+type return_type = (operation list) * promotion_state
 
 let retrieve_collectibles (txs : transfer_destination_descriptor list)
     : token_id list =
@@ -64,7 +70,8 @@ let retrieve_collectibles (txs : transfer_destination_descriptor list)
         
     ) txs ([] : token_id list)
 
-let validate_no_tokens_received (txs : transfer_destination_descriptor list) : unit =
+let validate_no_tokens_received (txs, this_address
+    : (transfer_destination_descriptor list) * address) : unit =
   List.iter 
     (fun (tx : transfer_destination_descriptor) ->
       if tx.amount = 0n
@@ -73,7 +80,7 @@ let validate_no_tokens_received (txs : transfer_destination_descriptor list) : u
         match tx.to_ with
         | None -> unit
         | Some a -> 
-          if a = Tezos.self_address
+          if a = this_address
           then failwith ("CANNOT_ACCEPT_TOKENS")
           else unit
     ) txs
@@ -97,20 +104,60 @@ let accept_collectibles (tx_param_michelson, pdef
             c :: a
           ) cc acc
         else
-          let u = validate_no_tokens_received td.txs in
+          let u = validate_no_tokens_received (td.txs, Tezos.self_address) in
           acc
       ) tx_param.batch ([] : token_id list) in
     In_progress {
       def = pdef;
       collectibles = collectibles;
-      money_deposits = (Map.empty : (address, nat) map);
-      allocated_collectibles = (Map.empty : (token_id, address) map);
+      money_deposits = (Map.empty : money_deposits);
+      allocated_collectibles = (Map.empty : allocated_collectibles);
     }
+
+let buy_collectibles (buyer, money_amount, promo : address * nat * promotion_in_progress)
+    : promotion_in_progress =
+  let new_money_amount = match Map.find_opt buyer promo.money_deposits with
+  | None -> money_amount
+  | Some ma -> ma + money_amount
+  in
+
+  let ntokens, reminder = match ediv money_amount promo.def.price with
+  | None -> (failwith "PROMO_PRICE_IS_ZERO" : nat * nat)
+  | Some res -> res
+  in
+  (* TODO: buy tokens *)
+    promo
+
+let retrieve_money (txs, buyer, promo
+    : (transfer_destination_descriptor list) * address * promotion_in_progress)
+    : promotion_in_progress =
+  List.fold
+    (fun (p, tx : promotion_in_progress * transfer_destination_descriptor) ->
+      match tx.to_ with
+      | None -> p
+      | Some a ->
+        if a <> Tezos.self_address
+        then p
+        else if tx.token_id <> p.def.money_token.id
+        then (failwith "PROMO_MONEY_TOKENS_EXPECTED" : promotion_in_progress)
+        else buy_collectibles (buyer, tx.amount, p)
+    ) txs promo
 
 let accept_money (tx_param_michelson, promo
     : transfer_descriptor_param_michelson * promotion_in_progress) : promotion_state =
-  let tx_param = transfer_descriptor_param_from_michelson tx_param_michelson in
-  In_progress promo
+  if Tezos.sender <> promo.def.money_token.fa2
+  then (failwith "PROMO_MONEY_TOKENS_EXPECTED" : promotion_state)
+  else
+    let tx_param = transfer_descriptor_param_from_michelson tx_param_michelson in
+    let new_promo = List.fold
+      (fun (p, td : promotion_in_progress * transfer_descriptor) ->
+        match td.from_ with
+        | None ->
+          let u = validate_no_tokens_received (td.txs, Tezos.self_address) in
+          p
+        | Some from_ -> retrieve_money (td.txs, from_, p)
+      ) tx_param.batch promo in
+    In_progress new_promo
 
 let accept_tokens (tx_param_michelson, state
     : transfer_descriptor_param_michelson * promotion_state) : promotion_state =
@@ -119,21 +166,104 @@ let accept_tokens (tx_param_michelson, state
   | In_progress promo -> accept_money (tx_param_michelson, promo)
   | Finished p -> (failwith "PROMO_FINISHED" : promotion_state)
 
-let cancel_promotion (state : promotion_state) : promotion_state =
+let disburse_collectibles (allocated_collectibles, collectible_fa2, owner, this
+    : allocated_collectibles * address * address * address)
+    : (operation list ) * allocated_collectibles =
+  match Map.find_opt owner allocated_collectibles with
+  | None -> ([] : operation list), allocated_collectibles
+  | Some cc -> 
+    let tx_destinations : transfer_destination list = List.map
+      (fun (cid : token_id) -> {
+        to_ = owner;
+        token_id = cid;
+        amount = 1n;
+      }) cc in
+    let tx : transfer = {
+      from_ = this;
+      txs = tx_destinations;
+    } in
+    let txm = transfer_to_michelson tx in
+    let fa2_entry : ((transfer_michelson list) contract) option = 
+      Operation.get_entrypoint_opt "%transfer"  collectible_fa2 in
+    let transfer_op = match fa2_entry with
+    | None -> (failwith "CANNOT_INVOKE_COLLECTIBLE_FA2" : operation)
+    | Some c -> Operation.transaction [txm] 0mutez c
+    in
+    [transfer_op], Map.remove owner allocated_collectibles
+
+let disburse_collectibles (state : promotion_state) : return_type =
   match state with
-  | Initial pdef -> 
+  | Initial pdef -> (failwith "PROMO_NOT_STARTED" : return_type)
+  | In_progress promo ->
+    let ops, new_collectibles =
+      disburse_collectibles (promo.allocated_collectibles, promo.def.collectible_fa2, Tezos.sender, Tezos.self_address) in
+    ops, In_progress { promo with allocated_collectibles = new_collectibles; }
+
+  | Finished promo ->
+    let ops, new_collectibles =
+      disburse_collectibles (promo.allocated_collectibles, promo.def.collectible_fa2, Tezos.sender, Tezos.self_address) in
+    ops, Finished { promo with allocated_collectibles = new_collectibles; }
+
+let refund_money (money_deposits, money_token, owner, this
+    : money_deposits * global_token_id * address * address)
+    : (operation list ) * money_deposits =
+  match Map.find_opt owner money_deposits with
+  | None -> ([] : operation list), money_deposits
+  | Some m ->
+    let tx : transfer = {
+      from_ = this;
+      txs = [{to_ = owner; token_id = money_token.id; amount = m; }];
+    } in
+    let txm = transfer_to_michelson tx in
+    let fa2_entry : ((transfer_michelson list) contract) option = 
+      Operation.get_entrypoint_opt "%transfer"  money_token.fa2 in
+    let transfer_op = match fa2_entry with
+    | None -> (failwith "CANNOT_INVOKE_MONEY_FA2" : operation)
+    | Some c -> Operation.transaction [txm] 0mutez c
+    in
+    [transfer_op], Map.remove owner money_deposits
+
+let refund_money (state : promotion_state) : return_type =
+  match state with
+  | Initial pdef -> (failwith "PROMO_NOT_STARTED" : return_type)
+  | In_progress promo ->
+    let ops, new_deposits =
+      refund_money (promo.money_deposits, promo.def.money_token, Tezos.sender, Tezos.self_address) in
+    ops, In_progress { promo with money_deposits = new_deposits; }
+  | Finished promo ->
+    let ops, new_deposits =
+      refund_money (promo.money_deposits, promo.def.money_token, Tezos.sender, Tezos.self_address) in
+    ops, Finished { promo with money_deposits = new_deposits; }
+
+let guard_promoter(promoter, asender : address * address) : unit =
+  if promoter = asender
+  then unit
+  else failwith "NOT_PROMOTER"
+
+let stop_promotion (state : promotion_state) : promotion_state =
+  match state with
+  | Initial pdef ->
+    let u = guard_promoter (pdef.promoter, Tezos.sender) in 
     Finished {
       def = pdef;
-      money_deposits = (Map.empty : (address, nat) map);
-      allocated_collectibles = (Map.empty : (token_id, address) map);
+      money_deposits = (Map.empty : money_deposits);
+      allocated_collectibles = (Map.empty : allocated_collectibles);
     }
 
   | In_progress promo -> 
+    let u = guard_promoter (promo.def.promoter, Tezos.sender) in
     (* return all unallocated collectibles to promoter *)
-    let allocated_collectibles = List.fold
-      (fun (acc, cid : ((token_id, address) map) * token_id) ->
-        Map.add cid promo.def.promoter acc
-      ) promo.collectibles promo.allocated_collectibles in
+
+    let promoter_collectibles =
+      match Map.find_opt promo.def.promoter promo.allocated_collectibles with
+      | None -> promo.collectibles
+      | Some cc ->
+        List.fold 
+          (fun (acc, c : token_id list * token_id) -> c :: acc )
+          promo.collectibles cc
+    in
+    let allocated_collectibles =
+      Map.update promo.def.promoter (Some promoter_collectibles) promo.allocated_collectibles in
     Finished {
       def = promo.def;
       money_deposits = promo.money_deposits;
@@ -142,19 +272,16 @@ let cancel_promotion (state : promotion_state) : promotion_state =
 
   | Finished p -> (failwith "PROMO_FINISHED" : promotion_state)
 
-let main (param, state : promotion_entrypoints * promotion_state)
-    : (operation list) * promotion_state =
+let main (param, state : promotion_entrypoints * promotion_state) : return_type =
   match param with
   | Tokens_received tx_param_michelson ->
     let new_state = accept_tokens (tx_param_michelson, state) in
     ([] : operation list), new_state
 
-  | Refund_money -> 
-    (* refund_money Tezos.sender *)
-    ([] : operation list), state
-  | Disburse_collectibles -> 
-    (* disburse_collectibles Tezos.sender *)
-    ([] : operation list), state
-  | Cancel_promotion ->
-    let new_state = cancel_promotion state in
+  | Refund_money -> refund_money state
+
+  | Disburse_collectibles -> disburse_collectibles state
+
+  | Stop_promotion ->
+    let new_state = stop_promotion state in
     ([] : operation list), new_state
