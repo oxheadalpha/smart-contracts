@@ -100,6 +100,7 @@ let accept_collectibles (tx_param_michelson, pdef
         if is_from_promoter
         then 
           let cc = retrieve_collectibles (td.txs) in
+          (* concat accumulator and received cc collectibles *)
           List.fold (fun (a, c : (token_id list) * token_id) ->
             c :: a
           ) cc acc
@@ -114,19 +115,36 @@ let accept_collectibles (tx_param_michelson, pdef
       allocated_collectibles = (Map.empty : allocated_collectibles);
     }
 
+let rec allocate_collectibles (money_amount, buyer, promo
+    : nat *  address * promotion_in_progress) : nat * promotion_in_progress =
+  match promo.collectibles with
+  | [] -> (money_amount, promo) (* ran out of collectibles *)
+  | cid :: tail -> 
+    (match is_nat(money_amount - promo.def.price) with
+    | None -> (money_amount, promo) (* not enough money to buy next collectible *)
+    | Some money_reminder ->
+      let new_buyer_allocated = match Map.find_opt buyer promo.allocated_collectibles with
+      | None -> [cid]
+      | Some buyer_allocated -> cid :: buyer_allocated
+      in
+      let new_allocated_collectibles =
+        Map.update buyer (Some new_buyer_allocated) promo.allocated_collectibles in
+      let new_promo = {promo with
+        allocated_collectibles = new_allocated_collectibles;
+        collectibles = tail;
+      } in
+      allocate_collectibles (money_reminder, buyer, new_promo)
+    )
+
 let buy_collectibles (buyer, money_amount, promo : address * nat * promotion_in_progress)
     : promotion_in_progress =
   let new_money_amount = match Map.find_opt buyer promo.money_deposits with
   | None -> money_amount
   | Some ma -> ma + money_amount
   in
-
-  let ntokens, reminder = match ediv money_amount promo.def.price with
-  | None -> (failwith "PROMO_PRICE_IS_ZERO" : nat * nat)
-  | Some res -> res
-  in
-  (* TODO: buy tokens *)
-    promo
+  let money_reminder, new_promo = allocate_collectibles (money_amount, buyer, promo) in
+  let new_deposits = Map.update buyer (Some money_reminder) new_promo.money_deposits in
+  { new_promo with money_deposits = new_deposits; }
 
 let retrieve_money (txs, buyer, promo
     : (transfer_destination_descriptor list) * address * promotion_in_progress)
@@ -137,7 +155,7 @@ let retrieve_money (txs, buyer, promo
       | None -> p
       | Some a ->
         if a <> Tezos.self_address
-        then p
+        then p (* skip transfer to other account *)
         else if tx.token_id <> p.def.money_token.id
         then (failwith "PROMO_MONEY_TOKENS_EXPECTED" : promotion_in_progress)
         else buy_collectibles (buyer, tx.amount, p)
@@ -157,7 +175,14 @@ let accept_money (tx_param_michelson, promo
           p
         | Some from_ -> retrieve_money (td.txs, from_, p)
       ) tx_param.batch promo in
-    In_progress new_promo
+    if List.size new_promo.collectibles = 0n
+    then Finished {
+      def = new_promo.def;
+      allocated_collectibles = new_promo.allocated_collectibles;
+      money_deposits = new_promo.money_deposits
+    }
+    else In_progress new_promo
+    
 
 let accept_tokens (tx_param_michelson, state
     : transfer_descriptor_param_michelson * promotion_state) : promotion_state =
