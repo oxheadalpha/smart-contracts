@@ -139,18 +139,6 @@ let fa2_transfer (tx_descriptors, validator, storage
   let ops = get_owner_hook_ops (tx_descriptors, storage) in
   ops, new_storage
 
-let fa2_update_operators (updates_michelson, storage
-    : (update_operator_michelson list) * single_token_storage) : single_token_storage =
-  let updates = operator_updates_from_michelson updates_michelson in
-  let updater = Tezos.sender in
-  let process_update = (fun (ops, update : operator_storage * update_operator) ->
-    let u = validate_update_operators_by_owner (update, updater) in
-    update_operators (update, ops)
-  ) in
-  let new_ops =
-    List.fold process_update updates storage.operators in
-  { storage with operators = new_ops; }
-
 let fa2_main (param, storage : fa2_entry_points * single_token_storage)
     : (operation  list) * single_token_storage =
   match param with
@@ -172,7 +160,8 @@ let fa2_main (param, storage : fa2_entry_points * single_token_storage)
     [op], storage
 
   | Update_operators updates_michelson ->
-    let new_storage = fa2_update_operators (updates_michelson, storage) in
+    let new_ops = fa2_update_operators (updates_michelson, storage.operators) in
+    let new_storage = { storage with operators = new_ops; } in
     ([] : operation list), new_storage
 
   | Token_metadata_registry callback ->

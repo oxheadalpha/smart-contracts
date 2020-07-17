@@ -29,16 +29,19 @@ let get_total_supply_change (txs : mint_burn_tx list) : nat =
   List.fold (fun (total, tx : nat * mint_burn_tx) -> total + tx.amount) txs 0n
 
 let mint_params_to_descriptors(txs : mint_burn_tokens_param)
-    : transfer_descriptor list =
-  let param_to_descriptor = fun (p : mint_burn_tx) -> {
-      from_ = (None : address option);
-      txs = [{
+    : transfer_descriptor list = 
+  let param_to_destination = fun (p : mint_burn_tx) -> {
         to_ = Some p.owner;
         token_id = 0n;
         amount = p.amount;
-      }]
-    } in
-  List.map param_to_descriptor txs
+      }
+  in
+  let destinations : transfer_destination_descriptor list = 
+    List.map param_to_destination txs in
+  [{
+    from_ = (None : address option);
+    txs = destinations;
+  }]
 
 let burn_params_to_descriptors(txs : mint_burn_tokens_param)
     : transfer_descriptor list =

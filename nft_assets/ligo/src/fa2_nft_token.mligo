@@ -121,14 +121,7 @@ let fa2_main (param, storage : fa2_entry_points * nft_token_storage)
     [op], storage
 
   | Update_operators updates_michelson ->
-    let updates = operator_updates_from_michelson updates_michelson in
-    let updater = Tezos.sender in
-    let process_update = (fun (ops, update : operator_storage * update_operator) ->
-      let u = validate_update_operators_by_owner (update, updater) in
-      update_operators (update, ops)
-    ) in
-    let new_ops = 
-      List.fold process_update updates storage.operators in
+    let new_ops = fa2_update_operators (updates_michelson, storage.operators) in
     let new_storage = { storage with operators = new_ops; } in
     ([] : operation list), new_storage
 

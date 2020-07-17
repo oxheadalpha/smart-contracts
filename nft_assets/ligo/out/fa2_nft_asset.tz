@@ -536,7 +536,16 @@
                              NIL operation ;
                              PAIR ;
                              DIP { DROP 4 } }
-                           { DUP ;
+                           { DIG 2 ;
+                             DUP ;
+                             DUG 3 ;
+                             CDR ;
+                             DIG 1 ;
+                             DUP ;
+                             DUG 2 ;
+                             PAIR ;
+                             DUP ;
+                             CAR ;
                              MAP { DUP ;
                                    IF_LEFT
                                      { DUP ; LEFT (pair (address %owner) (address %operator)) ; DIP { DROP } }
@@ -544,26 +553,26 @@
                                    DUP ;
                                    IF_LEFT
                                      { DUP ;
-                                       DIG 16 ;
+                                       DIG 17 ;
                                        DUP ;
-                                       DUG 17 ;
+                                       DUG 18 ;
                                        SWAP ;
                                        EXEC ;
                                        LEFT (pair (address %operator) (address %owner)) ;
                                        DIP { DROP } }
                                      { DUP ;
-                                       DIG 16 ;
+                                       DIG 17 ;
                                        DUP ;
-                                       DUG 17 ;
+                                       DUG 18 ;
                                        SWAP ;
                                        EXEC ;
                                        RIGHT (pair (address %operator) (address %owner)) ;
                                        DIP { DROP } } ;
                                    DIP { DROP 2 } } ;
                              SENDER ;
-                             DIG 4 ;
+                             DIG 2 ;
                              DUP ;
-                             DUG 5 ;
+                             DUG 3 ;
                              CDR ;
                              DIG 2 ;
                              DUP ;
@@ -639,9 +648,10 @@
                                         UPDATE ;
                                         DIP { DROP } } ;
                                     DIP { DROP 5 } } ;
-                             DIG 5 ;
+                             DIP { DROP 3 } ;
+                             DIG 3 ;
                              DUP ;
-                             DUG 6 ;
+                             DUG 4 ;
                              DIG 1 ;
                              DUP ;
                              DUG 2 ;
@@ -650,7 +660,7 @@
                              PAIR ;
                              NIL operation ;
                              PAIR ;
-                             DIP { DROP 4 } } ;
+                             DIP { DROP 2 } } ;
                          DIP { DROP } } ;
                      DIP { DROP 3 } }
                    { DUP ;
