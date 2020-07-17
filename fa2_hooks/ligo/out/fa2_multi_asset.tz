@@ -257,146 +257,6 @@
          APPLY ;
          DUP ;
          LAMBDA
-           (pair (lambda (pair (pair address nat) (big_map (pair address nat) nat)) nat)
-                 (pair (pair address nat) (pair nat (big_map (pair address nat) nat))))
-           (big_map (pair address nat) nat)
-           { DUP ;
-             CAR ;
-             SWAP ;
-             CDR ;
-             DUP ;
-             CDR ;
-             CDR ;
-             DIG 1 ;
-             DUP ;
-             DUG 2 ;
-             CAR ;
-             CDR ;
-             DIG 2 ;
-             DUP ;
-             DUG 3 ;
-             CAR ;
-             CAR ;
-             PAIR ;
-             DIG 1 ;
-             DUP ;
-             DUG 2 ;
-             DIG 1 ;
-             DUP ;
-             DUG 2 ;
-             PAIR ;
-             DIG 4 ;
-             DUP ;
-             DUG 5 ;
-             SWAP ;
-             EXEC ;
-             DIG 3 ;
-             DUP ;
-             DUG 4 ;
-             CDR ;
-             CAR ;
-             DIG 1 ;
-             DUP ;
-             DUG 2 ;
-             ADD ;
-             PUSH nat 0 ;
-             DIG 1 ;
-             DUP ;
-             DUG 2 ;
-             COMPARE ;
-             EQ ;
-             IF { DIG 3 ; DUP ; DUG 4 ; DIG 3 ; DUP ; DUG 4 ; NONE nat ; SWAP ; UPDATE }
-                { DIG 3 ;
-                  DUP ;
-                  DUG 4 ;
-                  DIG 1 ;
-                  DUP ;
-                  DUG 2 ;
-                  SOME ;
-                  DIG 4 ;
-                  DUP ;
-                  DUG 5 ;
-                  UPDATE } ;
-             DIP { DROP 6 } } ;
-         SWAP ;
-         APPLY ;
-         DIP { DIP { DIP { DIP { DIP { DUP } ; SWAP } ; SWAP } ; SWAP } ;
-               DUP ;
-               DIP { PAIR } ;
-               SWAP } ;
-         SWAP ;
-         LAMBDA
-           (pair (pair (lambda (pair (pair address nat) (big_map (pair address nat) nat)) nat) string)
-                 (pair (pair address nat) (pair nat (big_map (pair address nat) nat))))
-           (big_map (pair address nat) nat)
-           { DUP ;
-             CAR ;
-             SWAP ;
-             CDR ;
-             DIP { DUP ; CDR ; SWAP ; CAR } ;
-             DUP ;
-             CDR ;
-             CDR ;
-             DIG 1 ;
-             DUP ;
-             DUG 2 ;
-             CAR ;
-             CDR ;
-             DIG 2 ;
-             DUP ;
-             DUG 3 ;
-             CAR ;
-             CAR ;
-             PAIR ;
-             DIG 1 ;
-             DUP ;
-             DUG 2 ;
-             DIG 1 ;
-             DUP ;
-             DUG 2 ;
-             PAIR ;
-             DIG 4 ;
-             DUP ;
-             DUG 5 ;
-             SWAP ;
-             EXEC ;
-             DIG 3 ;
-             DUP ;
-             DUG 4 ;
-             CDR ;
-             CAR ;
-             DIG 1 ;
-             DUP ;
-             DUG 2 ;
-             SUB ;
-             ISNAT ;
-             IF_NONE
-               { DIG 5 ; DUP ; DUG 6 ; FAILWITH }
-               { PUSH nat 0 ;
-                 DIG 1 ;
-                 DUP ;
-                 DUG 2 ;
-                 COMPARE ;
-                 EQ ;
-                 IF { DIG 3 ; DUP ; DUG 4 ; DIG 3 ; DUP ; DUG 4 ; NONE nat ; SWAP ; UPDATE }
-                    { DIG 3 ;
-                      DUP ;
-                      DUG 4 ;
-                      DIG 1 ;
-                      DUP ;
-                      DUG 2 ;
-                      SOME ;
-                      DIG 4 ;
-                      DUP ;
-                      DUG 5 ;
-                      UPDATE } ;
-                 DIP { DROP } } ;
-             DIP { DROP 6 } } ;
-         SWAP ;
-         APPLY ;
-         DIP { DIP { DIP { DUP } ; SWAP } ; SWAP } ;
-         SWAP ;
-         LAMBDA
            (pair (lambda
                     (pair (pair (pair (list (pair (option address) (list (pair (pair nat (option address)) nat)))) address)
                                 (or (or unit unit) unit))
@@ -646,17 +506,24 @@
              DUP ;
              DUG 2 ;
              ADD ;
-             DIG 3 ;
-             DUP ;
-             DUG 4 ;
+             PUSH nat 0 ;
              DIG 1 ;
              DUP ;
              DUG 2 ;
-             SOME ;
-             DIG 4 ;
-             DUP ;
-             DUG 5 ;
-             UPDATE ;
+             COMPARE ;
+             EQ ;
+             IF { DIG 3 ; DUP ; DUG 4 ; DIG 3 ; DUP ; DUG 4 ; NONE nat ; SWAP ; UPDATE }
+                { DIG 3 ;
+                  DUP ;
+                  DUG 4 ;
+                  DIG 1 ;
+                  DUP ;
+                  DUG 2 ;
+                  SOME ;
+                  DIG 4 ;
+                  DUP ;
+                  DUG 5 ;
+                  UPDATE } ;
              DIP { DROP 6 } } ;
          SWAP ;
          APPLY ;

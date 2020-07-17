@@ -201,6 +201,7 @@ class TestTransfer(TestMacSetUp):
             ]
         ).inject()
         self.util.wait_for_ops(op_tx)
+        print("transferred")
 
         self.assertBalance(to_address, token_id, 3, "invalid recipient balance")
         self.assertBalance(from_address, token_id, 7, "invalid source balance")
@@ -233,6 +234,7 @@ class TestTransfer(TestMacSetUp):
             ]
         ).inject()
         self.util.wait_for_ops(op_tx)
+        print("batch transferred")
 
         self.assertBalance(alice_address, 1, 7, "invalid TK1 reminder balance")
         self.assertBalance(alice_address, 2, 5, "invalid TK1 reminder balance")
