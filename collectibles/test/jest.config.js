@@ -1,0 +1,1 @@
+../../shared/typescript/jest.config.js
