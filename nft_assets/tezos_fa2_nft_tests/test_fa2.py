@@ -18,6 +18,10 @@ ligo_env = LigoEnv(root_dir / "src", root_dir / "out")
 ligo_client_env = LigoEnv(root_dir / "fa2_clients", root_dir / "out")
 
 
+def balance_response(owner, token_id, balance):
+    return {"balance": balance, "request": {"owner": owner, "token_id": token_id,}}
+
+
 class TestFa2SetUp(TestCase):
     def setUp(self):
         self.util = PtzUtils(flextesa_sandbox)
@@ -94,21 +98,16 @@ class TestFa2SetUp(TestCase):
         op = self.fa2.pause(paused).inject()
         self.util.wait_for_ops(op)
 
-    def assertBalance(self, owner_address, token_id, expected_balance, msg=None):
-        op = self.inspector.query(
-            fa2=self.fa2.address, request={"owner": owner_address, "token_id": token_id}
-        ).inject()
+    def assertBalances(self, expectedResponses, msg=None):
+        requests = [response["request"] for response in expectedResponses]
+        op = self.inspector.query(fa2=self.fa2.address, requests=requests).inject()
         self.util.wait_for_ops(op)
         b = self.inspector.storage()["state"]
         print(b)
-        self.assertEqual(
-            {
-                "balance": expected_balance,
-                "request": {"token_id": token_id, "owner": owner_address},
-            },
-            b,
-            msg,
-        )
+        self.assertListEqual(expectedResponses, b, msg)
+
+    def assertBalance(self, owner, token_id, expected_balance, msg=None):
+        self.assertBalances([balance_response(owner, token_id, expected_balance)])
 
 
 class TestMintBurn(TestFa2SetUp):
@@ -139,9 +138,15 @@ class TestMintBurn(TestFa2SetUp):
             }
         ).inject()
         self.util.wait_for_ops(mint_op)
-        self.assertBalance(owner1_address, 0, 1, "invalid mint balance 1")
-        self.assertBalance(owner1_address, 1, 0, "invalid mint balance 1")
-        self.assertBalance(owner2_address, 1, 1, "invalid mint balance 2")
+
+        self.assertBalances(
+            [
+                balance_response(owner1_address, 0, 1),
+                balance_response(owner1_address, 1, 0),
+                balance_response(owner2_address, 1, 1),
+            ],
+            "invalid mint balances",
+        )
 
         print("burning")
         burn_op = self.fa2.burn_tokens(from_=0, to_=2).inject()
@@ -149,7 +154,8 @@ class TestMintBurn(TestFa2SetUp):
 
         with self.assertRaises(MichelsonRuntimeError) as cm:
             op = self.inspector.query(
-                fa2=self.fa2.address, request={"owner": owner1_address, "token_id": 0}
+                fa2=self.fa2.address,
+                requests=[{"owner": owner1_address, "token_id": 0}],
             ).inject()
             self.util.wait_for_ops(op)
 
@@ -210,10 +216,15 @@ class TestTransfer(TestFa2SetUp):
         ).inject()
         self.util.wait_for_ops(mint_op)
 
-        self.assertBalance(alice_a, left_sock, 1, "invalid mint balance alice")
-        self.assertBalance(bob_a, right_sock, 1, "invalid mint balance bob")
-        self.assertBalance(mike_a, left_sock, 0, "invalid mint balance mike")
-        self.assertBalance(mike_a, right_sock, 0, "invalid mint balance mike")
+        self.assertBalances(
+            [
+                balance_response(alice_a, left_sock, 1),
+                balance_response(bob_a, right_sock, 1),
+                balance_response(mike_a, left_sock, 0),
+                balance_response(mike_a, right_sock, 0),
+            ],
+            "invalid mint balance",
+        )
 
         print("transfering")
         op_tx = self.fa2.transfer(
@@ -230,7 +241,13 @@ class TestTransfer(TestFa2SetUp):
         ).inject()
         self.util.wait_for_ops(op_tx)
 
-        self.assertBalance(alice_a, left_sock, 0, "invalid mint balance alice")
-        self.assertBalance(bob_a, right_sock, 0, "invalid mint balance bob")
-        self.assertBalance(mike_a, left_sock, 1, "invalid mint balance mike")
-        self.assertBalance(mike_a, right_sock, 1, "invalid mint balance mike")
+        self.assertBalances(
+            [
+                balance_response(alice_a, left_sock, 0),
+                balance_response(bob_a, right_sock, 0),
+                balance_response(mike_a, left_sock, 1),
+                balance_response(mike_a, right_sock, 1),
+            ],
+            "invalid mint balance",
+        )
+

@@ -17,6 +17,10 @@ ligo_env = LigoEnv(root_dir / "src", root_dir / "out")
 ligo_client_env = LigoEnv(root_dir / "fa2_clients", root_dir / "out")
 
 
+def balance_response(owner, balance):
+    return {"balance": balance, "request": {"owner": owner, "token_id": 0,}}
+
+
 class TestFa2SetUp(TestCase):
     def setUp(self):
         self.util = PtzUtils(flextesa_sandbox)
@@ -103,21 +107,16 @@ class TestFa2SetUp(TestCase):
         op = self.fa2.pause(paused).inject()
         self.util.wait_for_ops(op)
 
-    def assertBalance(self, owner_address, expected_balance, msg=None):
-        op = self.inspector.query(
-            fa2=self.fa2.address, request={"owner": owner_address, "token_id": 0}
-        ).inject()
+    def assertBalances(self, expectedResponses, msg=None):
+        requests = [response["request"] for response in expectedResponses]
+        op = self.inspector.query(fa2=self.fa2.address, requests=requests).inject()
         self.util.wait_for_ops(op)
         b = self.inspector.storage()["state"]
         print(b)
-        self.assertEqual(
-            {
-                "balance": expected_balance,
-                "request": {"token_id": 0, "owner": owner_address},
-            },
-            b,
-            msg,
-        )
+        self.assertListEqual(expectedResponses, b, msg)
+
+    def assertBalance(self, owner, expected_balance, msg=None):
+        self.assertBalances([balance_response(owner, expected_balance)])
 
 
 class TestMintBurn(TestFa2SetUp):
@@ -193,5 +192,7 @@ class TestTransfer(TestFa2SetUp):
         ).inject()
         self.util.wait_for_ops(op_tx)
 
-        self.assertBalance(to_address, 3, "invalid recipient balance")
-        self.assertBalance(from_address, 7, "invalid source balance")
+        self.assertBalances(
+            [balance_response(to_address, 3), balance_response(from_address, 7),]
+        )
+
