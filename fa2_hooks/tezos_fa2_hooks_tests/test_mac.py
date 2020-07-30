@@ -17,6 +17,10 @@ ligo_env = LigoEnv(root_dir / "src", root_dir / "out")
 ligo_client_env = LigoEnv(root_dir / "fa2_clients", root_dir / "out")
 
 
+def balance_response(owner, token_id, balance):
+    return {"balance": balance, "request": {"owner": owner, "token_id": token_id,}}
+
+
 class TestMacSetUp(TestCase):
     def setUp(self):
         self.util = PtzUtils(flextesa_sandbox)
@@ -98,21 +102,16 @@ class TestMacSetUp(TestCase):
         op = self.fa2.pause(paused).inject()
         self.util.wait_for_ops(op)
 
-    def assertBalance(self, owner_address, token_id, expected_balance, msg=None):
-        op = self.inspector.query(
-            fa2=self.fa2.address, request={"owner": owner_address, "token_id": token_id}
-        ).inject()
+    def assertBalances(self, expectedResponses, msg=None):
+        requests = [response["request"] for response in expectedResponses]
+        op = self.inspector.query(fa2=self.fa2.address, requests=requests).inject()
         self.util.wait_for_ops(op)
         b = self.inspector.storage()["state"]
         print(b)
-        self.assertEqual(
-            {
-                "balance": expected_balance,
-                "request": {"token_id": token_id, "owner": owner_address},
-            },
-            b,
-            msg,
-        )
+        self.assertListEqual(expectedResponses, b, msg)
+
+    def assertBalance(self, owner, token_id, expected_balance, msg=None):
+        self.assertBalances([balance_response(owner, token_id, expected_balance)])
 
     def create_token(self, id, symbol):
         op = self.fa2.create_token(
@@ -203,8 +202,13 @@ class TestTransfer(TestMacSetUp):
         self.util.wait_for_ops(op_tx)
         print("transferred")
 
-        self.assertBalance(to_address, token_id, 3, "invalid recipient balance")
-        self.assertBalance(from_address, token_id, 7, "invalid source balance")
+        self.assertBalances(
+            [
+                balance_response(to_address, token_id, 3),
+                balance_response(from_address, token_id, 7),
+            ],
+            "invalid recipient/source balance",
+        )
 
     def test_batch_transfer(self):
         self.create_token(1, "TK1")
@@ -236,9 +240,14 @@ class TestTransfer(TestMacSetUp):
         self.util.wait_for_ops(op_tx)
         print("batch transferred")
 
-        self.assertBalance(alice_address, 1, 7, "invalid TK1 reminder balance")
-        self.assertBalance(alice_address, 2, 5, "invalid TK1 reminder balance")
-        self.assertBalance(bob_address, 1, 3, "invalid TK1 received balance")
-        self.assertBalance(bob_address, 2, 0, "invalid TK2 received balance")
-        self.assertBalance(mike_address, 1, 0, "invalid TK1 received balance")
-        self.assertBalance(mike_address, 2, 5, "invalid TK2 received balance")
+        self.assertBalances(
+            [
+                balance_response(alice_address, 1, 7),
+                balance_response(alice_address, 2, 5),
+                balance_response(bob_address, 1, 3),
+                balance_response(bob_address, 2, 0),
+                balance_response(mike_address, 1, 0),
+                balance_response(mike_address, 2, 5),
+            ]
+        )
+
