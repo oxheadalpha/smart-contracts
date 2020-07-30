@@ -1,4 +1,9 @@
-from tezos_fa2_hooks_tests.test_mac import TestMacSetUp, ligo_env, ligo_client_env
+from tezos_fa2_hooks_tests.test_mac import (
+    TestMacSetUp,
+    ligo_env,
+    ligo_client_env,
+    balance_response,
+)
 
 
 class TestHooks(TestMacSetUp):
@@ -55,5 +60,10 @@ class TestHooks(TestMacSetUp):
         self.util.wait_for_ops(op_tx)
         print("transferred")
 
-        self.assertBalance(to_address, token_id, 3, "invalid recipient balance")
-        self.assertBalance(from_address, token_id, 7, "invalid source balance")
+        self.assertBalances(
+            [
+                balance_response(to_address, token_id, 3),
+                balance_response(from_address, token_id, 7),
+            ],
+            "invalid balances",
+        )

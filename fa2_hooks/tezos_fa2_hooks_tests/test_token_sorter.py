@@ -1,4 +1,9 @@
-from tezos_fa2_hooks_tests.test_mac import TestMacSetUp, ligo_env, ligo_client_env
+from tezos_fa2_hooks_tests.test_mac import (
+    TestMacSetUp,
+    ligo_env,
+    ligo_client_env,
+    balance_response,
+)
 
 GREEN = 0
 YELLOW = 1
@@ -111,28 +116,53 @@ class TestTokenSorter(TestMacSetUp):
         print("forwarded")
 
         # assert alice reminders
-        self.assertBalance(alice_a, GREEN, 7, "alice green")
-        self.assertBalance(alice_a, YELLOW, 6, "alice yellow")
-        self.assertBalance(alice_a, RED, 4, "alice red")
+        self.assertBalances(
+            [
+                balance_response(alice_a, GREEN, 7),
+                balance_response(alice_a, YELLOW, 6),
+                balance_response(alice_a, RED, 4),
+            ],
+            "alice balances",
+        )
 
         # assert sorter does not hold any balances
-        self.assertBalance(sorter_a, GREEN, 0, "sorter green")
-        self.assertBalance(sorter_a, YELLOW, 0, "sorter yellow")
-        self.assertBalance(sorter_a, RED, 0, "sorter red")
+        self.assertBalances(
+            [
+                balance_response(sorter_a, GREEN, 0),
+                balance_response(sorter_a, YELLOW, 0),
+                balance_response(sorter_a, RED, 0),
+            ],
+            "sorter balances",
+        )
 
         # assert each token receiver
         green_a = self.green_receiver.address
-        self.assertBalance(green_a, GREEN, 3, "receiver green")
-        self.assertBalance(green_a, YELLOW, 0, "receiver green has yellow tokens")
-        self.assertBalance(green_a, RED, 0, "receiver green has red tokens")
+        self.assertBalances(
+            [
+                balance_response(green_a, GREEN, 3),
+                balance_response(green_a, YELLOW, 0),
+                balance_response(green_a, RED, 0),
+            ],
+            "green receiver balances",
+        )
 
         yellow_a = self.yellow_receiver.address
-        self.assertBalance(yellow_a, GREEN, 0, "receiver yellow has green tokens")
-        self.assertBalance(yellow_a, YELLOW, 4, "receiver yellow")
-        self.assertBalance(yellow_a, RED, 0, "receiver yellow has red tokens")
+        self.assertBalances(
+            [
+                balance_response(yellow_a, GREEN, 0),
+                balance_response(yellow_a, YELLOW, 4),
+                balance_response(yellow_a, RED, 0),
+            ],
+            "yellow receiver balances",
+        )
 
         red_a = self.red_receiver.address
-        self.assertBalance(red_a, GREEN, 0, "receiver red has green tokens")
-        self.assertBalance(red_a, YELLOW, 0, "receiver red has yellow tokens")
-        self.assertBalance(red_a, RED, 6, "receiver red")
+        self.assertBalances(
+            [
+                balance_response(red_a, GREEN, 0),
+                balance_response(red_a, YELLOW, 0),
+                balance_response(red_a, RED, 6),
+            ],
+            "red receiver balances",
+        )
 
