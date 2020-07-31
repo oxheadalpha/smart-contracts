@@ -30,6 +30,7 @@ describe('collectibles test', () => {
 
   let collection: Contract;
   let money: Contract;
+  let promotion: Contract;
 
   const moneyTokenId: nat = new BigNumber(0);
 
@@ -46,7 +47,7 @@ describe('collectibles test', () => {
     const bobAddress = await tezos.bob.signer.publicKeyHash();
     const aliceAddress = await tezos.alice.signer.publicKeyHash();
 
-    const promotion = await originatePromo(ligoEnv, tezos.bob, {
+    promotion = await originatePromo(ligoEnv, tezos.bob, {
       promoter: bobAddress,
       money_token: { fa2: money.address, id: new BigNumber(0) },
       collectible_fa2: collection.address,
@@ -116,10 +117,14 @@ describe('collectibles test', () => {
     const aliceRainbowTokens = await getCollectiblesOwnershipFor(aliceAddress);
     expect(aliceRainbowTokens).toEqual(expect.arrayContaining([false]));
 
+    const promoTokens = await getCollectiblesOwnershipFor(promotion.address);
+    expect(promoTokens).toEqual(expect.arrayContaining([false]));
+
     //check money
     await assertMoneyBalances([
       { owner: bobAddress, balance: new BigNumber(0) },
-      { owner: aliceAddress, balance: new BigNumber(100) }
+      { owner: aliceAddress, balance: new BigNumber(100) },
+      { owner: promotion.address, balance: new BigNumber(0) }
     ]);
   });
 });
