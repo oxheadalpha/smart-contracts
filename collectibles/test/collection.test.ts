@@ -8,6 +8,8 @@ import {
   queryBalances
 } from 'smart-contracts-common/fa2-balance-inspector';
 
+import { originateCollection } from './origination';
+
 jest.setTimeout(180000);
 
 const ligoEnv = defaultLigoEnv('../../', '../ligo');
@@ -16,9 +18,15 @@ describe('collectibles test', () => {
   let tezos: TestTz;
   let inspector: Contract;
 
+  let collection: Contract;
+
   beforeAll(async () => {
     tezos = await bootstrap();
     inspector = await originateInspector(ligoEnv, tezos.bob);
+  });
+
+  beforeEach(async () => {
+    collection = await originateCollection(ligoEnv, tezos.bob);
   });
 
   test('test', () => {
