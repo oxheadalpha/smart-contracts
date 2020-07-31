@@ -1,5 +1,7 @@
 import { $log } from '@tsed/logger';
 import { BigNumber } from 'bignumber.js';
+import { TezosToolkit } from '@taquito/taquito';
+
 import { bootstrap, TestTz } from 'smart-contracts-common/bootstrap-sandbox';
 import { Contract, address, nat } from 'smart-contracts-common/type-aliases';
 import { defaultLigoEnv } from 'smart-contracts-common/ligo';
@@ -10,7 +12,8 @@ import {
 } from 'smart-contracts-common/fa2-balance-inspector';
 import {
   BalanceOfRequest,
-  BalanceOfResponse
+  BalanceOfResponse,
+  transfer
 } from 'smart-contracts-common/fa2-interface';
 
 import {
@@ -18,11 +21,27 @@ import {
   originatePromo,
   originateMoney
 } from './origination';
-import { TezosToolkit } from '@taquito/taquito';
+import * as promo from './promotion';
 
 jest.setTimeout(180000);
 
 const ligoEnv = defaultLigoEnv('../../', '../ligo');
+
+interface TokenBalances {
+  collectibles: Set<number>;
+  money: number;
+}
+
+interface GlobalTokenBalances {
+  bob: TokenBalances;
+  alice: TokenBalances;
+  promo: TokenBalances;
+}
+
+interface MoneyBalance {
+  owner: address;
+  balance: nat;
+}
 
 describe('collectibles test', () => {
   let tezos: TestTz;
@@ -67,10 +86,14 @@ describe('collectibles test', () => {
     $log.info(`minted money. Consumed gas: ${op.consumedGas}`);
   }
 
-  async function getCollectiblesOwnershipFor(
-    owner: address
-  ): Promise<boolean[]> {
-    return hasNftTokens(inspector, collection.address, [
+  const initialBalances: GlobalTokenBalances = {
+    bob: { collectibles: new Set([0, 1, 2, 3, 4, 5, 6]), money: 0 },
+    alice: { collectibles: new Set(), money: 100 },
+    promo: { collectibles: new Set(), money: 0 }
+  };
+
+  async function getOwnedCollectibles(owner: address): Promise<Set<number>> {
+    const responses = await queryBalances(inspector, collection.address, [
       { owner: owner, token_id: new BigNumber(0) },
       { owner: owner, token_id: new BigNumber(1) },
       { owner: owner, token_id: new BigNumber(2) },
@@ -79,11 +102,12 @@ describe('collectibles test', () => {
       { owner: owner, token_id: new BigNumber(5) },
       { owner: owner, token_id: new BigNumber(6) }
     ]);
-  }
-
-  interface MoneyBalance {
-    owner: address;
-    balance: nat;
+    return responses
+      .filter(r => r.balance.eq(1))
+      .reduce(
+        (acc, r) => acc.add(r.request.token_id.toNumber()),
+        new Set<number>()
+      );
   }
 
   async function assertMoneyBalances(
@@ -107,24 +131,79 @@ describe('collectibles test', () => {
     expect(balances).toEqual(expectedResponses);
   }
 
-  test('check initial promotion setup', async () => {
+  async function assertGlobalState(state: GlobalTokenBalances): Promise<void> {
     const bobAddress = await tezos.bob.signer.publicKeyHash();
     const aliceAddress = await tezos.alice.signer.publicKeyHash();
 
     //check collectibles ownership
-    const bobsRainbowTokens = await getCollectiblesOwnershipFor(bobAddress);
-    expect(bobsRainbowTokens).toEqual(expect.arrayContaining([true]));
-    const aliceRainbowTokens = await getCollectiblesOwnershipFor(aliceAddress);
-    expect(aliceRainbowTokens).toEqual(expect.arrayContaining([false]));
+    const bobsRainbowTokens = await getOwnedCollectibles(bobAddress);
+    expect(bobsRainbowTokens).toEqual(state.bob.collectibles);
 
-    const promoTokens = await getCollectiblesOwnershipFor(promotion.address);
-    expect(promoTokens).toEqual(expect.arrayContaining([false]));
+    const aliceRainbowTokens = await getOwnedCollectibles(aliceAddress);
+    expect(aliceRainbowTokens).toEqual(state.alice.collectibles);
+
+    const promoTokens = await getOwnedCollectibles(promotion.address);
+    expect(promoTokens).toEqual(state.promo.collectibles);
 
     //check money
     await assertMoneyBalances([
-      { owner: bobAddress, balance: new BigNumber(0) },
-      { owner: aliceAddress, balance: new BigNumber(100) },
-      { owner: promotion.address, balance: new BigNumber(0) }
+      { owner: bobAddress, balance: new BigNumber(state.bob.money) },
+      { owner: aliceAddress, balance: new BigNumber(state.alice.money) },
+      { owner: promotion.address, balance: new BigNumber(state.promo.money) }
     ]);
+  }
+
+  test('check initial promotion setup', async () => {
+    return assertGlobalState(initialBalances);
+  });
+
+  test.only('cancel promotion', async () => {
+    const bobAddress = await tezos.bob.signer.publicKeyHash();
+    const aliceAddress = await tezos.alice.signer.publicKeyHash();
+
+    await transfer(collection.address, tezos.bob, [
+      {
+        from_: bobAddress,
+        txs: [
+          {
+            to_: promotion.address,
+            token_id: new BigNumber(0),
+            amount: new BigNumber(1)
+          },
+          {
+            to_: promotion.address,
+            token_id: new BigNumber(1),
+            amount: new BigNumber(1)
+          }
+        ]
+      }
+    ]);
+    $log.info('collectibles are transferred to promo');
+
+    await transfer(money.address, tezos.alice, [
+      {
+        from_: aliceAddress,
+        txs: [
+          {
+            to_: promotion.address,
+            token_id: moneyTokenId,
+            amount: new BigNumber(3)
+          }
+        ]
+      }
+    ]);
+    $log.info('alice sent some money to promo');
+
+    await promo.stopPromotion(tezos.bob, promotion.address);
+
+    await assertGlobalState({
+      bob: { collectibles: new Set([2, 3, 4, 5, 6]), money: 0 },
+      alice: { collectibles: new Set(), money: 97 },
+      promo: { collectibles: new Set([0, 1]), money: 3 }
+    });
+
+    await promo.refundMoney(tezos.alice, promotion.address);
+    await promo.disburseCollectibles(tezos.bob, promotion.address);
+    await assertGlobalState(initialBalances);
   });
 });
