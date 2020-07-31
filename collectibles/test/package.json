@@ -1,12 +1,7 @@
 {
   "name": "collectible-test",
   "version": "1.0.0",
-  "main": "index.js",
   "scripts": {
-    "clean": "rimraf ./__tests__/*",
-    "prebuild": "npm run clean",
-    "build:dev": "tsc -p . --inlineSources --inlineSourceMap --outDir ./__tests__",
-    "pretest": "npm run build:dev",
     "test": "jest"
   },
   "author": "",
@@ -15,13 +10,13 @@
     "@types/jest": "^26.0.7",
     "jest": "^26.1.0",
     "prettier": "^2.0.5",
-    "rimraf": "^3.0.2",
+    "ts-jest": "^26.1.4",
     "tslint": "^6.1.2",
     "typescript": "^3.9.7"
   },
   "dependencies": {
-    "@taquito/signer": "^6.3.4-beta.0",
-    "@taquito/taquito": "^6.3.4-beta.0",
+    "@taquito/signer": "^6.3.5-beta.0",
+    "@taquito/taquito": "^6.3.5-beta.0",
     "@tsed/logger": "^5.5.2",
     "child_process": "^1.0.2",
     "fs": "0.0.1-security",
