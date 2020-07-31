@@ -41,3 +41,17 @@ export async function queryBalances(
   if (Array.isArray(storage)) return storage;
   else return Promise.reject('Invalid inspector storage state Empty.');
 }
+
+export async function hasNftTokens(
+  inspector: Contract,
+  nft: address,
+  requests: BalanceOfRequest[]
+): Promise<boolean[]> {
+  const responses = await queryBalances(inspector, nft, requests);
+  const results = responses.map(r => {
+    if (r.balance.eq(1)) return true;
+    else if (r.balance.eq(0)) return false;
+    else throw new Error(`Invalid NFT balance ${r.balance}`);
+  });
+  return results;
+}
