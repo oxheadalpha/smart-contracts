@@ -1,0 +1,1 @@
+../../shared/typescript/fa2-interface.ts

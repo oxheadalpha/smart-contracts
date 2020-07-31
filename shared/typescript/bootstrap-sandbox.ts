@@ -15,7 +15,7 @@ async function flextesaKeys(): Promise<TestKeys> {
     'edsk3QoqBuvdamxouPhin7swCvkQNgq4jP5KZPbwWNnwdZpSpJiEbq'
   );
   const [bob, alice] = await Promise.all([bobK, aliceK]);
-  return Promise.resolve({ bob, alice });
+  return { bob, alice };
 }
 
 export type TestTz = {
