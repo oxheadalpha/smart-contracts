@@ -310,3 +310,14 @@ let main (param, state : promotion_entrypoints * promotion_state) : return_type 
   | Stop_promotion ->
     let new_state = stop_promotion state in
     ([] : operation list), new_state
+
+
+let example_store : promotion_state = Initial {
+    promoter  = ("tz1YPSCGWXwBdTncK2aCctSZAXWvGsGwVJqU" : address);
+  money_token = {
+    fa2 = ("KT1Ps9gYCnoRbncAb3sw1X4R17MCeGx3Zz1h" : address);
+    id = 0n;
+  };
+  collectible_fa2 = ("KT193LPqieuBfx1hqzXGZhuX2upkkKgfNY9w" : address);
+  price = 5n;
+}
