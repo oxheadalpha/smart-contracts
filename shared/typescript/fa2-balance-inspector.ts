@@ -3,19 +3,17 @@ import { $log } from '@tsed/logger';
 
 import { TezosToolkit } from '@taquito/taquito';
 
-import {
-  compileAndLoadContract,
-  originateContract,
-  defaultEnv,
-  LigoEnv
-} from './ligo';
+import { compileAndLoadContract, originateContract, LigoEnv } from './ligo';
 import { address, Contract } from './type-aliases';
 import { BalanceOfRequest, BalanceOfResponse } from './fa2-interface';
 
 export type InspectorStorage = BalanceOfResponse[] | {};
 
-export async function originateInspector(tz: TezosToolkit): Promise<Contract> {
-  const inspectorSrcDir = path.join(defaultEnv.cwd, 'fa2_clients');
+export async function originateInspector(
+  defaultEnv: LigoEnv,
+  tz: TezosToolkit
+): Promise<Contract> {
+  const inspectorSrcDir = path.join(defaultEnv.srcDir, '../fa2_clients');
   const env = new LigoEnv(defaultEnv.cwd, inspectorSrcDir, defaultEnv.outDir);
 
   const code = await compileAndLoadContract(
