@@ -3,7 +3,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { $log } from '@tsed/logger';
 
-import { TezosToolkit, MichelsonMap } from '@taquito/taquito';
+import { TezosToolkit } from '@taquito/taquito';
 import { Contract } from './type-aliases';
 
 export class LigoEnv {
@@ -26,13 +26,10 @@ export class LigoEnv {
   }
 }
 
-export const defaultEnv: LigoEnv = defaultLigoEnv();
-
-function defaultLigoEnv(): LigoEnv {
-  const cwd = path.join(__dirname, '../ligo/');
-  const src = path.join(cwd, 'src');
-  const out = path.join(cwd, 'out');
-  return new LigoEnv(cwd, src, out);
+export function defaultLigoEnv(cwd: string, ligoDir: string = 'ligo'): LigoEnv {
+  const src = path.join(ligoDir, 'src');
+  const out = path.join(ligoDir, 'out');
+  return new LigoEnv(path.resolve(cwd), path.resolve(src), path.resolve(out));
 }
 
 export async function compileAndLoadContract(
