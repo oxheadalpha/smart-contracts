@@ -1,6 +1,30 @@
 #include "../fa2/fa2_interface.mligo"
 #include "../fa2/lib/fa2_convertors.mligo"
 
+(**
+A promoter who owns some collectible NFT tokens can create an instance of promotion.
+The promotion definition contains FA2 address of the NFT collection, FA2 fungible
+"money" token used to pay for collectibles and a price per collectible token.
+
+The promotion starts when the promoter transfers one or more collectible NFT tokens
+to the promotion contract.
+
+Once promotion is in progress, other participants can transfer money tokens to the
+promotion contract. The promotion allocates promoted tokens to the participants and
+keeps remaining money balances.
+
+The promotion stops if all promotion tokens are allocated or if the promoter explicitly
+stopped it.
+
+At any time when the promotion is in progress or stopped, any participant may request
+refund (transfer back) the remaining unspent money balance and/or to disburse
+already allocated collectible tokens.
+
+If the promotion has been stopped and not all collectible tokens are allocated, the
+promoter should request to disburse remaining collectibles.
+
+ *)
+
 type global_token_id = {
   fa2 : address;
   id : token_id;
@@ -183,7 +207,6 @@ let accept_money (tx_param_michelson, promo
     }
     else In_progress new_promo
     
-
 let accept_tokens (tx_param_michelson, state
     : transfer_descriptor_param_michelson * promotion_state) : promotion_state =
   match state with
@@ -278,7 +301,6 @@ let stop_promotion (state : promotion_state) : promotion_state =
   | In_progress promo -> 
     let u = guard_promoter (promo.def.promoter, Tezos.sender) in
     (* return all unallocated collectibles to promoter *)
-
     let promoter_collectibles =
       match Map.find_opt promo.def.promoter promo.allocated_collectibles with
       | None -> promo.collectibles
@@ -299,14 +321,32 @@ let stop_promotion (state : promotion_state) : promotion_state =
 
 let main (param, state : promotion_entrypoints * promotion_state) : return_type =
   match param with
+  (**
+    Accepts either collectible nfts during initial state to start the promotion
+    or money tokens when promotion is in progress.
+ *)
   | Tokens_received tx_param_michelson ->
     let new_state = accept_tokens (tx_param_michelson, state) in
     ([] : operation list), new_state
 
+  (*
+    Anyone who sent money tokens to a promotion can get a refund if money has
+    not being exchanged for nft collectibles.
+  *)
   | Refund_money -> refund_money state
 
+  (*
+    Anyone who has collectibles allocated by the promotion can request to get
+    them transferred to him. If promo was stopped, the promoter can clain remaining
+    collectibles.
+  *)
   | Disburse_collectibles -> disburse_collectibles state
 
+  (*
+    Only the promoter can stop the promotion. All remaining collectibles are
+    allocated to the promoter. Promoter and other participants can disburse their
+    allocated collectibles and refund unspent money.
+  *)
   | Stop_promotion ->
     let new_state = stop_promotion state in
     ([] : operation list), new_state
