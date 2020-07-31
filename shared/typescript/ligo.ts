@@ -1,6 +1,10 @@
 import * as child from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
+import { $log } from '@tsed/logger';
+
+import { TezosToolkit, MichelsonMap } from '@taquito/taquito';
+import { Contract } from './type-aliases';
 
 export class LigoEnv {
   readonly cwd: string;
@@ -64,4 +68,27 @@ async function runCmd(cwd: string, cmd: string): Promise<void> {
       errout ? reject(errout) : resolve()
     )
   );
+}
+
+export async function originateContract(
+  tz: TezosToolkit,
+  code: string,
+  storage: any,
+  name: string
+): Promise<Contract> {
+  try {
+    const originationOp = await tz.contract.originate({
+      code,
+      init: storage
+    });
+
+    const contract = await originationOp.contract();
+    $log.info(`originated contract ${name} with address ${contract.address}`);
+    $log.info(`consumed gas: ${originationOp.consumedGas}`);
+    return Promise.resolve(contract);
+  } catch (error) {
+    const jsonError = JSON.stringify(error, null, 2);
+    $log.fatal(`${name} origination error ${jsonError}`);
+    return Promise.reject(error);
+  }
 }
