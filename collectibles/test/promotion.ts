@@ -7,6 +7,7 @@ export async function stopPromotion(
   tz: TezosToolkit,
   promotionAddress: address
 ): Promise<void> {
+  $log.info('stopping promotion.');
   const promotion = await tz.contract.at(promotionAddress);
   const op = await promotion.methods.stop_promotion(undefined).send();
   await op.confirmation();
@@ -17,6 +18,7 @@ export async function refundMoney(
   tz: TezosToolkit,
   promotionAddress: address
 ): Promise<void> {
+  $log.info('refunding money');
   const promotion = await tz.contract.at(promotionAddress);
   const op = await promotion.methods.refund_money(undefined).send();
   await op.confirmation();
@@ -27,6 +29,7 @@ export async function disburseCollectibles(
   tz: TezosToolkit,
   promotionAddress: address
 ): Promise<void> {
+  $log.info('disbursing collectibles');
   const promotion = await tz.contract.at(promotionAddress);
   const op = await promotion.methods.disburse_collectibles(undefined).send();
   await op.confirmation();

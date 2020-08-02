@@ -196,14 +196,17 @@ describe('collectibles test', () => {
 
     await promo.stopPromotion(tezos.bob, promotion.address);
 
+    $log.info('checking balances after promotion has being stopped');
     await assertGlobalState({
       bob: { collectibles: new Set([2, 3, 4, 5, 6]), money: 0 },
       alice: { collectibles: new Set(), money: 97 },
       promo: { collectibles: new Set([0, 1]), money: 3 }
     });
 
-    await promo.refundMoney(tezos.alice, promotion.address);
     await promo.disburseCollectibles(tezos.bob, promotion.address);
+    await promo.refundMoney(tezos.alice, promotion.address);
+
+    $log.info('checking balances after money/collectibles being disbursed');
     await assertGlobalState(initialBalances);
   });
 });
