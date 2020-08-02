@@ -54,7 +54,7 @@ export async function originateMoney(
 
   const storage = `(Pair (Pair (Pair "${owner}" False) None)
   (Pair (Pair (Pair {} {})
-              (Pair (Pair (Pair None (Left (Right Unit))) (Pair (Left (Left Unit)) (Left (Left Unit))))
+              (Pair (Pair (Pair None (Left (Right Unit))) (Pair (Left (Left Unit)) (Left (Right Unit))))
                     { Elt 0 (Pair 0 (Pair "MONEY" (Pair "Money Token" (Pair 0 {})))) }))
         0))`;
   return originateContract(tz, code, storage, 'money');
