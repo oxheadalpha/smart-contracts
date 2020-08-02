@@ -94,7 +94,7 @@ let generate_rainbow_collection_storage (owner_admin : address) : collection_ass
   let permissions : permissions_descriptor = {
     operator = Owner_or_operator_transfer;
     receiver = Optional_owner_hook;
-    sender = Optional_owner_hook;
+    sender = Owner_no_hook;
     custom = (None : custom_permission_policy option);
   } in
   generate_asset_storage (tokens, owner_admin, permissions)

@@ -157,7 +157,7 @@ describe('collectibles test', () => {
     return assertGlobalState(initialBalances);
   });
 
-  test.only('cancel promotion', async () => {
+  test('cancel promotion', async () => {
     const bobAddress = await tezos.bob.signer.publicKeyHash();
     const aliceAddress = await tezos.alice.signer.publicKeyHash();
 
