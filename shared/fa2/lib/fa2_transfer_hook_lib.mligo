@@ -27,7 +27,7 @@ let create_register_hook_op
     hook = hook_fn;
     permissions_descriptor = permissions_descriptor_to_michelson descriptor;
   } in
-  let pm = Layout.convert_to_right_comb p in
+  let pm = Layout.convert_to_right_comb (p : set_hook_param_aux) in
   Operation.transaction (Set_transfer_hook pm) 0mutez fa2
 
 
