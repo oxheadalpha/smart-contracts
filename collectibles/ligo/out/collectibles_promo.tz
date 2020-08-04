@@ -787,6 +787,18 @@
                                                               DIG 2 ;
                                                               DUP ;
                                                               DUG 3 ;
+                                                              CAR ;
+                                                              CDR ;
+                                                              SOME ;
+                                                              DIG 3 ;
+                                                              DUP ;
+                                                              DUG 4 ;
+                                                              CAR ;
+                                                              CAR ;
+                                                              UPDATE ;
+                                                              DIG 2 ;
+                                                              DUP ;
+                                                              DUG 3 ;
                                                               CDR ;
                                                               CDR ;
                                                               SOME ;
