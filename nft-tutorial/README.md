@@ -98,4 +98,4 @@ Example: `npx update-operator KT1SFWBwUSwmk2xd148Ws6gWUeASwK4UpFfP Alice Bob`
 
 TBD
 
-Modify NFT code and compile with ligo `npx compile` before origination the contract.
+Modify NFT code and compile with ligo `npx compile` before the origination the contract.
