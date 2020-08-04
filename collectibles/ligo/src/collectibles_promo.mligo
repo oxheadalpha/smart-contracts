@@ -139,36 +139,57 @@ let accept_collectibles (tx_param_michelson, pdef
       allocated_collectibles = (Map.empty : allocated_collectibles);
     }
 
-let rec allocate_collectibles (money_amount, buyer, promo
-    : nat *  address * promotion_in_progress) : nat * promotion_in_progress =
-  match promo.collectibles with
-  | [] -> (money_amount, promo) (* ran out of collectibles *)
+type buy_in_progress = {
+  buyer: address;
+  buyer_money: nat;
+  promoter_money: nat;
+  promo : promotion_in_progress;
+}
+
+let rec allocate_collectibles (p : buy_in_progress) : buy_in_progress =
+  match p.promo.collectibles with
+  | [] -> p (* ran out of collectibles *)
   | cid :: tail -> 
-    (match is_nat(money_amount - promo.def.price) with
-    | None -> (money_amount, promo) (* not enough money to buy next collectible *)
+    (match is_nat(p.buyer_money - p.promo.def.price) with
+    | None -> p (* not enough money to buy next collectible *)
     | Some money_reminder ->
-      let new_buyer_allocated = match Map.find_opt buyer promo.allocated_collectibles with
+      let new_buyer_allocated = match Map.find_opt p.buyer p.promo.allocated_collectibles with
       | None -> [cid]
       | Some buyer_allocated -> cid :: buyer_allocated
       in
       let new_allocated_collectibles =
-        Map.update buyer (Some new_buyer_allocated) promo.allocated_collectibles in
-      let new_promo = {promo with
+        Map.update p.buyer (Some new_buyer_allocated) p.promo.allocated_collectibles in
+      let new_promo = { p.promo with
         allocated_collectibles = new_allocated_collectibles;
         collectibles = tail;
       } in
-      allocate_collectibles (money_reminder, buyer, new_promo)
+      allocate_collectibles {
+        buyer = p.buyer;
+        buyer_money = money_reminder;
+        promoter_money = p.promoter_money + p.promo.def.price;
+        promo = new_promo;
+      }
     )
 
 let buy_collectibles (buyer, money_amount, promo : address * nat * promotion_in_progress)
     : promotion_in_progress =
-  let new_money_amount = match Map.find_opt buyer promo.money_deposits with
+  let buyer_money = match Map.find_opt buyer promo.money_deposits with
   | None -> money_amount
-  | Some ma -> ma + money_amount
+  | Some m -> m + money_amount
   in
-  let money_reminder, new_promo = allocate_collectibles (money_amount, buyer, promo) in
-  let new_deposits = Map.update buyer (Some money_reminder) new_promo.money_deposits in
-  { new_promo with money_deposits = new_deposits; }
+  let promoter_money = match Map.find_opt promo.def.promoter promo.money_deposits with
+  | None -> 0n
+  | Some m -> m
+  in
+  let r = allocate_collectibles {
+    buyer = buyer;
+    buyer_money = buyer_money;
+    promoter_money = promoter_money;
+    promo = promo;
+  } in
+  let new_deposits1 = Map.update buyer (Some r.buyer_money) r.promo.money_deposits in
+  let new_deposits2 = Map.update r.promo.def.promoter (Some r.promoter_money) r.promo.money_deposits in
+  { r.promo with money_deposits = new_deposits2; }
 
 let retrieve_money (txs, buyer, promo
     : (transfer_destination_descriptor list) * address * promotion_in_progress)

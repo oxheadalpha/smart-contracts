@@ -23,7 +23,8 @@ import {
 } from './origination';
 import * as promo from './promotion';
 
-jest.setTimeout(180000);
+// jest.setTimeout(180000);
+jest.setTimeout(240000);
 
 const ligoEnv = defaultLigoEnv('../../', '../ligo');
 
@@ -208,5 +209,181 @@ describe('collectibles test', () => {
 
     $log.info('checking balances after money/collectibles being disbursed');
     await assertGlobalState(initialBalances);
+  });
+
+  test('stop promotion in progress', async () => {
+    const bobAddress = await tezos.bob.signer.publicKeyHash();
+    const aliceAddress = await tezos.alice.signer.publicKeyHash();
+
+    await transfer(collection.address, tezos.bob, [
+      {
+        from_: bobAddress,
+        txs: [
+          {
+            to_: promotion.address,
+            token_id: new BigNumber(0),
+            amount: new BigNumber(1)
+          },
+          {
+            to_: promotion.address,
+            token_id: new BigNumber(1),
+            amount: new BigNumber(1)
+          }
+        ]
+      }
+    ]);
+    $log.info('collectibles are transferred to promo');
+
+    await transfer(money.address, tezos.alice, [
+      {
+        from_: aliceAddress,
+        txs: [
+          {
+            to_: promotion.address,
+            token_id: moneyTokenId,
+            amount: new BigNumber(7)
+          }
+        ]
+      }
+    ]);
+    $log.info('alice sent some money to promo');
+
+    $log.info('checking balances');
+    await assertGlobalState({
+      bob: { collectibles: new Set([2, 3, 4, 5, 6]), money: 0 },
+      alice: { collectibles: new Set(), money: 93 },
+      promo: { collectibles: new Set([0, 1]), money: 7 }
+    });
+
+    await promo.disburseCollectibles(tezos.alice, promotion.address);
+    await promo.refundMoney(tezos.alice, promotion.address);
+
+    $log.info(
+      'checking balances after money/collectibles being disbursed to alice'
+    );
+    await assertGlobalState({
+      bob: { collectibles: new Set([2, 3, 4, 5, 6]), money: 0 },
+      alice: { collectibles: new Set([0]), money: 95 },
+      promo: { collectibles: new Set([1]), money: 5 }
+    });
+
+    await promo.stopPromotion(tezos.bob, promotion.address);
+    await promo.disburseCollectibles(tezos.bob, promotion.address);
+    await promo.refundMoney(tezos.bob, promotion.address);
+
+    $log.info(
+      'checking balances after money/collectibles being disbursed to bob'
+    );
+    await assertGlobalState({
+      bob: { collectibles: new Set([1, 2, 3, 4, 5, 6]), money: 5 },
+      alice: { collectibles: new Set([0]), money: 95 },
+      promo: { collectibles: new Set(), money: 0 }
+    });
+  });
+
+  test.skip('refund money to promoter', async () => {
+    const bobAddress = await tezos.bob.signer.publicKeyHash();
+    const aliceAddress = await tezos.alice.signer.publicKeyHash();
+
+    await transfer(collection.address, tezos.bob, [
+      {
+        from_: bobAddress,
+        txs: [
+          {
+            to_: promotion.address,
+            token_id: new BigNumber(0),
+            amount: new BigNumber(1)
+          },
+          {
+            to_: promotion.address,
+            token_id: new BigNumber(1),
+            amount: new BigNumber(1)
+          }
+        ]
+      }
+    ]);
+    $log.info('collectibles are transferred to promo');
+
+    await transfer(money.address, tezos.alice, [
+      {
+        from_: aliceAddress,
+        txs: [
+          {
+            to_: promotion.address,
+            token_id: moneyTokenId,
+            amount: new BigNumber(7)
+          }
+        ]
+      }
+    ]);
+    $log.info('alice sent some money to promo');
+    await assertGlobalState({
+      bob: { collectibles: new Set([2, 3, 4, 5, 6]), money: 0 },
+      alice: { collectibles: new Set(), money: 93 },
+      promo: { collectibles: new Set([0, 1]), money: 7 }
+    });
+
+    await promo.refundMoney(tezos.bob, promotion.address);
+
+    $log.info('checking balances after bob refunded');
+
+    await assertMoneyBalances([
+      { owner: bobAddress, balance: new BigNumber(5) },
+      { owner: aliceAddress, balance: new BigNumber(93) },
+      { owner: promotion.address, balance: new BigNumber(2) }
+    ]);
+  });
+
+  test.only('refund money to buyer', async () => {
+    const bobAddress = await tezos.bob.signer.publicKeyHash();
+    const aliceAddress = await tezos.alice.signer.publicKeyHash();
+
+    await transfer(collection.address, tezos.bob, [
+      {
+        from_: bobAddress,
+        txs: [
+          {
+            to_: promotion.address,
+            token_id: new BigNumber(0),
+            amount: new BigNumber(1)
+          },
+          {
+            to_: promotion.address,
+            token_id: new BigNumber(1),
+            amount: new BigNumber(1)
+          }
+        ]
+      }
+    ]);
+    $log.info('collectibles are transferred to promo');
+
+    await transfer(money.address, tezos.alice, [
+      {
+        from_: aliceAddress,
+        txs: [
+          {
+            to_: promotion.address,
+            token_id: moneyTokenId,
+            amount: new BigNumber(7)
+          }
+        ]
+      }
+    ]);
+    // $log.info('alice sent some money to promo');
+    // await assertGlobalState({
+    //   bob: { collectibles: new Set([2, 3, 4, 5, 6]), money: 0 },
+    //   alice: { collectibles: new Set(), money: 93 },
+    //   promo: { collectibles: new Set([0, 1]), money: 7 }
+    // });
+
+    await promo.refundMoney(tezos.alice, promotion.address);
+
+    $log.info('checking balances after alice refunded');
+
+    await assertMoneyBalances([
+      { owner: bobAddress, balance: new BigNumber(0) },
+      { owner: aliceAddress, balance: new BigNumber(95) },
+      { owner: promotion.address, balance: new BigNumber(5) }
+    ]);
   });
 });
