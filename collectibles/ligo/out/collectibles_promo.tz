@@ -629,32 +629,39 @@
                                                               DUP ;
                                                               DUG 4 ;
                                                               GET ;
-                                                              IF_NONE { SWAP ; DUP ; DUG 2 } { DIG 2 ; DUP ; DUG 3 ; ADD } ;
-                                                              DROP ;
+                                                              IF_NONE { SWAP } { DIG 2 ; ADD } ;
+                                                              SWAP ;
+                                                              DUP ;
+                                                              DUG 2 ;
+                                                              CDR ;
+                                                              CDR ;
                                                               DIG 2 ;
                                                               DUP ;
                                                               DUG 3 ;
+                                                              CDR ;
+                                                              CAR ;
+                                                              CDR ;
+                                                              CDR ;
+                                                              GET ;
+                                                              IF_NONE { PUSH nat 0 } {} ;
+                                                              DIG 2 ;
+                                                              PAIR ;
+                                                              SWAP ;
                                                               DIG 2 ;
                                                               PAIR ;
                                                               PAIR ;
-                                                              LEFT (pair nat
-                                                                         (pair (pair (map %allocated_collectibles address (list nat)) (list %collectibles nat))
-                                                                               (pair (pair %def
-                                                                                        (pair (address %collectible_fa2) (pair %money_token (address %fa2) (nat %id)))
-                                                                                        (pair (nat %price) (address %promoter)))
-                                                                                     (map %money_deposits address nat)))) ;
+                                                              LEFT (pair (pair (address %buyer) (nat %buyer_money))
+                                                                         (pair (pair %promo
+                                                                                  (pair (map %allocated_collectibles address (list nat)) (list %collectibles nat))
+                                                                                  (pair (pair %def
+                                                                                           (pair (address %collectible_fa2) (pair %money_token (address %fa2) (nat %id)))
+                                                                                           (pair (nat %price) (address %promoter)))
+                                                                                        (map %money_deposits address nat)))
+                                                                               (nat %promoter_money))) ;
                                                               LOOP_LEFT
                                                                 { DUP ;
-                                                                  CAR ;
-                                                                  CAR ;
-                                                                  SWAP ;
-                                                                  DUP ;
-                                                                  DUG 2 ;
-                                                                  CAR ;
                                                                   CDR ;
-                                                                  DIG 2 ;
-                                                                  CDR ;
-                                                                  DUP ;
+                                                                  CAR ;
                                                                   CAR ;
                                                                   CDR ;
                                                                   IF_CONS
@@ -666,83 +673,130 @@
                                                                       CAR ;
                                                                       CDR ;
                                                                       CAR ;
-                                                                      DIG 5 ;
+                                                                      CDR ;
+                                                                      CAR ;
+                                                                      DIG 3 ;
                                                                       DUP ;
-                                                                      DUG 6 ;
+                                                                      DUG 4 ;
+                                                                      CAR ;
+                                                                      CDR ;
                                                                       SUB ;
                                                                       ISNAT ;
                                                                       IF_NONE
                                                                         { DROP 2 ;
-                                                                          SWAP ;
-                                                                          DROP ;
-                                                                          SWAP ;
-                                                                          PAIR ;
                                                                           RIGHT
-                                                                            (pair (pair nat address)
-                                                                                  (pair (pair (map %allocated_collectibles address (list nat)) (list %collectibles nat))
-                                                                                        (pair (pair %def
-                                                                                                 (pair (address %collectible_fa2) (pair %money_token (address %fa2) (nat %id)))
-                                                                                                 (pair (nat %price) (address %promoter)))
-                                                                                              (map %money_deposits address nat)))) }
-                                                                        { DIG 5 ;
-                                                                          DROP ;
-                                                                          DIG 3 ;
+                                                                            (pair (pair (address %buyer) (nat %buyer_money))
+                                                                                  (pair (pair %promo
+                                                                                           (pair (map %allocated_collectibles address (list nat)) (list %collectibles nat))
+                                                                                           (pair (pair %def
+                                                                                                    (pair (address %collectible_fa2) (pair %money_token (address %fa2) (nat %id)))
+                                                                                                    (pair (nat %price) (address %promoter)))
+                                                                                                 (map %money_deposits address nat)))
+                                                                                        (nat %promoter_money))) }
+                                                                        { DIG 3 ;
                                                                           DUP ;
                                                                           DUG 4 ;
+                                                                          CDR ;
                                                                           CAR ;
                                                                           CAR ;
-                                                                          DIG 5 ;
+                                                                          CAR ;
+                                                                          DIG 4 ;
                                                                           DUP ;
-                                                                          DUG 6 ;
+                                                                          DUG 5 ;
+                                                                          CAR ;
+                                                                          CAR ;
                                                                           GET ;
                                                                           IF_NONE { NIL nat ; DIG 3 ; CONS } { DIG 3 ; CONS } ;
                                                                           DIG 3 ;
                                                                           DUP ;
+                                                                          DUG 4 ;
+                                                                          CDR ;
                                                                           CAR ;
+                                                                          CDR ;
                                                                           CAR ;
-                                                                          DIG 2 ;
-                                                                          SOME ;
+                                                                          CDR ;
+                                                                          CAR ;
+                                                                          DIG 4 ;
+                                                                          DUP ;
+                                                                          DUG 5 ;
+                                                                          CDR ;
+                                                                          CDR ;
+                                                                          ADD ;
+                                                                          DIG 4 ;
+                                                                          DUP ;
+                                                                          DUG 5 ;
+                                                                          CDR ;
+                                                                          CAR ;
                                                                           DIG 5 ;
                                                                           DUP ;
                                                                           DUG 6 ;
+                                                                          CDR ;
+                                                                          CAR ;
+                                                                          CAR ;
+                                                                          CAR ;
+                                                                          DIG 3 ;
+                                                                          SOME ;
+                                                                          DIG 6 ;
+                                                                          DUP ;
+                                                                          DUG 7 ;
+                                                                          CAR ;
+                                                                          CAR ;
                                                                           UPDATE ;
                                                                           DIP { DUP ; CDR ; SWAP ; CAR ; CDR } ;
                                                                           PAIR ;
                                                                           PAIR ;
-                                                                          DIG 2 ;
+                                                                          DIG 3 ;
                                                                           DIP { DUP ; CDR ; SWAP ; CAR ; CAR } ;
                                                                           SWAP ;
                                                                           PAIR ;
                                                                           PAIR ;
-                                                                          DUG 2 ;
+                                                                          PAIR ;
+                                                                          SWAP ;
+                                                                          DIG 2 ;
+                                                                          CAR ;
+                                                                          CAR ;
                                                                           PAIR ;
                                                                           PAIR ;
-                                                                          LEFT (pair nat
-                                                                                     (pair (pair (map %allocated_collectibles address (list nat)) (list %collectibles nat))
-                                                                                           (pair (pair %def
-                                                                                                    (pair (address %collectible_fa2) (pair %money_token (address %fa2) (nat %id)))
-                                                                                                    (pair (nat %price) (address %promoter)))
-                                                                                                 (map %money_deposits address nat)))) } }
-                                                                    { SWAP ;
-                                                                      DROP ;
-                                                                      SWAP ;
-                                                                      PAIR ;
-                                                                      RIGHT
-                                                                        (pair (pair nat address)
-                                                                              (pair (pair (map %allocated_collectibles address (list nat)) (list %collectibles nat))
-                                                                                    (pair (pair %def
-                                                                                             (pair (address %collectible_fa2) (pair %money_token (address %fa2) (nat %id)))
-                                                                                             (pair (nat %price) (address %promoter)))
-                                                                                          (map %money_deposits address nat)))) } } ;
+                                                                          LEFT (pair (pair (address %buyer) (nat %buyer_money))
+                                                                                     (pair (pair %promo
+                                                                                              (pair (map %allocated_collectibles address (list nat)) (list %collectibles nat))
+                                                                                              (pair (pair %def
+                                                                                                       (pair (address %collectible_fa2) (pair %money_token (address %fa2) (nat %id)))
+                                                                                                       (pair (nat %price) (address %promoter)))
+                                                                                                    (map %money_deposits address nat)))
+                                                                                           (nat %promoter_money))) } }
+                                                                    { RIGHT
+                                                                        (pair (pair (address %buyer) (nat %buyer_money))
+                                                                              (pair (pair %promo
+                                                                                       (pair (map %allocated_collectibles address (list nat)) (list %collectibles nat))
+                                                                                       (pair (pair %def
+                                                                                                (pair (address %collectible_fa2) (pair %money_token (address %fa2) (nat %id)))
+                                                                                                (pair (nat %price) (address %promoter)))
+                                                                                             (map %money_deposits address nat)))
+                                                                                    (nat %promoter_money))) } } ;
                                                               DUP ;
                                                               CDR ;
+                                                              CAR ;
+                                                              SWAP ;
                                                               DUP ;
+                                                              DUG 2 ;
+                                                              CDR ;
+                                                              CAR ;
                                                               CDR ;
                                                               CDR ;
                                                               DIG 2 ;
-                                                              CAR ;
+                                                              DUP ;
+                                                              DUG 3 ;
+                                                              CDR ;
+                                                              CDR ;
                                                               SOME ;
                                                               DIG 3 ;
+                                                              CDR ;
+                                                              CAR ;
+                                                              CDR ;
+                                                              CAR ;
+                                                              CDR ;
+                                                              CDR ;
                                                               UPDATE ;
                                                               DIP { DUP ; CAR ; SWAP ; CDR ; CAR } ;
                                                               SWAP ;
