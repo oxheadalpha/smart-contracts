@@ -187,8 +187,8 @@ let buy_collectibles (buyer, money_amount, promo : address * nat * promotion_in_
     promoter_money = promoter_money;
     promo = promo;
   } in
-  let new_deposits1 = Map.update buyer (Some r.buyer_money) r.promo.money_deposits in
-  let new_deposits2 = Map.update r.promo.def.promoter (Some r.promoter_money) r.promo.money_deposits in
+  let new_deposits1 = Map.update r.buyer (Some r.buyer_money) r.promo.money_deposits in
+  let new_deposits2 = Map.update r.promo.def.promoter (Some r.promoter_money) new_deposits1 in
   { r.promo with money_deposits = new_deposits2; }
 
 let retrieve_money (txs, buyer, promo

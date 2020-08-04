@@ -281,7 +281,7 @@ describe('collectibles test', () => {
     });
   });
 
-  test.skip('refund money to promoter', async () => {
+  test('refund money to promoter', async () => {
     const bobAddress = await tezos.bob.signer.publicKeyHash();
     const aliceAddress = await tezos.alice.signer.publicKeyHash();
 
@@ -334,7 +334,7 @@ describe('collectibles test', () => {
     ]);
   });
 
-  test.only('refund money to buyer', async () => {
+  test('refund money to buyer', async () => {
     const bobAddress = await tezos.bob.signer.publicKeyHash();
     const aliceAddress = await tezos.alice.signer.publicKeyHash();
 
@@ -369,12 +369,12 @@ describe('collectibles test', () => {
         ]
       }
     ]);
-    // $log.info('alice sent some money to promo');
-    // await assertGlobalState({
-    //   bob: { collectibles: new Set([2, 3, 4, 5, 6]), money: 0 },
-    //   alice: { collectibles: new Set(), money: 93 },
-    //   promo: { collectibles: new Set([0, 1]), money: 7 }
-    // });
+    $log.info('alice sent some money to promo');
+    await assertGlobalState({
+      bob: { collectibles: new Set([2, 3, 4, 5, 6]), money: 0 },
+      alice: { collectibles: new Set(), money: 93 },
+      promo: { collectibles: new Set([0, 1]), money: 7 }
+    });
 
     await promo.refundMoney(tezos.alice, promotion.address);
 
