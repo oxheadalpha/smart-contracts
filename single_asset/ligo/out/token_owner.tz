@@ -5,66 +5,41 @@
   code { LAMBDA
            (pair address address)
            (pair address address)
-           { DUP ; CAR ; DIG 1 ; DUP ; DUG 2 ; CDR ; PAIR ; DIP { DROP } } ;
-         DUP ;
+           { DUP ; CAR ; SWAP ; CDR ; PAIR } ;
          LAMBDA
            (pair (lambda (pair address address) (pair address address))
                  (or (pair address address) (pair address address)))
            (or (pair address address) (pair address address))
            { DUP ;
+             CDR ;
+             SWAP ;
              CAR ;
              SWAP ;
-             CDR ;
-             DUP ;
              IF_LEFT
-               { DUP ;
-                 DIG 3 ;
-                 DUP ;
-                 DUG 4 ;
-                 SWAP ;
-                 EXEC ;
-                 LEFT (pair (address %owner) (address %operator)) ;
-                 DIP { DROP } }
-               { DUP ;
-                 DIG 3 ;
-                 DUP ;
-                 DUG 4 ;
-                 SWAP ;
-                 EXEC ;
-                 RIGHT (pair (address %owner) (address %operator)) ;
-                 DIP { DROP } } ;
-             DUP ;
+               { EXEC ; LEFT (pair (address %owner) (address %operator)) }
+               { EXEC ; RIGHT (pair (address %owner) (address %operator)) } ;
              IF_LEFT
-               { DUP ; LEFT (pair (address %owner) (address %operator)) ; DIP { DROP } }
-               { DUP ; RIGHT (pair (address %owner) (address %operator)) ; DIP { DROP } } ;
-             DIP { DROP 3 } } ;
+               { LEFT (pair (address %owner) (address %operator)) }
+               { RIGHT (pair (address %owner) (address %operator)) } } ;
          SWAP ;
          APPLY ;
-         DIG 2 ;
-         DUP ;
-         DUG 3 ;
+         SWAP ;
          CAR ;
          IF_LEFT
-           { DUP ;
-             IF_LEFT
-               { UNIT ; NIL operation ; PAIR ; DIP { DROP } }
+           { IF_LEFT
+               { SWAP ; DROP 2 ; UNIT ; NIL operation ; PAIR }
                { SELF ;
                  ADDRESS ;
-                 DIG 1 ;
+                 SWAP ;
                  DUP ;
                  DUG 2 ;
                  CDR ;
                  PAIR ;
-                 DUP ;
                  LEFT (pair (address %operator) (address %owner)) ;
-                 DIG 4 ;
-                 DUP ;
-                 DUG 5 ;
+                 DIG 2 ;
                  SWAP ;
                  EXEC ;
-                 DIG 2 ;
-                 DUP ;
-                 DUG 3 ;
+                 SWAP ;
                  CAR ;
                  CONTRACT %update_operators
                    (list (or (pair %add_operator (address %owner) (address %operator))
@@ -73,40 +48,28 @@
                    { PUSH string "bad address for get_entrypoint (%update_operators)" ;
                      FAILWITH }
                    {} ;
-                 DUP ;
                  PUSH mutez 0 ;
                  NIL (or (pair address address) (pair address address)) ;
-                 DIG 4 ;
-                 DUP ;
-                 DUG 5 ;
+                 DIG 3 ;
                  CONS ;
                  TRANSFER_TOKENS ;
                  UNIT ;
                  NIL operation ;
                  DIG 2 ;
-                 DUP ;
-                 DUG 3 ;
                  CONS ;
-                 PAIR ;
-                 DIP { DROP 5 } } ;
-             DIP { DROP } }
+                 PAIR } }
            { SELF ;
              ADDRESS ;
-             DIG 1 ;
+             SWAP ;
              DUP ;
              DUG 2 ;
              CDR ;
              PAIR ;
-             DUP ;
              RIGHT (pair (address %operator) (address %owner)) ;
-             DIG 3 ;
-             DUP ;
-             DUG 4 ;
+             DIG 2 ;
              SWAP ;
              EXEC ;
-             DIG 2 ;
-             DUP ;
-             DUG 3 ;
+             SWAP ;
              CAR ;
              CONTRACT %update_operators
                (list (or (pair %add_operator (address %owner) (address %operator))
@@ -115,21 +78,14 @@
                { PUSH string "bad address for get_entrypoint (%update_operators)" ;
                  FAILWITH }
                {} ;
-             DUP ;
              PUSH mutez 0 ;
              NIL (or (pair address address) (pair address address)) ;
-             DIG 4 ;
-             DUP ;
-             DUG 5 ;
+             DIG 3 ;
              CONS ;
              TRANSFER_TOKENS ;
              UNIT ;
              NIL operation ;
              DIG 2 ;
-             DUP ;
-             DUG 3 ;
              CONS ;
-             PAIR ;
-             DIP { DROP 5 } } ;
-         DIP { DROP 3 } } }
+             PAIR } } }
 
