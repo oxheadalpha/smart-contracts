@@ -93,3 +93,9 @@ Example: `npx update-operator KT1SFWBwUSwmk2xd148Ws6gWUeASwK4UpFfP Alice Bob`
 
 - Now Bob can transfer Alice's token
   `npx --operator=Bob transfer KT1SFWBwUSwmk2xd148Ws6gWUeASwK4UpFfP Alice Bob [0]`
+
+## Modifying NFT Contract Code
+
+TBD
+
+Modify NFT code and compile with ligo `npx compile` before origination the contract.
