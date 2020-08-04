@@ -92,7 +92,7 @@ Example:
 Example: `npx update-operator KT1SFWBwUSwmk2xd148Ws6gWUeASwK4UpFfP Alice Bob`
 
 - Now Bob can transfer Alice's token
-  `npx --operator=Bob transfer KT1SFWBwUSwmk2xd148Ws6gWUeASwK4UpFfP Alice Bob [0]`
+  `npx transfer KT1SFWBwUSwmk2xd148Ws6gWUeASwK4UpFfP Alice Bob [0] --operator=Bob`
 
 ## Modifying NFT Contract Code
 
