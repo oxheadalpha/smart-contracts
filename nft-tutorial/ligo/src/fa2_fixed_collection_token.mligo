@@ -22,7 +22,6 @@ type collection_storage = {
   ledger : ledger;
   operators : operator_storage;
   token_metadata : token_metadata_storage;
-  permissions_descriptor : permissions_descriptor;
 }
 
 
