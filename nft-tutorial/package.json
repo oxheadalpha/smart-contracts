@@ -1,10 +1,20 @@
 {
   "name": "tezos-nft-collection-tutorial",
   "version": "1.0.0",
-  "scripts": {
-    "test": "jest"
-  },
+  "keywords": [
+    "tezos",
+    "smart-contracts",
+    "nft"
+  ],
   "license": "MIT",
+  "scripts": {
+    "build": "tsc -p .",
+    "test": "jest",
+    "tznft": "ts-node cli.ts"
+  },
+  "bin": {
+    "tznft": "./lib/cli.js"
+  },
   "dependencies": {
     "@taquito/taquito": "^6.3.5-beta.0",
     "@tsed/logger": "^5.5.3",
@@ -15,9 +25,11 @@
   },
   "devDependencies": {
     "@types/jest": "^26.0.8",
+    "@types/node": "^14.0.27",
     "jest": "^26.2.2",
     "prettier": "^2.0.5",
     "ts-jest": "^26.1.4",
+    "ts-node": "^8.10.2",
     "typescript": "^3.9.7"
   }
 }
