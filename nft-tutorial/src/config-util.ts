@@ -23,3 +23,43 @@ export function loadUserConfig(): Conf<Record<string, string>> {
     throw new Error('no tznft.json config file found');
   }
 }
+
+interface ActiveNetworkCfg {
+  network: string;
+  configKey: string;
+}
+
+export function getActiveNetworkCfg(
+  config: Conf<Record<string, string>>
+): ActiveNetworkCfg {
+  const network = config.get('activeNetwork');
+  if (!network) {
+    console.log(kleur.red('No active network selected'));
+    console.log(
+      kleur.red(
+        `Try to run ${kleur.yellow(
+          'tznft config set-network <network>'
+        )} command`
+      )
+    );
+    throw new Error('No active network selected');
+  }
+
+  const configKey = `availableNetworks.${network}`;
+  if (!config.has(configKey)) {
+    const msg = `Currently active network ${kleur.yellow(
+      network
+    )}  is not configured`;
+    console.log(kleur.red(msg));
+    console.log(
+      kleur.red(
+        `Try to select configured network by running ${kleur.yellow(
+          'tznft config set-network <network>'
+        )} command`
+      )
+    );
+    throw new Error(msg);
+  }
+
+  return { network, configKey };
+}
