@@ -1,8 +1,8 @@
 {
-  "active-network": "sandbox",
-  "available-networks": {
+  "activeNetwork": "sandbox",
+  "availableNetworks": {
     "sandbox": {
-      "provider-url": "http//localhost:20000",
+      "providerUrl": "http//localhost:20000",
       "bob": "edsk3RFgDiCt7tWB2oe96w1eRw72iYiiqZPLu9nnEY23MYRp2d8Kkx",
       "alice": "edsk3QoqBuvdamxouPhin7swCvkQNgq4jP5KZPbwWNnwdZpSpJiEbq"
     }

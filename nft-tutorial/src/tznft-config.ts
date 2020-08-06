@@ -13,6 +13,19 @@ cfg
 
 //prettier-ignore
 cfg
+  .command('show-network')
+  .description('shows currently selected active network')
+  .action(conf.showActiveNetwork)
+
+//prettier-ignore
+cfg
+  .command('set-network')
+  .arguments('<network>')
+  .description('selected network to originate contracts')
+  .action(conf.setNetwork)
+
+//prettier-ignore
+cfg
   .command('show-all')
   .action(conf.showConfig);
 
