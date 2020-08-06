@@ -20,27 +20,27 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const commander_1 = require("commander");
-const conf = __importStar(require("./config"));
+const networkConf = __importStar(require("./config-network"));
 const cli = new commander_1.Command();
 const cfg = cli.command('config');
 //prettier-ignore
 cfg
     .command('init')
     .description('creates tznft.config file')
-    .action(conf.initUserConfig);
+    .action(networkConf.initUserConfig);
 //prettier-ignore
 cfg
     .command('show-network')
     .description('shows currently selected active network')
-    .action(conf.showActiveNetwork);
+    .action(networkConf.showActiveNetwork);
 //prettier-ignore
 cfg
     .command('set-network')
     .arguments('<network>')
     .description('selected network to originate contracts')
-    .action(conf.setNetwork);
+    .action(networkConf.setNetwork);
 //prettier-ignore
 cfg
     .command('show-all')
-    .action(conf.showConfig);
+    .action(networkConf.showConfig);
 cfg.parse();

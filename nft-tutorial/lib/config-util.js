@@ -22,16 +22,15 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteAccount = exports.showAccount = exports.showConfig = exports.setNetwork = exports.showActiveNetwork = exports.initUserConfig = void 0;
+exports.loadUserConfig = exports.userConfigFileWithExt = void 0;
 const conf_1 = __importDefault(require("conf"));
-// import {Schema} from 'conf';
 const path = __importStar(require("path"));
 const fs = __importStar(require("fs"));
 const kleur = __importStar(require("kleur"));
 const userConfigFile = path.join(process.cwd(), 'tznft');
-const userConfigFileWithExt = userConfigFile + '.json';
+exports.userConfigFileWithExt = userConfigFile + '.json';
 function loadUserConfig() {
-    if (fs.existsSync(userConfigFileWithExt))
+    if (fs.existsSync(exports.userConfigFileWithExt))
         return new conf_1.default({
             configName: 'tznft',
             cwd: process.cwd(),
@@ -43,39 +42,4 @@ function loadUserConfig() {
         throw new Error('no tznft.json config file found');
     }
 }
-function initUserConfig() {
-    if (fs.existsSync(userConfigFileWithExt)) {
-        console.log(kleur.yellow('tznft.json config file already exists'));
-    }
-    else {
-        fs.copyFileSync(path.join(__dirname, '../tznft.json'), userConfigFileWithExt);
-        console.log(`${kleur.green('tznft.json')} config file created`);
-    }
-}
-exports.initUserConfig = initUserConfig;
-function showActiveNetwork() {
-    const config = loadUserConfig();
-    const network = config.get('activeNetwork', 'no network selected');
-    console.log(`active network: ${kleur.green(network)}`);
-}
-exports.showActiveNetwork = showActiveNetwork;
-function setNetwork(network) {
-    const config = loadUserConfig();
-    if (!config.has(`availableNetworks.${network}`))
-        console.log(kleur.red(`network ${kleur.yellow(network)} is not available in configuration`));
-    else {
-        config.set('activeNetwork', network);
-        console.log(`network ${kleur.green(network)} is selected`);
-    }
-}
-exports.setNetwork = setNetwork;
-function showConfig() {
-    const config = loadUserConfig();
-    const c = JSON.stringify(config.store, null, 2);
-    console.info(c);
-}
-exports.showConfig = showConfig;
-function showAccount(alias) { }
-exports.showAccount = showAccount;
-function deleteAccount(alias, def) { }
-exports.deleteAccount = deleteAccount;
+exports.loadUserConfig = loadUserConfig;
