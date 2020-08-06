@@ -22,8 +22,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.showConfig = exports.initUserConfig = void 0;
+exports.showConfig = exports.setNetwork = exports.showActiveNetwork = exports.initUserConfig = void 0;
 const conf_1 = __importDefault(require("conf"));
+// import {Schema} from 'conf';
 const path = __importStar(require("path"));
 const fs = __importStar(require("fs"));
 const kleur = __importStar(require("kleur"));
@@ -47,17 +48,30 @@ function initUserConfig() {
         console.log(kleur.yellow('tznft.json config file already exists'));
     }
     else {
-        return fs.copyFileSync(path.join(__dirname, '../tznft.json'), userConfigFileWithExt);
+        fs.copyFileSync(path.join(__dirname, '../tznft.json'), userConfigFileWithExt);
+        console.log(`${kleur.green('tznft.json')} config file created`);
     }
 }
 exports.initUserConfig = initUserConfig;
+function showActiveNetwork() {
+    const config = loadUserConfig();
+    const network = config.get('activeNetwork', 'no network selected');
+    console.log(`active network: ${kleur.green(network)}`);
+}
+exports.showActiveNetwork = showActiveNetwork;
+function setNetwork(network) {
+    const config = loadUserConfig();
+    if (!config.has(`availableNetworks.${network}`))
+        console.log(kleur.red(`network ${kleur.yellow(network)} is not available in configuration`));
+    else {
+        config.set('activeNetwork', network);
+        console.log(`network ${kleur.green(network)} is selected`);
+    }
+}
+exports.setNetwork = setNetwork;
 function showConfig() {
-    const config = new conf_1.default({
-        configName: 'tznft',
-        cwd: path.join(__dirname, '../'),
-        serialize: v => JSON.stringify(v, null, 2)
-    });
-    const j = JSON.stringify(config.store, null, 2);
-    console.info(j);
+    const config = loadUserConfig();
+    const c = JSON.stringify(config.store, null, 2);
+    console.info(c);
 }
 exports.showConfig = showConfig;
