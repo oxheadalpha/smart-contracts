@@ -1,9 +1,19 @@
 import { Command } from 'commander';
+import * as conf from './config';
 
-const cfg = new Command();
+const cli = new Command();
+
+const cfg = cli.command('config');
 
 //prettier-ignore
 cfg
-  .command('config').alias('cfg')
-  .arguments('<foo> [bar]')
-  .parse();
+  .command('init')
+  .description('creates tznft.config file')
+  .action(conf.initUserConfig);
+
+//prettier-ignore
+cfg
+  .command('show-all')
+  .action(conf.showConfig);
+
+cfg.parse();

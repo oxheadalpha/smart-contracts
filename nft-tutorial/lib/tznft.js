@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-var commander_1 = require("commander");
-var cli = new commander_1.Command();
+const commander_1 = require("commander");
+const cli = new commander_1.Command();
 //prettier-ignore
 cli
-    .command('config', 'configure something')
+    .command('config', 'configure something').alias('cfg')
     .command('originate', 'originate something')
     .parse();

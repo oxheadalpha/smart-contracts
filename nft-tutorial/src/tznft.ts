@@ -5,6 +5,6 @@ const cli = new Command();
 
 //prettier-ignore
 cli
-  .command('config', 'configure something')
+  .command('config', 'configure something').alias('cfg')
   .command('originate', 'originate something')
   .parse();
