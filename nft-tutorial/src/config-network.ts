@@ -16,10 +16,25 @@ export function initUserConfig(): void {
   }
 }
 
-export function showActiveNetwork(): void {
+export function showActiveNetwork(all: boolean): void {
   const config = loadUserConfig();
-  const network = config.get('activeNetwork', 'no network selected');
-  console.log(`active network: ${kleur.green(network)}`);
+  const network = config.get('activeNetwork');
+  if (!all)
+    console.log(
+      `active network: ${
+        network ? kleur.green(network) : kleur.red('not selected')
+      }`
+    );
+  else {
+    const allNetworks = Object.getOwnPropertyNames(
+      config.store.availableNetworks
+    );
+    for (let n of allNetworks) {
+      if (n === network) console.log(kleur.bold().green(`* ${n}`));
+      else console.log(kleur.yellow(`  ${n}`));
+    }
+    if (!network) console.log(`active network: ${kleur.red('not selected')}`);
+  }
 }
 
 export function setNetwork(network: string): void {
