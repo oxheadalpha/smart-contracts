@@ -15,7 +15,9 @@ cfg
 cfg
   .command('show-network')
   .description('shows currently selected active network')
-  .action(networkConf.showActiveNetwork)
+  .option('-a --all', 'shows all available configured networks', false)
+  .action((options) => networkConf.showActiveNetwork(options.all))
+  .passCommandToAction(false)
 
 //prettier-ignore
 cfg
