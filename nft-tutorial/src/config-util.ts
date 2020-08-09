@@ -63,3 +63,19 @@ export function getActiveNetworkCfg(
 
   return { network, configKey };
 }
+
+export function getActiveAccountsCfgKey(
+  config: Conf<Record<string, string>>,
+  validate: boolean = true
+): string {
+  const { network, configKey } = getActiveNetworkCfg(config);
+
+  const accountsConfigKey = `${configKey}.accounts`;
+  if (!config.has(accountsConfigKey) && validate) {
+    const msg = 'there are no configured account aliases';
+    console.log(kleur.red(msg));
+    throw new Error(msg);
+  }
+
+  return accountsConfigKey;
+}
