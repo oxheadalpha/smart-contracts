@@ -1,6 +1,7 @@
 import * as child from 'child_process';
 import * as kleur from 'kleur';
 import { getActiveNetworkCfg, loadUserConfig } from './config-util';
+import { Tezos } from '@taquito/taquito';
 
 export async function start(): Promise<void> {
   const config = loadUserConfig();
@@ -24,6 +25,8 @@ export async function start(): Promise<void> {
       )
     );
     console.log(kleur.yellow('starting sandbox...'));
+    Tezos.rpc.getBlockHeader({ block: '1' });
+    console.log(kleur.green('sandbox started'));
   }
 }
 
