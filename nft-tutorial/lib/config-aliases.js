@@ -24,9 +24,9 @@ const kleur = __importStar(require("kleur"));
 const config_util_1 = require("./config-util");
 function showAlias(alias) {
     const config = config_util_1.loadUserConfig();
-    const accKey = config_util_1.getActiveAccountsCfgKey(config);
+    const aliasesKey = config_util_1.getActiveAliasesCfgKey(config);
     if (alias) {
-        const aliasKey = `${accKey}.${alias}`;
+        const aliasKey = `${aliasesKey}.${alias}`;
         if (config.has(aliasKey)) {
             const key_or_address = config.get(aliasKey);
             console.log(kleur.yellow(`${alias}\t${key_or_address}`));
@@ -35,9 +35,9 @@ function showAlias(alias) {
             console.log(kleur.red(`alias ${kleur.yellow(alias)} is not configured`));
     }
     else {
-        const allAliases = Object.getOwnPropertyNames(config.get(accKey));
+        const allAliases = Object.getOwnPropertyNames(config.get(aliasesKey));
         for (let a of allAliases) {
-            const aliasKey = `${accKey}.${a}`;
+            const aliasKey = `${aliasesKey}.${a}`;
             const key_or_address = config.get(aliasKey);
             console.log(kleur.yellow(`${a}\t${key_or_address}`));
         }
@@ -46,8 +46,7 @@ function showAlias(alias) {
 exports.showAlias = showAlias;
 function addAlias(alias, key_or_address) {
     const config = config_util_1.loadUserConfig();
-    const accKey = config_util_1.getActiveAccountsCfgKey(config);
-    const aliasKey = `${accKey}.${alias}`;
+    const aliasKey = `${config_util_1.getActiveAliasesCfgKey(config)}.${alias}`;
     if (config.has(aliasKey)) {
         console.log(kleur.red(`alias ${kleur.yellow(alias)} already exists`));
         return;
@@ -61,8 +60,7 @@ function addAlias(alias, key_or_address) {
 exports.addAlias = addAlias;
 function removeAlias(alias) {
     const config = config_util_1.loadUserConfig();
-    const accKey = config_util_1.getActiveAccountsCfgKey(config);
-    const aliasKey = `${accKey}.${alias}`;
+    const aliasKey = `${config_util_1.getActiveAliasesCfgKey(config)}.${alias}`;
     if (!config.has(aliasKey)) {
         console.log(kleur.red(`alias ${kleur.yellow(alias)} does not exists`));
         return;

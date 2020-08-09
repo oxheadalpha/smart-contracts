@@ -1,21 +1,20 @@
 import * as kleur from 'kleur';
-import { getActiveAccountsCfgKey, loadUserConfig } from './config-util';
-import { POINT_CONVERSION_HYBRID } from 'constants';
+import { getActiveAliasesCfgKey, loadUserConfig } from './config-util';
 
 export function showAlias(alias: string): void {
   const config = loadUserConfig();
-  const accKey = getActiveAccountsCfgKey(config);
+  const aliasesKey = getActiveAliasesCfgKey(config);
   if (alias) {
-    const aliasKey = `${accKey}.${alias}`;
+    const aliasKey = `${aliasesKey}.${alias}`;
     if (config.has(aliasKey)) {
       const key_or_address = config.get(aliasKey);
       console.log(kleur.yellow(`${alias}\t${key_or_address}`));
     } else
       console.log(kleur.red(`alias ${kleur.yellow(alias)} is not configured`));
   } else {
-    const allAliases = Object.getOwnPropertyNames(config.get(accKey));
+    const allAliases = Object.getOwnPropertyNames(config.get(aliasesKey));
     for (let a of allAliases) {
-      const aliasKey = `${accKey}.${a}`;
+      const aliasKey = `${aliasesKey}.${a}`;
       const key_or_address = config.get(aliasKey);
       console.log(kleur.yellow(`${a}\t${key_or_address}`));
     }
@@ -24,8 +23,7 @@ export function showAlias(alias: string): void {
 
 export function addAlias(alias: string, key_or_address: string): void {
   const config = loadUserConfig();
-  const accKey = getActiveAccountsCfgKey(config);
-  const aliasKey = `${accKey}.${alias}`;
+  const aliasKey = `${getActiveAliasesCfgKey(config)}.${alias}`;
   if (config.has(aliasKey)) {
     console.log(kleur.red(`alias ${kleur.yellow(alias)} already exists`));
     return;
@@ -42,8 +40,7 @@ export function addAlias(alias: string, key_or_address: string): void {
 
 export function removeAlias(alias: string): void {
   const config = loadUserConfig();
-  const accKey = getActiveAccountsCfgKey(config);
-  const aliasKey = `${accKey}.${alias}`;
+  const aliasKey = `${getActiveAliasesCfgKey(config)}.${alias}`;
   if (!config.has(aliasKey)) {
     console.log(kleur.red(`alias ${kleur.yellow(alias)} does not exists`));
     return;
