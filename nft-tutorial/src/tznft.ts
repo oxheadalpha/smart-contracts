@@ -37,7 +37,7 @@ program
 program
     .command('show-alias')
     .alias('showa')
-    .arguments('<alias>')
+    .arguments('[alias]')
     .action(aliasConf.showAlias).passCommandToAction(false);
 
 //prettier-ignore

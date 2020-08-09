@@ -49,7 +49,7 @@ commander_1.program
 commander_1.program
     .command('show-alias')
     .alias('showa')
-    .arguments('<alias>')
+    .arguments('[alias]')
     .action(aliasConf.showAlias).passCommandToAction(false);
 //prettier-ignore
 commander_1.program
