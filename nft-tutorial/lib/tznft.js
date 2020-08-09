@@ -22,6 +22,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const commander_1 = require("commander");
 const networkConf = __importStar(require("./config-network"));
+const aliasConf = __importStar(require("./config-aliases"));
 // configuration commands
 //prettier-ignore
 commander_1.program
@@ -35,8 +36,7 @@ commander_1.program
     .alias('shown')
     .description('shows currently selected active network', { 'a': 'also shows all available networks' })
     .option('-a --all', 'shows all available configured networks', false)
-    .action((options) => networkConf.showActiveNetwork(options.all))
-    .passCommandToAction(false);
+    .action((options) => networkConf.showActiveNetwork(options.all)).passCommandToAction(false);
 //prettier-ignore
 commander_1.program
     .command('set-network')
@@ -44,6 +44,27 @@ commander_1.program
     .arguments('<network>')
     .description('selected network to originate contracts')
     .action(networkConf.setNetwork);
+//aliases
+//prettier-ignore
+commander_1.program
+    .command('show-alias')
+    .alias('showa')
+    .arguments('<alias>')
+    .action(aliasConf.showAlias).passCommandToAction(false);
+//prettier-ignore
+commander_1.program
+    .command('add-alias')
+    .alias('adda')
+    .description('adds new alias to the configuration')
+    .arguments('<alias> <key_or_address>')
+    .action(aliasConf.addAlias).passCommandToAction(false);
+//prettier-ignore
+commander_1.program
+    .command('remove-alias')
+    .alias('rma')
+    .description('removes alias from the configuration')
+    .arguments('<alias>')
+    .action(aliasConf.removeAlias).passCommandToAction(false);
 //prettier-ignore
 commander_1.program
     .command('config-show-all')
