@@ -61,9 +61,10 @@ async function compileContract(
 
 async function runCmd(cwd: string, cmd: string): Promise<void> {
   return new Promise<void>((resolve, reject) =>
-    child.exec(cmd, { cwd }, (err, stdout, errout) =>
-      errout ? reject(errout) : resolve()
-    )
+    child.exec(cmd, { cwd }, (err, stdout, errout) => {
+      if (err) reject(errout);
+      else resolve();
+    })
   );
 }
 
