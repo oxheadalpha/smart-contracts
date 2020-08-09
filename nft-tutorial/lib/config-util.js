@@ -22,7 +22,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getActiveAccountsCfgKey = exports.getActiveNetworkCfg = exports.loadUserConfig = exports.userConfigFileWithExt = void 0;
+exports.getActiveAliasesCfgKey = exports.getActiveNetworkCfg = exports.loadUserConfig = exports.userConfigFileWithExt = void 0;
 const conf_1 = __importDefault(require("conf"));
 const path = __importStar(require("path"));
 const fs = __importStar(require("fs"));
@@ -60,14 +60,14 @@ function getActiveNetworkCfg(config) {
     return { network, configKey };
 }
 exports.getActiveNetworkCfg = getActiveNetworkCfg;
-function getActiveAccountsCfgKey(config, validate = true) {
+function getActiveAliasesCfgKey(config, validate = true) {
     const { network, configKey } = getActiveNetworkCfg(config);
-    const accountsConfigKey = `${configKey}.accounts`;
-    if (!config.has(accountsConfigKey) && validate) {
+    const aliasesConfigKey = `${configKey}.aliases`;
+    if (!config.has(aliasesConfigKey) && validate) {
         const msg = 'there are no configured account aliases';
         console.log(kleur.red(msg));
         throw new Error(msg);
     }
-    return accountsConfigKey;
+    return aliasesConfigKey;
 }
-exports.getActiveAccountsCfgKey = getActiveAccountsCfgKey;
+exports.getActiveAliasesCfgKey = getActiveAliasesCfgKey;
