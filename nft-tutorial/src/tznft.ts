@@ -2,6 +2,7 @@
 import { program } from 'commander';
 import * as networkConf from './config-network';
 import * as aliasConf from './config-aliases';
+import * as bootstrap from './bootstrap';
 
 // configuration commands
 
@@ -61,5 +62,20 @@ program
   .command('config-show-all')
   .description('shows whole raw config')
   .action(networkConf.showConfig);
+
+//working with network
+
+//prettier-ignore
+program
+  .command('start')
+  .alias('s')
+  .description('starts and initializes network provider')
+  .action(bootstrap.start)
+
+program
+  .command('kill')
+  .alias('k')
+  .description('kills running network provider')
+  .action(bootstrap.kill);
 
 program.parse();

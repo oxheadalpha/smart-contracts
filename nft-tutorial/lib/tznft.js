@@ -23,6 +23,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const commander_1 = require("commander");
 const networkConf = __importStar(require("./config-network"));
 const aliasConf = __importStar(require("./config-aliases"));
+const bootstrap = __importStar(require("./bootstrap"));
 // configuration commands
 //prettier-ignore
 commander_1.program
@@ -70,4 +71,16 @@ commander_1.program
     .command('config-show-all')
     .description('shows whole raw config')
     .action(networkConf.showConfig);
+//working with network
+//prettier-ignore
+commander_1.program
+    .command('start')
+    .alias('s')
+    .description('starts and initializes network provider')
+    .action(bootstrap.start);
+commander_1.program
+    .command('kill')
+    .alias('k')
+    .description('kills running network provider')
+    .action(bootstrap.kill);
 commander_1.program.parse();
