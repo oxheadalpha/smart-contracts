@@ -9,13 +9,16 @@ export function showAlias(alias: string): void {
     const aliasKey = `${accKey}.${alias}`;
     if (config.has(aliasKey)) {
       const key_or_address = config.get(aliasKey);
-      console.log(kleur.yellow(`${alias}  ${key_or_address}`));
+      console.log(kleur.yellow(`${alias}\t${key_or_address}`));
     } else
       console.log(kleur.red(`alias ${kleur.yellow(alias)} is not configured`));
   } else {
-    //show all accounts
-    // config.get[object](accKey)
-    console.log('all aliases');
+    const allAliases = Object.getOwnPropertyNames(config.get(accKey));
+    for (let a of allAliases) {
+      const aliasKey = `${accKey}.${a}`;
+      const key_or_address = config.get(aliasKey);
+      console.log(kleur.yellow(`${a}\t${key_or_address}`));
+    }
   }
 }
 
