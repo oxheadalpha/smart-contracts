@@ -32,6 +32,7 @@ exports.kill = exports.start = void 0;
 const child = __importStar(require("child_process"));
 const kleur = __importStar(require("kleur"));
 const config_util_1 = require("./config-util");
+const taquito_1 = require("@taquito/taquito");
 function start() {
     return __awaiter(this, void 0, void 0, function* () {
         const config = config_util_1.loadUserConfig();
@@ -50,6 +51,8 @@ function start() {
                 }
             }));
             console.log(kleur.yellow('starting sandbox...'));
+            taquito_1.Tezos.rpc.getBlockHeader({ block: '1' });
+            console.log(kleur.green('sandbox started'));
         }
     });
 }
