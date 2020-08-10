@@ -28,12 +28,14 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.originateInspector = exports.createToolkit = void 0;
+exports.parseTokens = exports.mintNfts = exports.originateInspector = exports.createToolkit = void 0;
 const kleur = __importStar(require("kleur"));
 const fs = __importStar(require("fs"));
 const path = __importStar(require("path"));
+const bignumber_js_1 = require("bignumber.js");
 const taquito_1 = require("@taquito/taquito");
 const config_util_1 = require("./config-util");
+const config_aliases_1 = require("./config-aliases");
 function createToolkit(signer, config) {
     const { network, configKey } = config_util_1.getActiveNetworkCfg(config);
     const providerUrl = config.get(`${configKey}.providerUrl`);
@@ -59,6 +61,46 @@ function originateInspector(tezos) {
     });
 }
 exports.originateInspector = originateInspector;
+function mintNfts(owner, tokens) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const config = config_util_1.loadUserConfig();
+        const signer = yield config_aliases_1.resolveAlias2Signer(owner, config);
+        const ownerAddress = yield signer.publicKeyHash();
+        const tz = createToolkit(signer, config);
+        const code = yield loadFile(path.join(__dirname, '../ligo/out/fa2_fixed_collection_token.tz'));
+        const storage = createNftStorage(tokens, ownerAddress);
+        console.log(kleur.yellow('originating new NFT contract'));
+        const nftAddress = yield originateContract(tz, code, storage, 'nft');
+        console.log(kleur.yellow(`originated NFT collection ${kleur.green(nftAddress)}`));
+    });
+}
+exports.mintNfts = mintNfts;
+function parseTokens(descriptor, tokens) {
+    const [id, symbol, name] = descriptor.split(',');
+    const token = {
+        token_id: new bignumber_js_1.BigNumber(id),
+        symbol,
+        name,
+        decimals: new bignumber_js_1.BigNumber(0),
+        extras: new taquito_1.MichelsonMap()
+    };
+    tokens.push(token);
+    return tokens;
+}
+exports.parseTokens = parseTokens;
+function createNftStorage(tokens, owner) {
+    const ledger = new taquito_1.MichelsonMap();
+    const token_metadata = new taquito_1.MichelsonMap();
+    for (let meta of tokens) {
+        ledger.set(meta.token_id, owner);
+        token_metadata.set(meta.token_id, meta);
+    }
+    return {
+        ledger,
+        operators: new taquito_1.MichelsonMap(),
+        token_metadata
+    };
+}
 function loadFile(filePath) {
     return __awaiter(this, void 0, void 0, function* () {
         return new Promise((resolve, reject) => fs.readFile(filePath, (err, buff) => err ? reject(err) : resolve(buff.toString())));
@@ -66,11 +108,9 @@ function loadFile(filePath) {
 }
 function originateContract(tz, code, storage, name) {
     return __awaiter(this, void 0, void 0, function* () {
+        const origParam = typeof storage === 'string' ? { code, init: storage } : { code, storage };
         try {
-            const originationOp = yield tz.contract.originate({
-                code,
-                init: storage
-            });
+            const originationOp = yield tz.contract.originate(origParam);
             const contract = yield originationOp.contract();
             return contract.address;
         }

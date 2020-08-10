@@ -24,6 +24,7 @@ const commander_1 = require("commander");
 const networkConf = __importStar(require("./config-network"));
 const aliasConf = __importStar(require("./config-aliases"));
 const bootstrap = __importStar(require("./bootstrap"));
+const contracts = __importStar(require("./contracts"));
 // configuration commands
 //prettier-ignore
 commander_1.program
@@ -66,11 +67,6 @@ commander_1.program
     .description('removes alias from the configuration')
     .arguments('<alias>')
     .action(aliasConf.removeAlias).passCommandToAction(false);
-//prettier-ignore
-commander_1.program
-    .command('config-show-all')
-    .description('shows whole raw config')
-    .action(networkConf.showConfig);
 //working with network
 //prettier-ignore
 commander_1.program
@@ -79,9 +75,24 @@ commander_1.program
     .option('-b, --bootstrap <alias>', 'alias to use for the helper contract origination', 'bob')
     .description('starts and initializes network provider')
     .action(options => bootstrap.start(options.bootstrap)).passCommandToAction(false);
+//prettier-ignore
 commander_1.program
     .command('kill')
     .alias('k')
     .description('kills running network provider')
     .action(bootstrap.kill);
+// nft
+//prettier-ignore
+commander_1.program
+    .command('mint')
+    .alias('m')
+    .description('creates a new NFT contract and mint new tokens')
+    .arguments('<owner>')
+    .requiredOption('-t, --tokens <tokens...>', 'definitions of new tokens, a list of [id, symbol, name]', contracts.parseTokens, [])
+    .action((cmd, options) => contracts.mintNfts(cmd, options.tokens)).passCommandToAction(false);
+//prettier-ignore
+commander_1.program
+    .command('config-show-all')
+    .description('shows whole raw config')
+    .action(networkConf.showConfig);
 commander_1.program.parse();

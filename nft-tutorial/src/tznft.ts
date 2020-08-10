@@ -3,6 +3,7 @@ import { program } from 'commander';
 import * as networkConf from './config-network';
 import * as aliasConf from './config-aliases';
 import * as bootstrap from './bootstrap';
+import * as contracts from './contracts';
 
 // configuration commands
 
@@ -57,26 +58,44 @@ program
   .arguments('<alias>')
   .action(aliasConf.removeAlias).passCommandToAction(false);
 
-//prettier-ignore
-program
-  .command('config-show-all')
-  .description('shows whole raw config')
-  .action(networkConf.showConfig);
-
 //working with network
 
 //prettier-ignore
 program
   .command('start')
   .alias('s')
-  .option('-b, --bootstrap <alias>', 'alias to use for the helper contract origination', 'bob')
+  .option(
+    '-b, --bootstrap <alias>',
+    'alias to use for the helper contract origination',
+    'bob')
   .description('starts and initializes network provider')
   .action(options => bootstrap.start(options.bootstrap)).passCommandToAction(false);
 
+//prettier-ignore
 program
   .command('kill')
   .alias('k')
   .description('kills running network provider')
   .action(bootstrap.kill);
+
+// nft
+
+//prettier-ignore
+program
+  .command('mint')
+  .alias('m')
+  .description('creates a new NFT contract and mint new tokens')
+  .arguments('<owner>')
+  .requiredOption(
+    '-t, --tokens <tokens...>',
+    'definitions of new tokens, a list of [id, symbol, name]',
+    contracts.parseTokens, [])
+  .action((cmd, options) => contracts.mintNfts(cmd, options.tokens)).passCommandToAction(false);
+
+//prettier-ignore
+program
+  .command('config-show-all')
+  .description('shows whole raw config')
+  .action(networkConf.showConfig);
 
 program.parse();
