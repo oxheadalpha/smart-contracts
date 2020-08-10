@@ -9,12 +9,13 @@ DONE    4. start sandbox and wait
 DONE    5. originate balance inspector
 NA      6. LIGO compilation
 DONE    7. originate NFT
-        8. transfer tokens
+WIP     8. transfer tokens
 DONE    9. substitute aliases with addresses/signers
         10. create testnet config with bootstrap faucet accounts
         11. Complete readme
-WIP     12. Inspect balances
-            12.1 print alias names when inspecting balance
+DONE    12. Inspect balances
+NA           12.1 print alias names when inspecting balance
+        13. update operators
 PHASE TWO
         1. Editable contracts
         2. write assets tutorial

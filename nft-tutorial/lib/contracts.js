@@ -28,7 +28,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.parseTokens = exports.mintNfts = exports.originateInspector = exports.createToolkit = void 0;
+exports.getBalances = exports.parseTokens = exports.mintNfts = exports.originateInspector = exports.createToolkit = void 0;
 const kleur = __importStar(require("kleur"));
 const fs = __importStar(require("fs"));
 const path = __importStar(require("path"));
@@ -100,6 +100,42 @@ function createNftStorage(tokens, owner) {
         operators: new taquito_1.MichelsonMap(),
         token_metadata
     };
+}
+function getBalances(operator, nft, owner, tokens) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const config = config_util_1.loadUserConfig();
+        const signer = yield config_aliases_1.resolveAlias2Signer(operator, config);
+        const operatorAddress = yield signer.publicKeyHash();
+        const tz = createToolkit(signer, config);
+        const ownerAddress = yield config_aliases_1.resolveAlias2Address(owner, config);
+        const requests = tokens.map(t => {
+            return { token_id: new bignumber_js_1.BigNumber(t), owner: ownerAddress };
+        });
+        const inspectorKey = config_util_1.getInspectorKey(config);
+        const inspectorAddress = config.get(inspectorKey);
+        if (!inspectorAddress) {
+            console.log(kleur.red('Cannot find deployed balance inspector contract.\nTry to kill and start network again.'));
+            return;
+        }
+        console.log(kleur.yellow(`querying NFT contract ${kleur.green(nft)} over balance inspector ${kleur.green(inspectorAddress)}`));
+        const inspector = yield tz.contract.at(inspectorAddress);
+        const balanceOp = yield inspector.methods.query(nft, requests).send();
+        yield balanceOp.confirmation();
+        const storage = yield inspector.storage();
+        if (Array.isArray(storage))
+            printBalances(storage);
+        else {
+            console.log(kleur.red('invalid inspector storage state'));
+            return Promise.reject('Invalid inspector storage state Empty.');
+        }
+    });
+}
+exports.getBalances = getBalances;
+function printBalances(balances) {
+    console.log(kleur.green('requested NFT balances:'));
+    for (let b of balances) {
+        console.log(kleur.yellow(`owner: ${kleur.green(b.request.owner)}\ttoken: ${kleur.green(b.request.token_id.toString())}\tbalance: ${kleur.green(b.balance.toString())}`));
+    }
 }
 function loadFile(filePath) {
     return __awaiter(this, void 0, void 0, function* () {
