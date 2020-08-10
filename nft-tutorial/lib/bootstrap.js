@@ -31,28 +31,22 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.kill = exports.start = void 0;
 const child = __importStar(require("child_process"));
 const kleur = __importStar(require("kleur"));
-const config_util_1 = require("./config-util");
 const taquito_1 = require("@taquito/taquito");
-function start() {
+const config_util_1 = require("./config-util");
+const config_aliases_1 = require("./config-aliases");
+const contracts_1 = require("./contracts");
+function start(bootstrap) {
     return __awaiter(this, void 0, void 0, function* () {
-        const config = config_util_1.loadUserConfig();
-        const { network, configKey } = config_util_1.getActiveNetworkCfg(config);
-        if (network === 'sandbox') {
-            //start and wait
-            yield new Promise((resolve, reject) => child.exec('sh ../flextesa/start-sandbox.sh', { cwd: __dirname }, (err, stdout, errout) => {
-                if (err) {
-                    console.log(kleur.red('failed to start sandbox'));
-                    console.log(kleur.red().dim(errout));
-                    reject();
-                }
-                else {
-                    console.log(kleur.yellow().dim(stdout));
-                    resolve();
-                }
-            }));
-            console.log(kleur.yellow('starting sandbox...'));
-            taquito_1.Tezos.rpc.getBlockHeader({ block: '1' });
-            console.log(kleur.green('sandbox started'));
+        try {
+            const config = config_util_1.loadUserConfig();
+            const { network, configKey } = config_util_1.getActiveNetworkCfg(config);
+            if (network === 'sandbox')
+                yield startSandbox();
+            yield originateBalanceInspector(config, configKey, bootstrap);
+        }
+        catch (err) {
+            console.log(kleur.red('failed to start. ' + JSON.stringify(err)));
+            return;
         }
     });
 }
@@ -61,21 +55,54 @@ function kill() {
     return __awaiter(this, void 0, void 0, function* () {
         const config = config_util_1.loadUserConfig();
         const { network, configKey } = config_util_1.getActiveNetworkCfg(config);
-        if (network === 'sandbox') {
-            //start and wait
-            yield new Promise((resolve, reject) => child.exec('sh ../flextesa/kill-sandbox.sh', { cwd: __dirname }, (err, stdout, errout) => {
-                if (err) {
-                    console.log(kleur.red('failed to stop sandbox'));
-                    console.log(kleur.red().dim(errout));
-                    reject();
-                }
-                else {
-                    console.log(kleur.yellow().dim(stdout));
-                    resolve();
-                }
-            }));
-            console.log(kleur.yellow('killed sandbox.'));
-        }
+        if (network === 'sandbox')
+            yield killSandbox();
     });
 }
 exports.kill = kill;
+function startSandbox() {
+    return __awaiter(this, void 0, void 0, function* () {
+        yield new Promise((resolve, reject) => 
+        //start and wait
+        child.exec('sh ../flextesa/start-sandbox.sh', { cwd: __dirname }, (err, stdout, errout) => {
+            if (err) {
+                console.log(kleur.red('failed to start sandbox'));
+                console.log(kleur.red().dim(errout));
+                reject();
+            }
+            else {
+                console.log(kleur.yellow().dim(stdout));
+                resolve();
+            }
+        }));
+        console.log(kleur.yellow('starting sandbox...'));
+        yield taquito_1.Tezos.rpc.getBlockHeader({ block: '1' });
+        console.log(kleur.green('sandbox started'));
+    });
+}
+function killSandbox() {
+    return __awaiter(this, void 0, void 0, function* () {
+        yield new Promise((resolve, reject) => child.exec('sh ../flextesa/kill-sandbox.sh', { cwd: __dirname }, (err, stdout, errout) => {
+            if (err) {
+                console.log(kleur.red('failed to stop sandbox'));
+                console.log(kleur.red().dim(errout));
+                reject();
+            }
+            else {
+                console.log(kleur.yellow().dim(stdout));
+                resolve();
+            }
+        }));
+        console.log(kleur.yellow('killed sandbox.'));
+    });
+}
+function originateBalanceInspector(config, networkKey, orig_alias) {
+    return __awaiter(this, void 0, void 0, function* () {
+        console.log(kleur.yellow(`originating balance inspector contract...`));
+        const signer = yield config_aliases_1.resolveAlias2Signer(orig_alias, config);
+        const tezos = contracts_1.createToolkit(signer, config);
+        const inspectorAddress = yield contracts_1.originateInspector(tezos);
+        config.set(config_util_1.getInspectorKey(config), inspectorAddress);
+        console.log(kleur.yellow(`originated balance inspector ${kleur.green(inspectorAddress)}`));
+    });
+}

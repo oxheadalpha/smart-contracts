@@ -1,5 +1,5 @@
 (** Helper contract to query FA2 `Balance_of` entry point *)
-#include "../fa2/lib/fa2_convertors.mligo"
+#include "fa2_convertors.mligo"
 
 type storage =
   | State of balance_of_response list

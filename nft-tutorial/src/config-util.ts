@@ -79,3 +79,8 @@ export function getActiveAliasesCfgKey(
 
   return aliasesConfigKey;
 }
+
+export function getInspectorKey(config: Conf<Record<string, string>>): string {
+  const { network, configKey } = getActiveNetworkCfg(config);
+  return `${configKey}.inspector`;
+}

@@ -1,0 +1,20 @@
+DONE    1. Pick CLI parser (yargs, meow, commander). Commander it is
+DONE    2. Pick config library (configstore, conf). conf
+DONE    3. Initial CLI for config manipulation
+DONE        3.1 network
+DONE        3.2 aliases
+DONE          3.2.1 alias/address/secret key
+NA          3.3 Figure out json schema for conf
+DONE    4. start sandbox and wait
+DONE    5. originate balance inspector
+        6. LIGO compilation
+WIP     7. originate NFT
+        8. transfer tokens
+DONE    9. substitute aliases with addresses/signers
+        10. create testnet config with bootstrap faucet accounts
+        11. Complete readme
+        12. Inspect balances
+            12.1 print alias names when inspecting balance
+PHASE TWO
+        1. Editable contracts
+        2. write assets tutorial

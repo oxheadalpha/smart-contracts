@@ -2,7 +2,7 @@
   "activeNetwork": "sandbox",
   "availableNetworks": {
     "sandbox": {
-      "providerUrl": "http//localhost:20000",
+      "providerUrl": "http://localhost:20000",
       "aliases": {
         "bob": {
           "address": "tz1YPSCGWXwBdTncK2aCctSZAXWvGsGwVJqU",
