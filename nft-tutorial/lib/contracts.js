@@ -76,7 +76,7 @@ function mintNfts(owner, tokens) {
 }
 exports.mintNfts = mintNfts;
 function parseTokens(descriptor, tokens) {
-    const [id, symbol, name] = descriptor.split(',');
+    const [id, symbol, name] = descriptor.split(',').map(p => p.trim());
     const token = {
         token_id: new bignumber_js_1.BigNumber(id),
         symbol,
@@ -137,7 +137,7 @@ function printBalances(balances) {
     }
 }
 function parseTransfers(description, transfers) {
-    const [from_, to_, token_id] = description.split(',');
+    const [from_, to_, token_id] = description.split(',').map(p => p.trim());
     const tx = {
         from_,
         txs: [
@@ -158,11 +158,33 @@ function parseTransfers(description, transfers) {
 exports.parseTransfers = parseTransfers;
 function transfer(operator, nft, tokens) {
     return __awaiter(this, void 0, void 0, function* () {
-        console.log('OPER ' + operator);
-        console.log('TX  ' + JSON.stringify(tokens));
+        const config = config_util_1.loadUserConfig();
+        const txs = yield resolveTxAddresses(tokens, config);
+        console.log('RESOLVED ' + JSON.stringify(txs));
     });
 }
 exports.transfer = transfer;
+function resolveTxAddresses(tokens, config) {
+    return __awaiter(this, void 0, void 0, function* () {
+        return Promise.all(tokens.map((t) => __awaiter(this, void 0, void 0, function* () {
+            return {
+                from_: yield config_aliases_1.resolveAlias2Address(t.from_, config),
+                txs: yield resolveTxDestinationAddresses(t.txs, config)
+            };
+        })));
+    });
+}
+function resolveTxDestinationAddresses(txs, config) {
+    return __awaiter(this, void 0, void 0, function* () {
+        return Promise.all(txs.map((t) => __awaiter(this, void 0, void 0, function* () {
+            return {
+                to_: yield config_aliases_1.resolveAlias2Address(t.to_, config),
+                amount: t.amount,
+                token_id: t.token_id
+            };
+        })));
+    });
+}
 function loadFile(filePath) {
     return __awaiter(this, void 0, void 0, function* () {
         return new Promise((resolve, reject) => fs.readFile(filePath, (err, buff) => err ? reject(err) : resolve(buff.toString())));
