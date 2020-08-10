@@ -213,7 +213,16 @@ export async function transfer(
 ): Promise<void> {
   const config = loadUserConfig();
   const txs = await resolveTxAddresses(tokens, config);
-  console.log('RESOLVED ' + JSON.stringify(txs));
+  // console.log('RESOLVED ' + JSON.stringify(txs));
+  const signer = await resolveAlias2Signer(operator, config);
+  const operatorAddress = await signer.publicKeyHash();
+  const tz = createToolkit(signer, config);
+
+  console.log(kleur.yellow('transferring tokens...'));
+  const nftContract = await tz.contract.at(nft);
+  const txOp = await nftContract.methods.transfer(txs).send();
+  await txOp.confirmation();
+  console.log(kleur.green('tokens transferred'));
 }
 
 async function resolveTxAddresses(
