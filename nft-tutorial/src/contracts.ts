@@ -105,8 +105,7 @@ export function parseTokens(
     decimals: new BigNumber(0),
     extras: new MichelsonMap()
   };
-  tokens.push(token);
-  return tokens;
+  return [token].concat(tokens);
 }
 
 function createNftStorage(tokens: TokenMetadata[], owner: string) {
@@ -181,6 +180,39 @@ function printBalances(balances: BalanceOfResponse[]): void {
       )
     );
   }
+}
+
+export function parseTransfers(
+  description: string,
+  transfers: Fa2Transfer[]
+): Fa2Transfer[] {
+  const [from_, to_, token_id] = description.split(',');
+  const tx: Fa2Transfer = {
+    from_,
+    txs: [
+      {
+        to_,
+        token_id: new BigNumber(token_id),
+        amount: new BigNumber(1)
+      }
+    ]
+  };
+  if (transfers.length > 0 && transfers[0].from_ === from_) {
+    //merge last two transfers
+    transfers[0].txs = transfers[0].txs.concat(tx.txs);
+    return transfers;
+  }
+
+  return [tx].concat(transfers);
+}
+
+export async function transfer(
+  operator: string,
+  nft: string,
+  tokens: Fa2Transfer[]
+): Promise<void> {
+  console.log('OPER ' + operator);
+  console.log('TX  ' + JSON.stringify(tokens));
 }
 
 async function loadFile(filePath: string): Promise<string> {

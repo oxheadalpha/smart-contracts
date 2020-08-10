@@ -28,7 +28,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getBalances = exports.parseTokens = exports.mintNfts = exports.originateInspector = exports.createToolkit = void 0;
+exports.transfer = exports.parseTransfers = exports.getBalances = exports.parseTokens = exports.mintNfts = exports.originateInspector = exports.createToolkit = void 0;
 const kleur = __importStar(require("kleur"));
 const fs = __importStar(require("fs"));
 const path = __importStar(require("path"));
@@ -84,8 +84,7 @@ function parseTokens(descriptor, tokens) {
         decimals: new bignumber_js_1.BigNumber(0),
         extras: new taquito_1.MichelsonMap()
     };
-    tokens.push(token);
-    return tokens;
+    return [token].concat(tokens);
 }
 exports.parseTokens = parseTokens;
 function createNftStorage(tokens, owner) {
@@ -137,6 +136,33 @@ function printBalances(balances) {
         console.log(kleur.yellow(`owner: ${kleur.green(b.request.owner)}\ttoken: ${kleur.green(b.request.token_id.toString())}\tbalance: ${kleur.green(b.balance.toString())}`));
     }
 }
+function parseTransfers(description, transfers) {
+    const [from_, to_, token_id] = description.split(',');
+    const tx = {
+        from_,
+        txs: [
+            {
+                to_,
+                token_id: new bignumber_js_1.BigNumber(token_id),
+                amount: new bignumber_js_1.BigNumber(1)
+            }
+        ]
+    };
+    if (transfers.length > 0 && transfers[0].from_ === from_) {
+        //merge last two transfers
+        transfers[0].txs = transfers[0].txs.concat(tx.txs);
+        return transfers;
+    }
+    return [tx].concat(transfers);
+}
+exports.parseTransfers = parseTransfers;
+function transfer(operator, nft, tokens) {
+    return __awaiter(this, void 0, void 0, function* () {
+        console.log('OPER ' + operator);
+        console.log('TX  ' + JSON.stringify(tokens));
+    });
+}
+exports.transfer = transfer;
 function loadFile(filePath) {
     return __awaiter(this, void 0, void 0, function* () {
         return new Promise((resolve, reject) => fs.readFile(filePath, (err, buff) => err ? reject(err) : resolve(buff.toString())));
