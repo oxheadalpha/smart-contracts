@@ -22,7 +22,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getActiveAliasesCfgKey = exports.getActiveNetworkCfg = exports.loadUserConfig = exports.userConfigFileWithExt = void 0;
+exports.getInspectorKey = exports.getActiveAliasesCfgKey = exports.getActiveNetworkCfg = exports.loadUserConfig = exports.userConfigFileWithExt = void 0;
 const conf_1 = __importDefault(require("conf"));
 const path = __importStar(require("path"));
 const fs = __importStar(require("fs"));
@@ -71,3 +71,8 @@ function getActiveAliasesCfgKey(config, validate = true) {
     return aliasesConfigKey;
 }
 exports.getActiveAliasesCfgKey = getActiveAliasesCfgKey;
+function getInspectorKey(config) {
+    const { network, configKey } = getActiveNetworkCfg(config);
+    return `${configKey}.inspector`;
+}
+exports.getInspectorKey = getInspectorKey;

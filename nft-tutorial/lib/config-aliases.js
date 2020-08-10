@@ -28,7 +28,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.removeAlias = exports.addAlias = exports.showAlias = void 0;
+exports.resolveAlias2Address = exports.resolveAlias2Signer = exports.removeAlias = exports.addAlias = exports.showAlias = void 0;
 const kleur = __importStar(require("kleur"));
 const utils_1 = require("@taquito/utils");
 const signer_1 = require("@taquito/signer");
@@ -67,8 +67,10 @@ function addAlias(alias, key_or_address) {
             return;
         }
         const aliasDef = yield validateKey(key_or_address);
-        if (!aliasDef)
+        if (!aliasDef) {
+            console.log(kleur.red('invalid address or secret key'));
             return;
+        }
         config.set(aliasKey, aliasDef);
     });
 }
@@ -81,10 +83,9 @@ function validateKey(key_or_address) {
             try {
                 const signer = yield signer_1.InMemorySigner.fromSecretKey(key_or_address);
                 const address = yield signer.publicKeyHash();
-                return { address, secret: key_or_address };
+                return { address, secret: key_or_address, signer };
             }
             catch (_a) {
-                console.log(kleur.red('invalid address or secret key'));
                 return undefined;
             }
     });
@@ -99,3 +100,48 @@ function removeAlias(alias) {
     config.delete(aliasKey);
 }
 exports.removeAlias = removeAlias;
+function resolveAlias2Signer(alias_or_address, config) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const aliasKey = `${config_util_1.getActiveAliasesCfgKey(config)}.${alias_or_address}`;
+        const aliasDef = config.get(aliasKey);
+        if (aliasDef === null || aliasDef === void 0 ? void 0 : aliasDef.secret) {
+            const ad = yield validateKey(aliasDef.secret);
+            if (ad === null || ad === void 0 ? void 0 : ad.signer)
+                return ad.signer;
+        }
+        if (utils_1.validateAddress(alias_or_address) !== utils_1.ValidationResult.VALID)
+            return cannotResolve(alias_or_address);
+        const ad = findAlias(config, ad => ad.address === alias_or_address);
+        if (!(ad === null || ad === void 0 ? void 0 : ad.secret))
+            return cannotResolve(alias_or_address);
+        return signer_1.InMemorySigner.fromSecretKey(ad.secret);
+    });
+}
+exports.resolveAlias2Signer = resolveAlias2Signer;
+function findAlias(config, predicate) {
+    const aliasesKey = config_util_1.getActiveAliasesCfgKey(config);
+    const allAliases = Object.getOwnPropertyNames(config.get(aliasesKey));
+    for (let a of allAliases) {
+        const aliasKey = `${aliasesKey}.${a}`;
+        const aliasDef = config.get(aliasKey);
+        if (predicate(aliasDef))
+            return aliasDef;
+    }
+    return undefined;
+}
+function resolveAlias2Address(alias_or_address, config) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (utils_1.validateAddress(alias_or_address) === utils_1.ValidationResult.VALID)
+            return alias_or_address;
+        const aliasKey = `${config_util_1.getActiveAliasesCfgKey(config)}.${alias_or_address}`;
+        if (!config.has(aliasKey))
+            return cannotResolve(alias_or_address);
+        const aliasDef = config.get(aliasKey);
+        return aliasDef.address;
+    });
+}
+exports.resolveAlias2Address = resolveAlias2Address;
+function cannotResolve(alias_or_address) {
+    console.log(kleur.red(`${kleur.yellow(alias_or_address)} is not a valid address or configured alias`));
+    return Promise.reject('cannot resolve address or alias');
+}

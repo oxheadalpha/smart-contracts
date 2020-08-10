@@ -19,6 +19,7 @@
   "dependencies": {
     "@taquito/taquito": "^6.3.5-beta.0",
     "@tsed/logger": "^5.5.3",
+    "bignumber.js": "^9.0.0",
     "child_process": "^1.0.2",
     "commander": "^6.0.0",
     "conf": "^7.1.1",

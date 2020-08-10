@@ -1,7 +1,9 @@
+import Conf from 'conf';
 import * as kleur from 'kleur';
 import { validateAddress, ValidationResult } from '@taquito/utils';
 import { InMemorySigner } from '@taquito/signer';
 import { getActiveAliasesCfgKey, loadUserConfig } from './config-util';
+import { stringify } from 'querystring';
 
 export function showAlias(alias: string): void {
   const config = loadUserConfig();
@@ -38,7 +40,10 @@ export async function addAlias(
     return;
   }
   const aliasDef = await validateKey(key_or_address);
-  if (!aliasDef) return;
+  if (!aliasDef) {
+    console.log(kleur.red('invalid address or secret key'));
+    return;
+  }
 
   config.set(aliasKey, aliasDef);
 }
@@ -46,6 +51,7 @@ export async function addAlias(
 interface AliasDef {
   address: string;
   secret?: string;
+  signer?: InMemorySigner;
 }
 async function validateKey(
   key_or_address: string
@@ -56,9 +62,8 @@ async function validateKey(
     try {
       const signer = await InMemorySigner.fromSecretKey(key_or_address);
       const address = await signer.publicKeyHash();
-      return { address, secret: key_or_address };
+      return { address, secret: key_or_address, signer };
     } catch {
-      console.log(kleur.red('invalid address or secret key'));
       return undefined;
     }
 }
@@ -71,4 +76,63 @@ export function removeAlias(alias: string): void {
     return;
   }
   config.delete(aliasKey);
+}
+
+export async function resolveAlias2Signer(
+  alias_or_address: string,
+  config: Conf<Record<string, string>>
+): Promise<InMemorySigner> {
+  const aliasKey = `${getActiveAliasesCfgKey(config)}.${alias_or_address}`;
+  const aliasDef: any = config.get(aliasKey);
+  if (aliasDef?.secret) {
+    const ad = await validateKey(aliasDef.secret);
+    if (ad?.signer) return ad.signer;
+  }
+
+  if (validateAddress(alias_or_address) !== ValidationResult.VALID)
+    return cannotResolve(alias_or_address);
+
+  const ad = findAlias(config, ad => ad.address === alias_or_address);
+  if (!ad?.secret) return cannotResolve(alias_or_address);
+
+  return InMemorySigner.fromSecretKey(ad.secret);
+}
+
+function findAlias(
+  config: Conf<Record<string, string>>,
+  predicate: (aliasDef: any) => boolean
+): any {
+  const aliasesKey = getActiveAliasesCfgKey(config);
+  const allAliases = Object.getOwnPropertyNames(config.get(aliasesKey));
+  for (let a of allAliases) {
+    const aliasKey = `${aliasesKey}.${a}`;
+    const aliasDef: any = config.get(aliasKey);
+    if (predicate(aliasDef)) return aliasDef;
+  }
+  return undefined;
+}
+
+export async function resolveAlias2Address(
+  alias_or_address: string,
+  config: Conf<Record<string, string>>
+): Promise<string> {
+  if (validateAddress(alias_or_address) === ValidationResult.VALID)
+    return alias_or_address;
+
+  const aliasKey = `${getActiveAliasesCfgKey(config)}.${alias_or_address}`;
+  if (!config.has(aliasKey)) return cannotResolve(alias_or_address);
+
+  const aliasDef: any = config.get(aliasKey);
+  return aliasDef.address;
+}
+
+function cannotResolve<T>(alias_or_address: string): Promise<T> {
+  console.log(
+    kleur.red(
+      `${kleur.yellow(
+        alias_or_address
+      )} is not a valid address or configured alias`
+    )
+  );
+  return Promise.reject('cannot resolve address or alias');
 }

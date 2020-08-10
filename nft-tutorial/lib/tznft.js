@@ -76,8 +76,9 @@ commander_1.program
 commander_1.program
     .command('start')
     .alias('s')
+    .option('-b, --bootstrap <alias>', 'alias to use for the helper contract origination', 'bob')
     .description('starts and initializes network provider')
-    .action(bootstrap.start);
+    .action(options => bootstrap.start(options.bootstrap)).passCommandToAction(false);
 commander_1.program
     .command('kill')
     .alias('k')
