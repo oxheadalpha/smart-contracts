@@ -160,7 +160,15 @@ function transfer(operator, nft, tokens) {
     return __awaiter(this, void 0, void 0, function* () {
         const config = config_util_1.loadUserConfig();
         const txs = yield resolveTxAddresses(tokens, config);
-        console.log('RESOLVED ' + JSON.stringify(txs));
+        // console.log('RESOLVED ' + JSON.stringify(txs));
+        const signer = yield config_aliases_1.resolveAlias2Signer(operator, config);
+        const operatorAddress = yield signer.publicKeyHash();
+        const tz = createToolkit(signer, config);
+        console.log(kleur.yellow('transferring tokens...'));
+        const nftContract = yield tz.contract.at(nft);
+        const txOp = yield nftContract.methods.transfer(txs).send();
+        yield txOp.confirmation();
+        console.log(kleur.green('tokens transferred'));
     });
 }
 exports.transfer = transfer;
