@@ -13,13 +13,13 @@ import {
 import { resolveAlias2Signer, resolveAlias2Address } from './config-aliases';
 
 export interface Fa2TransferDestination {
-  to_?: string;
+  to_: string;
   token_id: BigNumber;
   amount: BigNumber;
 }
 
 export interface Fa2Transfer {
-  from_?: string;
+  from_: string;
   txs: Fa2TransferDestination[];
 }
 
@@ -97,7 +97,7 @@ export function parseTokens(
   descriptor: string,
   tokens: TokenMetadata[]
 ): TokenMetadata[] {
-  const [id, symbol, name] = descriptor.split(',');
+  const [id, symbol, name] = descriptor.split(',').map(p => p.trim());
   const token: TokenMetadata = {
     token_id: new BigNumber(id),
     symbol,
@@ -186,7 +186,7 @@ export function parseTransfers(
   description: string,
   transfers: Fa2Transfer[]
 ): Fa2Transfer[] {
-  const [from_, to_, token_id] = description.split(',');
+  const [from_, to_, token_id] = description.split(',').map(p => p.trim());
   const tx: Fa2Transfer = {
     from_,
     txs: [
@@ -211,8 +211,38 @@ export async function transfer(
   nft: string,
   tokens: Fa2Transfer[]
 ): Promise<void> {
-  console.log('OPER ' + operator);
-  console.log('TX  ' + JSON.stringify(tokens));
+  const config = loadUserConfig();
+  const txs = await resolveTxAddresses(tokens, config);
+  console.log('RESOLVED ' + JSON.stringify(txs));
+}
+
+async function resolveTxAddresses(
+  tokens: Fa2Transfer[],
+  config: Conf<Record<string, string>>
+): Promise<Fa2Transfer[]> {
+  return Promise.all(
+    tokens.map(async t => {
+      return {
+        from_: await resolveAlias2Address(t.from_, config),
+        txs: await resolveTxDestinationAddresses(t.txs, config)
+      };
+    })
+  );
+}
+
+async function resolveTxDestinationAddresses(
+  txs: Fa2TransferDestination[],
+  config: Conf<Record<string, string>>
+): Promise<Fa2TransferDestination[]> {
+  return Promise.all(
+    txs.map(async t => {
+      return {
+        to_: await resolveAlias2Address(t.to_, config),
+        amount: t.amount,
+        token_id: t.token_id
+      };
+    })
+  );
 }
 
 async function loadFile(filePath: string): Promise<string> {
