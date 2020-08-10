@@ -9,9 +9,9 @@ DONE    4. start sandbox and wait
 DONE    5. originate balance inspector
 NA      6. LIGO compilation
 DONE    7. originate NFT
-WIP     8. transfer tokens
+DONE    8. transfer tokens
 DONE    9. substitute aliases with addresses/signers
-        10. create testnet config with bootstrap faucet accounts
+WIP     10. create testnet config with bootstrap faucet accounts
         11. Complete readme
 DONE    12. Inspect balances
 NA           12.1 print alias names when inspecting balance
