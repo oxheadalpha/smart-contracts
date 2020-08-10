@@ -88,7 +88,7 @@ program
   .arguments('<owner>')
   .requiredOption(
     '-t, --tokens <tokens...>',
-    'definitions of new tokens, a list of [id, symbol, name]',
+    'definitions of new tokens, a list of "id, symbol, name"',
     contracts.parseTokens, [])
   .action((owner, options) => contracts.mintNfts(owner, options.tokens)).passCommandToAction(false);
 
@@ -97,12 +97,26 @@ program
   .command('get-balance')
   .alias('gb')
   .description('gets NFT balances for the specified owner')
-  .arguments('<operator>')
+  .requiredOption('-op, --operator <operator>', 'address that originates a query')
   .requiredOption('--nft <nft_address>', 'address of the NFT contract')
   .requiredOption('-o, --owner <owner>', 'token owner to check balances')
   .requiredOption('-t, --tokens <tokens...>', 'list of token IDs to check')
-  .action((operator, options)=>contracts.getBalances(
-    operator, options.nft, options.owner, options.tokens)).passCommandToAction(false);
+  .action((options)=>contracts.getBalances(
+    options.operator, options.nft, options.owner, options.tokens)).passCommandToAction(false);
+
+//prettier-ignore
+program
+  .command('transfer')
+  .alias('tx')
+  .description('transfers NFT tokens')
+  .requiredOption('-op, --operator <operator>', 'address that originates a query')
+  .requiredOption('--nft <nft_address>', 'address of the NFT contract')
+  .requiredOption(
+    '-t, --tokens <tokens...>', 
+    'definitions of each transfer, a list of "token_id, from, to"',
+    contracts.parseTransfers, [])
+    .action((options)=>contracts.transfer(
+      options.operator, options.nft, options.tokens)).passCommandToAction(false);
 
 //prettier-ignore
 program
