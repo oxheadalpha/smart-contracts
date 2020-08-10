@@ -5,8 +5,12 @@ import * as path from 'path';
 import { BigNumber } from 'bignumber.js';
 import { TezosToolkit, MichelsonMap } from '@taquito/taquito';
 import { InMemorySigner } from '@taquito/signer';
-import { getActiveNetworkCfg, loadUserConfig } from './config-util';
-import { resolveAlias2Signer } from './config-aliases';
+import {
+  getActiveNetworkCfg,
+  getInspectorKey,
+  loadUserConfig
+} from './config-util';
+import { resolveAlias2Signer, resolveAlias2Address } from './config-aliases';
 
 export interface Fa2TransferDestination {
   to_?: string;
@@ -117,6 +121,66 @@ function createNftStorage(tokens: TokenMetadata[], owner: string) {
     operators: new MichelsonMap(),
     token_metadata
   };
+}
+
+export async function getBalances(
+  operator: string,
+  nft: string,
+  owner: string,
+  tokens: string[]
+): Promise<void> {
+  const config = loadUserConfig();
+
+  const signer = await resolveAlias2Signer(operator, config);
+  const operatorAddress = await signer.publicKeyHash();
+  const tz = createToolkit(signer, config);
+
+  const ownerAddress = await resolveAlias2Address(owner, config);
+
+  const requests: BalanceOfRequest[] = tokens.map(t => {
+    return { token_id: new BigNumber(t), owner: ownerAddress };
+  });
+
+  const inspectorKey = getInspectorKey(config);
+  const inspectorAddress = config.get(inspectorKey);
+  if (!inspectorAddress) {
+    console.log(
+      kleur.red(
+        'Cannot find deployed balance inspector contract.\nTry to kill and start network again.'
+      )
+    );
+    return;
+  }
+
+  console.log(
+    kleur.yellow(
+      `querying NFT contract ${kleur.green(
+        nft
+      )} over balance inspector ${kleur.green(inspectorAddress)}`
+    )
+  );
+  const inspector = await tz.contract.at(inspectorAddress);
+  const balanceOp = await inspector.methods.query(nft, requests).send();
+  await balanceOp.confirmation();
+  const storage = await inspector.storage<InspectorStorage>();
+  if (Array.isArray(storage)) printBalances(storage);
+  else {
+    console.log(kleur.red('invalid inspector storage state'));
+    return Promise.reject('Invalid inspector storage state Empty.');
+  }
+}
+
+function printBalances(balances: BalanceOfResponse[]): void {
+  console.log(kleur.green('requested NFT balances:'));
+  for (let b of balances) {
+    console.log(
+      kleur.yellow(
+        `owner: ${kleur.green(b.request.owner)}\ttoken: ${kleur.green(
+          b.request.token_id.toString()
+        )}\tbalance: ${kleur.green(b.balance.toString())}`
+      )
+    );
+  }
 }
 
 async function loadFile(filePath: string): Promise<string> {

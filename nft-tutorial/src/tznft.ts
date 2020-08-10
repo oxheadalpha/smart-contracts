@@ -90,7 +90,19 @@ program
     '-t, --tokens <tokens...>',
     'definitions of new tokens, a list of [id, symbol, name]',
     contracts.parseTokens, [])
-  .action((cmd, options) => contracts.mintNfts(cmd, options.tokens)).passCommandToAction(false);
+  .action((owner, options) => contracts.mintNfts(owner, options.tokens)).passCommandToAction(false);
+
+//prettier-ignore
+program
+  .command('get-balance')
+  .alias('gb')
+  .description('gets NFT balances for the specified owner')
+  .arguments('<operator>')
+  .requiredOption('--nft <nft_address>', 'address of the NFT contract')
+  .requiredOption('-o, --owner <owner>', 'token owner to check balances')
+  .requiredOption('-t, --tokens <tokens...>', 'list of token IDs to check')
+  .action((operator, options)=>contracts.getBalances(
+    operator, options.nft, options.owner, options.tokens)).passCommandToAction(false);
 
 //prettier-ignore
 program
