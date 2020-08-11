@@ -28,14 +28,14 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.transfer = exports.parseTransfers = exports.getBalances = exports.parseTokens = exports.mintNfts = exports.originateInspector = exports.testNode = exports.createToolkit = void 0;
+exports.transfer = exports.parseTransfers = exports.getBalances = exports.parseTokens = exports.mintNfts = exports.originateInspector = exports.createToolkit = void 0;
 const kleur = __importStar(require("kleur"));
 const path = __importStar(require("path"));
 const bignumber_js_1 = require("bignumber.js");
 const taquito_1 = require("@taquito/taquito");
-const signer_1 = require("@taquito/signer");
 const config_util_1 = require("./config-util");
 const config_aliases_1 = require("./config-aliases");
+const fa2 = __importStar(require("./fa2-interface"));
 function createToolkit(signer, config) {
     const { network, configKey } = config_util_1.getActiveNetworkCfg(config);
     const providerUrl = config.get(`${configKey}.providerUrl`);
@@ -53,34 +53,6 @@ function createToolkit(signer, config) {
     return toolkit;
 }
 exports.createToolkit = createToolkit;
-function testNode() {
-    return __awaiter(this, void 0, void 0, function* () {
-        try {
-            console.log('NODDING');
-            const signer = yield signer_1.InMemorySigner.fromFundraiser('zpbvthys.zrhzykdu@tezos.example.org', 'MDibu76MwG', 'smooth series steel before firm security clog puppy hard spice cotton pizza rent whip crane');
-            const toolkit = new taquito_1.TezosToolkit();
-            toolkit.setProvider({
-                rpc: 'https://testnet-tezos.giganode.io',
-                signer
-            });
-            const secretKey = yield toolkit.signer.secretKey();
-            console.log('SECRET', secretKey);
-            // console.log('ACTIVATING');
-            // const aop = await toolkit.tz.activate(
-            //   'tz1f6LtT8nER9aYaaNb7PPJq7rkhwpcXexU6',
-            //   'd7f3fa4d7ba43804b0eb9725d6c4543c94107bc5'
-            // );
-            // await aop.confirmation();
-            console.log('BALANCING');
-            const bal = yield toolkit.tz.getBalance('tz1f6LtT8nER9aYaaNb7PPJq7rkhwpcXexU6');
-            console.log('FAUCET BAL ' + bal);
-        }
-        catch (err) {
-            console.log(JSON.stringify(err));
-        }
-    });
-}
-exports.testNode = testNode;
 function originateInspector(tezos) {
     return __awaiter(this, void 0, void 0, function* () {
         const code = yield config_util_1.loadFile(path.join(__dirname, '../ligo/out/inspector.tz'));
@@ -132,7 +104,6 @@ function getBalances(operator, nft, owner, tokens) {
     return __awaiter(this, void 0, void 0, function* () {
         const config = config_util_1.loadUserConfig();
         const signer = yield config_aliases_1.resolveAlias2Signer(operator, config);
-        const operatorAddress = yield signer.publicKeyHash();
         const tz = createToolkit(signer, config);
         const ownerAddress = yield config_aliases_1.resolveAlias2Address(owner, config);
         const requests = tokens.map(t => {
@@ -144,7 +115,7 @@ function getBalances(operator, nft, owner, tokens) {
             console.log(kleur.red('Cannot find deployed balance inspector contract.\nTry to kill and start network again.'));
             return;
         }
-        console.log(kleur.yellow(`querying NFT contract ${kleur.green(nft)} over balance inspector ${kleur.green(inspectorAddress)}`));
+        console.log(kleur.yellow(`querying NFT contract ${kleur.green(nft)} using balance inspector ${kleur.green(inspectorAddress)}`));
         const inspector = yield tz.contract.at(inspectorAddress);
         const balanceOp = yield inspector.methods.query(nft, requests).send();
         yield balanceOp.confirmation();
@@ -177,7 +148,7 @@ function parseTransfers(description, transfers) {
         ]
     };
     if (transfers.length > 0 && transfers[0].from_ === from_) {
-        //merge last two transfers
+        //merge last two transfers if their from_ addresses are the same
         transfers[0].txs = transfers[0].txs.concat(tx.txs);
         return transfers;
     }
@@ -188,37 +159,34 @@ function transfer(operator, nft, tokens) {
     return __awaiter(this, void 0, void 0, function* () {
         const config = config_util_1.loadUserConfig();
         const txs = yield resolveTxAddresses(tokens, config);
-        // console.log('RESOLVED ' + JSON.stringify(txs));
         const signer = yield config_aliases_1.resolveAlias2Signer(operator, config);
         const operatorAddress = yield signer.publicKeyHash();
         const tz = createToolkit(signer, config);
-        console.log(kleur.yellow('transferring tokens...'));
-        const nftContract = yield tz.contract.at(nft);
-        const txOp = yield nftContract.methods.transfer(txs).send();
-        yield txOp.confirmation();
-        console.log(kleur.green('tokens transferred'));
+        yield fa2.transfer(nft, tz, txs);
     });
 }
 exports.transfer = transfer;
 function resolveTxAddresses(tokens, config) {
     return __awaiter(this, void 0, void 0, function* () {
-        return Promise.all(tokens.map((t) => __awaiter(this, void 0, void 0, function* () {
+        const resolved = tokens.map((t) => __awaiter(this, void 0, void 0, function* () {
             return {
                 from_: yield config_aliases_1.resolveAlias2Address(t.from_, config),
                 txs: yield resolveTxDestinationAddresses(t.txs, config)
             };
-        })));
+        }));
+        return Promise.all(resolved);
     });
 }
 function resolveTxDestinationAddresses(txs, config) {
     return __awaiter(this, void 0, void 0, function* () {
-        return Promise.all(txs.map((t) => __awaiter(this, void 0, void 0, function* () {
+        const resolved = txs.map((t) => __awaiter(this, void 0, void 0, function* () {
             return {
                 to_: yield config_aliases_1.resolveAlias2Address(t.to_, config),
                 amount: t.amount,
                 token_id: t.token_id
             };
-        })));
+        }));
+        return Promise.all(resolved);
     });
 }
 function originateContract(tz, code, storage, name) {

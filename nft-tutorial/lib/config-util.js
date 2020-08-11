@@ -46,9 +46,10 @@ function loadUserConfig() {
             serialize: v => JSON.stringify(v, null, 2)
         });
     else {
-        console.log(kleur.red('no tznft.json config file found'));
-        console.log(`Try to run ${kleur.green('tznft config init')} command to create default config`);
-        throw new Error('no tznft.json config file found');
+        const msg = 'no tznft.json config file found';
+        console.log(kleur.red(msg));
+        suggestCommand('config-int');
+        throw new Error(msg);
     }
 }
 exports.loadUserConfig = loadUserConfig;
@@ -56,21 +57,21 @@ function getActiveNetworkCfg(config) {
     const network = config.get('activeNetwork');
     if (!network) {
         console.log(kleur.red('No active network selected'));
-        console.log(kleur.red(`Try to run ${kleur.yellow('tznft config set-network <network>')} command`));
+        suggestCommand('set-network <network>');
         throw new Error('No active network selected');
     }
     const configKey = `availableNetworks.${network}`;
     if (!config.has(configKey)) {
         const msg = `Currently active network ${kleur.yellow(network)}  is not configured`;
         console.log(kleur.red(msg));
-        console.log(kleur.red(`Try to select configured network by running ${kleur.yellow('tznft config set-network <network>')} command`));
+        suggestCommand('set-network <network>');
         throw new Error(msg);
     }
     return { network, configKey };
 }
 exports.getActiveNetworkCfg = getActiveNetworkCfg;
 function getActiveAliasesCfgKey(config, validate = true) {
-    const { network, configKey } = getActiveNetworkCfg(config);
+    const { configKey } = getActiveNetworkCfg(config);
     const aliasesConfigKey = `${configKey}.aliases`;
     if (!config.has(aliasesConfigKey) && validate) {
         const msg = 'there are no configured account aliases';
@@ -81,7 +82,7 @@ function getActiveAliasesCfgKey(config, validate = true) {
 }
 exports.getActiveAliasesCfgKey = getActiveAliasesCfgKey;
 function getInspectorKey(config) {
-    const { network, configKey } = getActiveNetworkCfg(config);
+    const { configKey } = getActiveNetworkCfg(config);
     return `${configKey}.inspector`;
 }
 exports.getInspectorKey = getInspectorKey;
@@ -96,3 +97,6 @@ function loadFile(filePath) {
     });
 }
 exports.loadFile = loadFile;
+function suggestCommand(cmd) {
+    console.log(`Try to run ${kleur.green(`tznft ${cmd}`)} command to create default config`);
+}

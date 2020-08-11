@@ -1,6 +1,5 @@
 import Conf from 'conf';
 import * as kleur from 'kleur';
-import * as fs from 'fs';
 import * as path from 'path';
 import { BigNumber } from 'bignumber.js';
 import { TezosToolkit, MichelsonMap } from '@taquito/taquito';
@@ -12,37 +11,9 @@ import {
   loadFile
 } from './config-util';
 import { resolveAlias2Signer, resolveAlias2Address } from './config-aliases';
+import * as fa2 from './fa2-interface';
 
-export interface Fa2TransferDestination {
-  to_: string;
-  token_id: BigNumber;
-  amount: BigNumber;
-}
-
-export interface Fa2Transfer {
-  from_: string;
-  txs: Fa2TransferDestination[];
-}
-
-export interface BalanceOfRequest {
-  owner: string;
-  token_id: BigNumber;
-}
-
-export interface BalanceOfResponse {
-  balance: BigNumber;
-  request: BalanceOfRequest;
-}
-
-type InspectorStorage = BalanceOfResponse[] | {};
-
-interface TokenMetadata {
-  token_id: BigNumber;
-  symbol: string;
-  name: string;
-  decimals: BigNumber;
-  extras: MichelsonMap<string, string>;
-}
+type InspectorStorage = fa2.BalanceOfResponse[] | {};
 
 export function createToolkit(
   signer: InMemorySigner,
@@ -67,42 +38,6 @@ export function createToolkit(
   return toolkit;
 }
 
-export async function testNode() {
-  try {
-    console.log('NODDING');
-
-    const signer = await InMemorySigner.fromFundraiser(
-      'zpbvthys.zrhzykdu@tezos.example.org',
-      'MDibu76MwG',
-      'smooth series steel before firm security clog puppy hard spice cotton pizza rent whip crane'
-    );
-
-    const toolkit = new TezosToolkit();
-    toolkit.setProvider({
-      rpc: 'https://testnet-tezos.giganode.io',
-      signer
-    });
-
-    const secretKey = await toolkit.signer.secretKey();
-    console.log('SECRET', secretKey);
-
-    // console.log('ACTIVATING');
-    // const aop = await toolkit.tz.activate(
-    //   'tz1f6LtT8nER9aYaaNb7PPJq7rkhwpcXexU6',
-    //   'd7f3fa4d7ba43804b0eb9725d6c4543c94107bc5'
-    // );
-    // await aop.confirmation();
-
-    console.log('BALANCING');
-    const bal = await toolkit.tz.getBalance(
-      'tz1f6LtT8nER9aYaaNb7PPJq7rkhwpcXexU6'
-    );
-    console.log('FAUCET BAL ' + bal);
-  } catch (err) {
-    console.log(JSON.stringify(err));
-  }
-}
-
 export async function originateInspector(tezos: TezosToolkit): Promise<string> {
   const code = await loadFile(path.join(__dirname, '../ligo/out/inspector.tz'));
   const storage = `(Left Unit)`;
@@ -111,7 +46,7 @@ export async function originateInspector(tezos: TezosToolkit): Promise<string> {
 
 export async function mintNfts(
   owner: string,
-  tokens: TokenMetadata[]
+  tokens: fa2.TokenMetadata[]
 ): Promise<void> {
   const config = loadUserConfig();
   const signer = await resolveAlias2Signer(owner, config);
@@ -132,10 +67,10 @@ export async function mintNfts(
 
 export function parseTokens(
   descriptor: string,
-  tokens: TokenMetadata[]
-): TokenMetadata[] {
+  tokens: fa2.TokenMetadata[]
+): fa2.TokenMetadata[] {
   const [id, symbol, name] = descriptor.split(',').map(p => p.trim());
-  const token: TokenMetadata = {
+  const token: fa2.TokenMetadata = {
     token_id: new BigNumber(id),
     symbol,
     name,
@@ -145,9 +80,9 @@ export function parseTokens(
   return [token].concat(tokens);
 }
 
-function createNftStorage(tokens: TokenMetadata[], owner: string) {
+function createNftStorage(tokens: fa2.TokenMetadata[], owner: string) {
   const ledger = new MichelsonMap<BigNumber, string>();
-  const token_metadata = new MichelsonMap<BigNumber, TokenMetadata>();
+  const token_metadata = new MichelsonMap<BigNumber, fa2.TokenMetadata>();
   for (let meta of tokens) {
     ledger.set(meta.token_id, owner);
     token_metadata.set(meta.token_id, meta);
@@ -168,12 +103,9 @@ export async function getBalances(
   const config = loadUserConfig();
 
   const signer = await resolveAlias2Signer(operator, config);
-  const operatorAddress = await signer.publicKeyHash();
   const tz = createToolkit(signer, config);
-
   const ownerAddress = await resolveAlias2Address(owner, config);
-
-  const requests: BalanceOfRequest[] = tokens.map(t => {
+  const requests: fa2.BalanceOfRequest[] = tokens.map(t => {
     return { token_id: new BigNumber(t), owner: ownerAddress };
   });
 
@@ -192,7 +124,7 @@ export async function getBalances(
     kleur.yellow(
       `querying NFT contract ${kleur.green(
         nft
-      )} over balance inspector ${kleur.green(inspectorAddress)}`
+      )} using balance inspector ${kleur.green(inspectorAddress)}`
     )
   );
   const inspector = await tz.contract.at(inspectorAddress);
@@ -206,7 +138,7 @@ export async function getBalances(
   }
 }
 
-function printBalances(balances: BalanceOfResponse[]): void {
+function printBalances(balances: fa2.BalanceOfResponse[]): void {
   console.log(kleur.green('requested NFT balances:'));
   for (let b of balances) {
     console.log(
@@ -221,10 +153,10 @@ function printBalances(balances: BalanceOfResponse[]): void {
 
 export function parseTransfers(
   description: string,
-  transfers: Fa2Transfer[]
-): Fa2Transfer[] {
+  transfers: fa2.Fa2Transfer[]
+): fa2.Fa2Transfer[] {
   const [from_, to_, token_id] = description.split(',').map(p => p.trim());
-  const tx: Fa2Transfer = {
+  const tx: fa2.Fa2Transfer = {
     from_,
     txs: [
       {
@@ -235,7 +167,7 @@ export function parseTransfers(
     ]
   };
   if (transfers.length > 0 && transfers[0].from_ === from_) {
-    //merge last two transfers
+    //merge last two transfers if their from_ addresses are the same
     transfers[0].txs = transfers[0].txs.concat(tx.txs);
     return transfers;
   }
@@ -246,49 +178,43 @@ export function parseTransfers(
 export async function transfer(
   operator: string,
   nft: string,
-  tokens: Fa2Transfer[]
+  tokens: fa2.Fa2Transfer[]
 ): Promise<void> {
   const config = loadUserConfig();
   const txs = await resolveTxAddresses(tokens, config);
-  // console.log('RESOLVED ' + JSON.stringify(txs));
+
   const signer = await resolveAlias2Signer(operator, config);
   const operatorAddress = await signer.publicKeyHash();
   const tz = createToolkit(signer, config);
 
-  console.log(kleur.yellow('transferring tokens...'));
-  const nftContract = await tz.contract.at(nft);
-  const txOp = await nftContract.methods.transfer(txs).send();
-  await txOp.confirmation();
-  console.log(kleur.green('tokens transferred'));
+  await fa2.transfer(nft, tz, txs);
 }
 
 async function resolveTxAddresses(
-  tokens: Fa2Transfer[],
+  tokens: fa2.Fa2Transfer[],
   config: Conf<Record<string, string>>
-): Promise<Fa2Transfer[]> {
-  return Promise.all(
-    tokens.map(async t => {
-      return {
-        from_: await resolveAlias2Address(t.from_, config),
-        txs: await resolveTxDestinationAddresses(t.txs, config)
-      };
-    })
-  );
+): Promise<fa2.Fa2Transfer[]> {
+  const resolved = tokens.map(async t => {
+    return {
+      from_: await resolveAlias2Address(t.from_, config),
+      txs: await resolveTxDestinationAddresses(t.txs, config)
+    };
+  });
+  return Promise.all(resolved);
 }
 
 async function resolveTxDestinationAddresses(
-  txs: Fa2TransferDestination[],
+  txs: fa2.Fa2TransferDestination[],
   config: Conf<Record<string, string>>
-): Promise<Fa2TransferDestination[]> {
-  return Promise.all(
-    txs.map(async t => {
-      return {
-        to_: await resolveAlias2Address(t.to_, config),
-        amount: t.amount,
-        token_id: t.token_id
-      };
-    })
-  );
+): Promise<fa2.Fa2TransferDestination[]> {
+  const resolved = txs.map(async t => {
+    return {
+      to_: await resolveAlias2Address(t.to_, config),
+      amount: t.amount,
+      token_id: t.token_id
+    };
+  });
+  return Promise.all(resolved);
 }
 
 async function originateContract(
@@ -301,7 +227,6 @@ async function originateContract(
     typeof storage === 'string' ? { code, init: storage } : { code, storage };
   try {
     const originationOp = await tz.contract.originate(origParam);
-
     const contract = await originationOp.contract();
     return contract.address;
   } catch (error) {
