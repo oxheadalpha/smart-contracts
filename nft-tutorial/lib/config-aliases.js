@@ -38,29 +38,33 @@ const contracts_1 = require("./contracts");
 function showAlias(alias) {
     const config = config_util_1.loadUserConfig();
     const aliasesKey = config_util_1.getActiveAliasesCfgKey(config, false);
-    if (alias) {
-        const aliasKey = `${aliasesKey}.${alias}`;
-        if (config.has(aliasKey)) {
-            const aliasDef = config.get(aliasKey);
-            console.log(kleur.yellow(formatAlias(alias, aliasDef)));
-        }
-        else
-            console.log(kleur.red(`alias ${kleur.yellow(alias)} is not configured`));
-    }
-    else if (config.has(aliasesKey)) {
-        const allAliases = Object.getOwnPropertyNames(config.get(aliasesKey));
+    if (alias)
+        printAlias(alias, aliasesKey, config);
+    else
+        printAllAliases(aliasesKey, config);
+}
+exports.showAlias = showAlias;
+function printAllAliases(aliasesKey, config) {
+    const allAliasesCfg = config.get(aliasesKey);
+    if (allAliasesCfg) {
+        const allAliases = Object.getOwnPropertyNames(allAliasesCfg);
         for (let a of allAliases) {
-            const aliasKey = `${aliasesKey}.${a}`;
-            const aliasDef = config.get(aliasKey);
-            console.log(kleur.yellow(formatAlias(a, aliasDef)));
+            printAlias(a, aliasesKey, config);
         }
     }
     else
         console.log(kleur.yellow('there are no configured aliases'));
 }
-exports.showAlias = showAlias;
+function printAlias(alias, aliasesKey, config) {
+    const aliasKey = `${aliasesKey}.${alias}`;
+    const aliasDef = config.get(aliasKey);
+    if (aliasDef)
+        console.log(formatAlias(alias, aliasDef));
+    else
+        console.log(kleur.red(`alias ${kleur.yellow(alias)} is not configured`));
+}
 function formatAlias(alias, def) {
-    return `${alias}\t${def.address}\t${def.secret ? def.secret : ''}`;
+    return kleur.yellow(`${alias}\t${def.address}\t${def.secret ? def.secret : ''}`);
 }
 function addAlias(alias, key_or_address) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -78,6 +82,7 @@ function addAlias(alias, key_or_address) {
                 address: aliasDef.address,
                 secret: aliasDef.secret
             });
+            console.log(kleur.yellow(`alias ${kleur.green(alias)} has been added`));
         }
     });
 }
@@ -92,8 +97,8 @@ function addAliasFromFaucet(alias, faucetFile) {
         const faucet = JSON.parse(faucetContent);
         //create signer
         const signer = yield signer_1.InMemorySigner.fromFundraiser(faucet.email, faucet.password, faucet.mnemonic.join(' '));
-        const secretKey = yield signer.secretKey();
         yield activateFaucet(signer, faucet.secret);
+        const secretKey = yield signer.secretKey();
         yield addAlias(alias, secretKey);
     });
 }
@@ -135,6 +140,7 @@ function removeAlias(alias) {
         return;
     }
     config.delete(aliasKey);
+    console.log(kleur.yellow(`alias ${kleur.green(alias)} has been deleted`));
 }
 exports.removeAlias = removeAlias;
 function resolveAlias2Signer(alias_or_address, config) {

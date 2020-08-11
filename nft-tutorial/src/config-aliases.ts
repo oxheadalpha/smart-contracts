@@ -13,25 +13,40 @@ import { createToolkit } from './contracts';
 export function showAlias(alias: string): void {
   const config = loadUserConfig();
   const aliasesKey = getActiveAliasesCfgKey(config, false);
-  if (alias) {
-    const aliasKey = `${aliasesKey}.${alias}`;
-    if (config.has(aliasKey)) {
-      const aliasDef: any = config.get(aliasKey);
-      console.log(kleur.yellow(formatAlias(alias, aliasDef)));
-    } else
-      console.log(kleur.red(`alias ${kleur.yellow(alias)} is not configured`));
-  } else if (config.has(aliasesKey)) {
-    const allAliases = Object.getOwnPropertyNames(config.get(aliasesKey));
+
+  if (alias) printAlias(alias, aliasesKey, config);
+  else printAllAliases(aliasesKey, config);
+}
+
+function printAllAliases(
+  aliasesKey: string,
+  config: Conf<Record<string, string>>
+) {
+  const allAliasesCfg = config.get(aliasesKey);
+  if (allAliasesCfg) {
+    const allAliases = Object.getOwnPropertyNames(allAliasesCfg);
     for (let a of allAliases) {
-      const aliasKey = `${aliasesKey}.${a}`;
-      const aliasDef: any = config.get(aliasKey);
-      console.log(kleur.yellow(formatAlias(a, aliasDef)));
+      printAlias(a, aliasesKey, config);
     }
   } else console.log(kleur.yellow('there are no configured aliases'));
 }
 
+function printAlias(
+  alias: string,
+  aliasesKey: string,
+  config: Conf<Record<string, string>>
+) {
+  const aliasKey = `${aliasesKey}.${alias}`;
+  const aliasDef = config.get(aliasKey);
+
+  if (aliasDef) console.log(formatAlias(alias, aliasDef));
+  else console.log(kleur.red(`alias ${kleur.yellow(alias)} is not configured`));
+}
+
 function formatAlias(alias: string, def: any): string {
-  return `${alias}\t${def.address}\t${def.secret ? def.secret : ''}`;
+  return kleur.yellow(
+    `${alias}\t${def.address}\t${def.secret ? def.secret : ''}`
+  );
 }
 
 export async function addAlias(
@@ -51,6 +66,7 @@ export async function addAlias(
       address: aliasDef.address,
       secret: aliasDef.secret
     });
+    console.log(kleur.yellow(`alias ${kleur.green(alias)} has been added`));
   }
 }
 
@@ -71,9 +87,9 @@ export async function addAliasFromFaucet(
     faucet.password,
     faucet.mnemonic.join(' ')
   );
-  const secretKey = await signer.secretKey();
-
   await activateFaucet(signer, faucet.secret);
+
+  const secretKey = await signer.secretKey();
   await addAlias(alias, secretKey);
 }
 
@@ -121,6 +137,7 @@ export function removeAlias(alias: string): void {
     return;
   }
   config.delete(aliasKey);
+  console.log(kleur.yellow(`alias ${kleur.green(alias)} has been deleted`));
 }
 
 export async function resolveAlias2Signer(

@@ -14,13 +14,10 @@ export function loadUserConfig(): Conf<Record<string, string>> {
       serialize: v => JSON.stringify(v, null, 2)
     });
   else {
-    console.log(kleur.red('no tznft.json config file found'));
-    console.log(
-      `Try to run ${kleur.green(
-        'tznft config init'
-      )} command to create default config`
-    );
-    throw new Error('no tznft.json config file found');
+    const msg = 'no tznft.json config file found';
+    console.log(kleur.red(msg));
+    suggestCommand('config-int');
+    throw new Error(msg);
   }
 }
 
@@ -35,13 +32,7 @@ export function getActiveNetworkCfg(
   const network = config.get('activeNetwork');
   if (!network) {
     console.log(kleur.red('No active network selected'));
-    console.log(
-      kleur.red(
-        `Try to run ${kleur.yellow(
-          'tznft config set-network <network>'
-        )} command`
-      )
-    );
+    suggestCommand('set-network <network>');
     throw new Error('No active network selected');
   }
 
@@ -51,13 +42,7 @@ export function getActiveNetworkCfg(
       network
     )}  is not configured`;
     console.log(kleur.red(msg));
-    console.log(
-      kleur.red(
-        `Try to select configured network by running ${kleur.yellow(
-          'tznft config set-network <network>'
-        )} command`
-      )
-    );
+    suggestCommand('set-network <network>');
     throw new Error(msg);
   }
 
@@ -68,7 +53,7 @@ export function getActiveAliasesCfgKey(
   config: Conf<Record<string, string>>,
   validate: boolean = true
 ): string {
-  const { network, configKey } = getActiveNetworkCfg(config);
+  const { configKey } = getActiveNetworkCfg(config);
 
   const aliasesConfigKey = `${configKey}.aliases`;
   if (!config.has(aliasesConfigKey) && validate) {
@@ -81,7 +66,7 @@ export function getActiveAliasesCfgKey(
 }
 
 export function getInspectorKey(config: Conf<Record<string, string>>): string {
-  const { network, configKey } = getActiveNetworkCfg(config);
+  const { configKey } = getActiveNetworkCfg(config);
   return `${configKey}.inspector`;
 }
 
@@ -93,4 +78,10 @@ export async function loadFile(filePath: string): Promise<string> {
         err ? reject(err) : resolve(buff.toString())
       );
   });
+}
+
+function suggestCommand(cmd: string) {
+  console.log(
+    `Try to run ${kleur.green(`tznft ${cmd}`)} command to create default config`
+  );
 }
