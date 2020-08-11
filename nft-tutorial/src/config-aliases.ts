@@ -1,9 +1,14 @@
 import Conf from 'conf';
 import * as kleur from 'kleur';
+import * as path from 'path';
 import { validateAddress, ValidationResult } from '@taquito/utils';
 import { InMemorySigner } from '@taquito/signer';
-import { getActiveAliasesCfgKey, loadUserConfig } from './config-util';
-import { stringify } from 'querystring';
+import {
+  getActiveAliasesCfgKey,
+  loadUserConfig,
+  loadFile
+} from './config-util';
+import { createToolkit } from './contracts';
 
 export function showAlias(alias: string): void {
   const config = loadUserConfig();
@@ -40,12 +45,52 @@ export async function addAlias(
     return;
   }
   const aliasDef = await validateKey(key_or_address);
-  if (!aliasDef) {
-    console.log(kleur.red('invalid address or secret key'));
-    return;
+  if (!aliasDef) console.log(kleur.red('invalid address or secret key'));
+  else {
+    config.set(aliasKey, {
+      address: aliasDef.address,
+      secret: aliasDef.secret
+    });
   }
+}
 
-  config.set(aliasKey, aliasDef);
+export async function addAliasFromFaucet(
+  alias: string,
+  faucetFile: string
+): Promise<void> {
+  //load file
+  const filePath = path.isAbsolute(faucetFile)
+    ? faucetFile
+    : path.join(process.cwd(), faucetFile);
+  const faucetContent = await loadFile(filePath);
+  const faucet = JSON.parse(faucetContent);
+
+  //create signer
+  const signer = await InMemorySigner.fromFundraiser(
+    faucet.email,
+    faucet.password,
+    faucet.mnemonic.join(' ')
+  );
+  const secretKey = await signer.secretKey();
+
+  await activateFaucet(signer, faucet.secret);
+  await addAlias(alias, secretKey);
+}
+
+async function activateFaucet(
+  signer: InMemorySigner,
+  secret: string
+): Promise<void> {
+  const config = loadUserConfig();
+  const tz = createToolkit(signer, config);
+  const address = await signer.publicKeyHash();
+  const bal = await tz.tz.getBalance(address);
+  if (bal.eq(0)) {
+    console.log(kleur.yellow('activating faucet account...'));
+    const op = await tz.tz.activate(address, secret);
+    await op.confirmation();
+    console.log(kleur.yellow('faucet account activated'));
+  }
 }
 
 interface AliasDef {

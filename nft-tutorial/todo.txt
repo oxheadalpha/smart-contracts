@@ -12,11 +12,17 @@ DONE    7. originate NFT
 DONE    8. transfer tokens
 DONE    9. substitute aliases with addresses/signers
 WIP     10. create testnet config with bootstrap faucet accounts
+            10.1 add alias from the faucet file (activate if necessary)
         11. Complete readme
 DONE    12. Inspect balances
 NA           12.1 print alias names when inspecting balance
         13. update operators
+        14. get token metadata
+            14.1 metadata inspector contract
+            14.2 metadata cli
 PHASE TWO
         1. Editable contracts
-        2. write assets tutorial
+        2. write complete readme
         3. custom contract origination
+        4. custom metadata
+        5. write tutorial

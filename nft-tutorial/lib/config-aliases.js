@@ -28,11 +28,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.resolveAlias2Address = exports.resolveAlias2Signer = exports.removeAlias = exports.addAlias = exports.showAlias = void 0;
+exports.resolveAlias2Address = exports.resolveAlias2Signer = exports.removeAlias = exports.addAliasFromFaucet = exports.addAlias = exports.showAlias = void 0;
 const kleur = __importStar(require("kleur"));
+const path = __importStar(require("path"));
 const utils_1 = require("@taquito/utils");
 const signer_1 = require("@taquito/signer");
 const config_util_1 = require("./config-util");
+const contracts_1 = require("./contracts");
 function showAlias(alias) {
     const config = config_util_1.loadUserConfig();
     const aliasesKey = config_util_1.getActiveAliasesCfgKey(config, false);
@@ -69,14 +71,47 @@ function addAlias(alias, key_or_address) {
             return;
         }
         const aliasDef = yield validateKey(key_or_address);
-        if (!aliasDef) {
+        if (!aliasDef)
             console.log(kleur.red('invalid address or secret key'));
-            return;
+        else {
+            config.set(aliasKey, {
+                address: aliasDef.address,
+                secret: aliasDef.secret
+            });
         }
-        config.set(aliasKey, aliasDef);
     });
 }
 exports.addAlias = addAlias;
+function addAliasFromFaucet(alias, faucetFile) {
+    return __awaiter(this, void 0, void 0, function* () {
+        //load file
+        const filePath = path.isAbsolute(faucetFile)
+            ? faucetFile
+            : path.join(process.cwd(), faucetFile);
+        const faucetContent = yield config_util_1.loadFile(filePath);
+        const faucet = JSON.parse(faucetContent);
+        //create signer
+        const signer = yield signer_1.InMemorySigner.fromFundraiser(faucet.email, faucet.password, faucet.mnemonic.join(' '));
+        const secretKey = yield signer.secretKey();
+        yield activateFaucet(signer, faucet.secret);
+        yield addAlias(alias, secretKey);
+    });
+}
+exports.addAliasFromFaucet = addAliasFromFaucet;
+function activateFaucet(signer, secret) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const config = config_util_1.loadUserConfig();
+        const tz = contracts_1.createToolkit(signer, config);
+        const address = yield signer.publicKeyHash();
+        const bal = yield tz.tz.getBalance(address);
+        if (bal.eq(0)) {
+            console.log(kleur.yellow('activating faucet account...'));
+            const op = yield tz.tz.activate(address, secret);
+            yield op.confirmation();
+            console.log(kleur.yellow('faucet account activated'));
+        }
+    });
+}
 function validateKey(key_or_address) {
     return __awaiter(this, void 0, void 0, function* () {
         if (utils_1.validateAddress(key_or_address) === utils_1.ValidationResult.VALID)
