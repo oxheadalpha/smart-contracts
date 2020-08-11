@@ -114,7 +114,7 @@ commander_1.program
     .description('transfers NFT tokens')
     .requiredOption('-op, --operator <operator>', 'address that originates a transfer')
     .requiredOption('--nft <nft_address>', 'address of the NFT contract')
-    .requiredOption('-t, --tokens <tokens...>', 'definitions of each transfer, a list of "token_id, from, to"', contracts.parseTransfers, [])
+    .requiredOption('-t, --tokens <tokens...>', 'definitions of each transfer, a list of "from, to, token_id"', contracts.parseTransfers, [])
     .action((options) => contracts.transfer(options.operator, options.nft, options.tokens)).passCommandToAction(false);
 //prettier-ignore
 // program

@@ -121,7 +121,7 @@ program
   .requiredOption('--nft <nft_address>', 'address of the NFT contract')
   .requiredOption(
     '-t, --tokens <tokens...>', 
-    'definitions of each transfer, a list of "token_id, from, to"',
+    'definitions of each transfer, a list of "from, to, token_id"',
     contracts.parseTransfers, [])
     .action((options)=>contracts.transfer(
       options.operator, options.nft, options.tokens)).passCommandToAction(false);
