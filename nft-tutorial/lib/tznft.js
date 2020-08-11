@@ -62,6 +62,13 @@ commander_1.program
     .action(aliasConf.addAlias).passCommandToAction(false);
 //prettier-ignore
 commander_1.program
+    .command('add-alias-faucet')
+    .alias('addaf')
+    .description('adds new alias to the configuration from the faucet json file')
+    .arguments('<alias> <faucet_file>')
+    .action(aliasConf.addAliasFromFaucet).passCommandToAction(false);
+//prettier-ignore
+commander_1.program
     .command('remove-alias')
     .alias('rma')
     .description('removes alias from the configuration')
@@ -109,6 +116,10 @@ commander_1.program
     .requiredOption('--nft <nft_address>', 'address of the NFT contract')
     .requiredOption('-t, --tokens <tokens...>', 'definitions of each transfer, a list of "token_id, from, to"', contracts.parseTransfers, [])
     .action((options) => contracts.transfer(options.operator, options.nft, options.tokens)).passCommandToAction(false);
+//prettier-ignore
+// program
+//   .command('node')
+//   .action(contracts.testNode)
 //prettier-ignore
 commander_1.program
     .command('config-show-all')

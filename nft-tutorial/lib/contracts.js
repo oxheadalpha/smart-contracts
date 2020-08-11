@@ -28,12 +28,12 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.transfer = exports.parseTransfers = exports.getBalances = exports.parseTokens = exports.mintNfts = exports.originateInspector = exports.createToolkit = void 0;
+exports.transfer = exports.parseTransfers = exports.getBalances = exports.parseTokens = exports.mintNfts = exports.originateInspector = exports.testNode = exports.createToolkit = void 0;
 const kleur = __importStar(require("kleur"));
-const fs = __importStar(require("fs"));
 const path = __importStar(require("path"));
 const bignumber_js_1 = require("bignumber.js");
 const taquito_1 = require("@taquito/taquito");
+const signer_1 = require("@taquito/signer");
 const config_util_1 = require("./config-util");
 const config_aliases_1 = require("./config-aliases");
 function createToolkit(signer, config) {
@@ -53,9 +53,37 @@ function createToolkit(signer, config) {
     return toolkit;
 }
 exports.createToolkit = createToolkit;
+function testNode() {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            console.log('NODDING');
+            const signer = yield signer_1.InMemorySigner.fromFundraiser('zpbvthys.zrhzykdu@tezos.example.org', 'MDibu76MwG', 'smooth series steel before firm security clog puppy hard spice cotton pizza rent whip crane');
+            const toolkit = new taquito_1.TezosToolkit();
+            toolkit.setProvider({
+                rpc: 'https://testnet-tezos.giganode.io',
+                signer
+            });
+            const secretKey = yield toolkit.signer.secretKey();
+            console.log('SECRET', secretKey);
+            // console.log('ACTIVATING');
+            // const aop = await toolkit.tz.activate(
+            //   'tz1f6LtT8nER9aYaaNb7PPJq7rkhwpcXexU6',
+            //   'd7f3fa4d7ba43804b0eb9725d6c4543c94107bc5'
+            // );
+            // await aop.confirmation();
+            console.log('BALANCING');
+            const bal = yield toolkit.tz.getBalance('tz1f6LtT8nER9aYaaNb7PPJq7rkhwpcXexU6');
+            console.log('FAUCET BAL ' + bal);
+        }
+        catch (err) {
+            console.log(JSON.stringify(err));
+        }
+    });
+}
+exports.testNode = testNode;
 function originateInspector(tezos) {
     return __awaiter(this, void 0, void 0, function* () {
-        const code = yield loadFile(path.join(__dirname, '../ligo/out/inspector.tz'));
+        const code = yield config_util_1.loadFile(path.join(__dirname, '../ligo/out/inspector.tz'));
         const storage = `(Left Unit)`;
         return originateContract(tezos, code, storage, 'inspector');
     });
@@ -67,7 +95,7 @@ function mintNfts(owner, tokens) {
         const signer = yield config_aliases_1.resolveAlias2Signer(owner, config);
         const ownerAddress = yield signer.publicKeyHash();
         const tz = createToolkit(signer, config);
-        const code = yield loadFile(path.join(__dirname, '../ligo/out/fa2_fixed_collection_token.tz'));
+        const code = yield config_util_1.loadFile(path.join(__dirname, '../ligo/out/fa2_fixed_collection_token.tz'));
         const storage = createNftStorage(tokens, ownerAddress);
         console.log(kleur.yellow('originating new NFT contract'));
         const nftAddress = yield originateContract(tz, code, storage, 'nft');
@@ -191,11 +219,6 @@ function resolveTxDestinationAddresses(txs, config) {
                 token_id: t.token_id
             };
         })));
-    });
-}
-function loadFile(filePath) {
-    return __awaiter(this, void 0, void 0, function* () {
-        return new Promise((resolve, reject) => fs.readFile(filePath, (err, buff) => err ? reject(err) : resolve(buff.toString())));
     });
 }
 function originateContract(tz, code, storage, name) {

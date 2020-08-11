@@ -8,7 +8,8 @@ import { InMemorySigner } from '@taquito/signer';
 import {
   getActiveNetworkCfg,
   getInspectorKey,
-  loadUserConfig
+  loadUserConfig,
+  loadFile
 } from './config-util';
 import { resolveAlias2Signer, resolveAlias2Address } from './config-aliases';
 
@@ -64,6 +65,42 @@ export function createToolkit(
     config: { confirmationPollingIntervalSecond: 5 }
   });
   return toolkit;
+}
+
+export async function testNode() {
+  try {
+    console.log('NODDING');
+
+    const signer = await InMemorySigner.fromFundraiser(
+      'zpbvthys.zrhzykdu@tezos.example.org',
+      'MDibu76MwG',
+      'smooth series steel before firm security clog puppy hard spice cotton pizza rent whip crane'
+    );
+
+    const toolkit = new TezosToolkit();
+    toolkit.setProvider({
+      rpc: 'https://testnet-tezos.giganode.io',
+      signer
+    });
+
+    const secretKey = await toolkit.signer.secretKey();
+    console.log('SECRET', secretKey);
+
+    // console.log('ACTIVATING');
+    // const aop = await toolkit.tz.activate(
+    //   'tz1f6LtT8nER9aYaaNb7PPJq7rkhwpcXexU6',
+    //   'd7f3fa4d7ba43804b0eb9725d6c4543c94107bc5'
+    // );
+    // await aop.confirmation();
+
+    console.log('BALANCING');
+    const bal = await toolkit.tz.getBalance(
+      'tz1f6LtT8nER9aYaaNb7PPJq7rkhwpcXexU6'
+    );
+    console.log('FAUCET BAL ' + bal);
+  } catch (err) {
+    console.log(JSON.stringify(err));
+  }
 }
 
 export async function originateInspector(tezos: TezosToolkit): Promise<string> {
@@ -251,14 +288,6 @@ async function resolveTxDestinationAddresses(
         token_id: t.token_id
       };
     })
-  );
-}
-
-async function loadFile(filePath: string): Promise<string> {
-  return new Promise<string>((resolve, reject) =>
-    fs.readFile(filePath, (err, buff) =>
-      err ? reject(err) : resolve(buff.toString())
-    )
   );
 }
 

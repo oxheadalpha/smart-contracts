@@ -13,6 +13,19 @@
           "secret": "edsk3QoqBuvdamxouPhin7swCvkQNgq4jP5KZPbwWNnwdZpSpJiEbq"
         }
       }
+    },
+    "testnet": {
+      "providerUrl": "https://testnet-tezos.giganode.io",
+      "aliases": {
+        "bob": {
+          "address": "tz1f6LtT8nER9aYaaNb7PPJq7rkhwpcXexU6",
+          "secret": "edskRfLsHb49bP4dTpYzAZ7qHCX4ByK2g6Cwq2LWqRYAQSeRpziaZGBW72vrJnp1ahLGKd9rXUf7RHzm8EmyPgseUi3VS9putT"
+        },
+        "alice": {
+          "address": "tz1cbWPEd7vuwTS4XkJsMVmm8ZDN7xhRsnDk",
+          "secret": "edskRqb8GgnD4d2B7nR3ofJajDU7kwooUzXz7yMwRdLDP9j7Z1DvhaeBcs8WkJ4ELXXJgVkq5tGwrFibojDjYVaG7n4Tq1qDxZ"
+        }
+      }
     }
   }
 }

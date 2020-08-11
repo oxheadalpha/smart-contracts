@@ -52,6 +52,14 @@ program
 
 //prettier-ignore
 program
+  .command('add-alias-faucet')
+  .alias('addaf')
+  .description('adds new alias to the configuration from the faucet json file')
+  .arguments('<alias> <faucet_file>')
+  .action(aliasConf.addAliasFromFaucet).passCommandToAction(false);
+
+//prettier-ignore
+program
   .command('remove-alias')
   .alias('rma')
   .description('removes alias from the configuration')
@@ -117,6 +125,11 @@ program
     contracts.parseTransfers, [])
     .action((options)=>contracts.transfer(
       options.operator, options.nft, options.tokens)).passCommandToAction(false);
+
+//prettier-ignore
+// program
+//   .command('node')
+//   .action(contracts.testNode)
 
 //prettier-ignore
 program
