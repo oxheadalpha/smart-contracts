@@ -35,7 +35,7 @@ const signer_1 = require("@taquito/signer");
 const config_util_1 = require("./config-util");
 function showAlias(alias) {
     const config = config_util_1.loadUserConfig();
-    const aliasesKey = config_util_1.getActiveAliasesCfgKey(config);
+    const aliasesKey = config_util_1.getActiveAliasesCfgKey(config, false);
     if (alias) {
         const aliasKey = `${aliasesKey}.${alias}`;
         if (config.has(aliasKey)) {
@@ -45,7 +45,7 @@ function showAlias(alias) {
         else
             console.log(kleur.red(`alias ${kleur.yellow(alias)} is not configured`));
     }
-    else {
+    else if (config.has(aliasesKey)) {
         const allAliases = Object.getOwnPropertyNames(config.get(aliasesKey));
         for (let a of allAliases) {
             const aliasKey = `${aliasesKey}.${a}`;
@@ -53,6 +53,8 @@ function showAlias(alias) {
             console.log(kleur.yellow(formatAlias(a, aliasDef)));
         }
     }
+    else
+        console.log(kleur.yellow('there are no configured aliases'));
 }
 exports.showAlias = showAlias;
 function formatAlias(alias, def) {
@@ -61,7 +63,7 @@ function formatAlias(alias, def) {
 function addAlias(alias, key_or_address) {
     return __awaiter(this, void 0, void 0, function* () {
         const config = config_util_1.loadUserConfig();
-        const aliasKey = `${config_util_1.getActiveAliasesCfgKey(config)}.${alias}`;
+        const aliasKey = `${config_util_1.getActiveAliasesCfgKey(config, false)}.${alias}`;
         if (config.has(aliasKey)) {
             console.log(kleur.red(`alias ${kleur.yellow(alias)} already exists`));
             return;

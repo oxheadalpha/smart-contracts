@@ -7,7 +7,7 @@ import { stringify } from 'querystring';
 
 export function showAlias(alias: string): void {
   const config = loadUserConfig();
-  const aliasesKey = getActiveAliasesCfgKey(config);
+  const aliasesKey = getActiveAliasesCfgKey(config, false);
   if (alias) {
     const aliasKey = `${aliasesKey}.${alias}`;
     if (config.has(aliasKey)) {
@@ -15,14 +15,14 @@ export function showAlias(alias: string): void {
       console.log(kleur.yellow(formatAlias(alias, aliasDef)));
     } else
       console.log(kleur.red(`alias ${kleur.yellow(alias)} is not configured`));
-  } else {
+  } else if (config.has(aliasesKey)) {
     const allAliases = Object.getOwnPropertyNames(config.get(aliasesKey));
     for (let a of allAliases) {
       const aliasKey = `${aliasesKey}.${a}`;
       const aliasDef: any = config.get(aliasKey);
       console.log(kleur.yellow(formatAlias(a, aliasDef)));
     }
-  }
+  } else console.log(kleur.yellow('there are no configured aliases'));
 }
 
 function formatAlias(alias: string, def: any): string {
@@ -34,7 +34,7 @@ export async function addAlias(
   key_or_address: string
 ): Promise<void> {
   const config = loadUserConfig();
-  const aliasKey = `${getActiveAliasesCfgKey(config)}.${alias}`;
+  const aliasKey = `${getActiveAliasesCfgKey(config, false)}.${alias}`;
   if (config.has(aliasKey)) {
     console.log(kleur.red(`alias ${kleur.yellow(alias)} already exists`));
     return;

@@ -105,7 +105,7 @@ commander_1.program
     .command('transfer')
     .alias('tx')
     .description('transfers NFT tokens')
-    .requiredOption('-op, --operator <operator>', 'address that originates a query')
+    .requiredOption('-op, --operator <operator>', 'address that originates a transfer')
     .requiredOption('--nft <nft_address>', 'address of the NFT contract')
     .requiredOption('-t, --tokens <tokens...>', 'definitions of each transfer, a list of "token_id, from, to"', contracts.parseTransfers, [])
     .action((options) => contracts.transfer(options.operator, options.nft, options.tokens)).passCommandToAction(false);
