@@ -15,9 +15,12 @@ DONE    10. create testnet config with bootstrap faucet accounts
 DONE        10.1 add alias from the faucet file (activate if necessary)
         11. Complete readme
 DONE    12. Inspect balances
-NA           12.1 print alias names when inspecting balance
+             12.1 print alias names when inspecting balance
         13. update operators
 WIP     14. get token metadata
+            14.1 use metadata to query balances for all tokens
+        15. Investigate dry run using taquito
+        16. Replace conf with configstore (maybe)
 
 PHASE TWO
         1. Editable contracts

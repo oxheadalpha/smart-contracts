@@ -25,13 +25,14 @@ const networkConf = __importStar(require("./config-network"));
 const aliasConf = __importStar(require("./config-aliases"));
 const bootstrap = __importStar(require("./bootstrap"));
 const contracts = __importStar(require("./contracts"));
-// configuration commands
+// configuration
 //prettier-ignore
 commander_1.program
     .command('config-init')
     .alias('ci')
     .description('creates tznft.config file')
     .action(networkConf.initUserConfig);
+// selecting network
 //prettier-ignore
 commander_1.program
     .command('show-network')
@@ -46,6 +47,19 @@ commander_1.program
     .arguments('<network>')
     .description('selected network to originate contracts')
     .action(networkConf.setNetwork);
+//prettier-ignore
+commander_1.program
+    .command('start')
+    .alias('s')
+    .option('-b, --bootstrap <alias>', 'alias to use for the helper contract origination', 'bob')
+    .description('starts and initializes network provider')
+    .action(options => bootstrap.start(options.bootstrap)).passCommandToAction(false);
+//prettier-ignore
+commander_1.program
+    .command('kill')
+    .alias('k')
+    .description('kills running network provider')
+    .action(bootstrap.kill);
 //aliases
 //prettier-ignore
 commander_1.program
@@ -74,20 +88,6 @@ commander_1.program
     .description('removes alias from the configuration')
     .arguments('<alias>')
     .action(aliasConf.removeAlias).passCommandToAction(false);
-//working with network
-//prettier-ignore
-commander_1.program
-    .command('start')
-    .alias('s')
-    .option('-b, --bootstrap <alias>', 'alias to use for the helper contract origination', 'bob')
-    .description('starts and initializes network provider')
-    .action(options => bootstrap.start(options.bootstrap)).passCommandToAction(false);
-//prettier-ignore
-commander_1.program
-    .command('kill')
-    .alias('k')
-    .description('kills running network provider')
-    .action(bootstrap.kill);
 // nft
 //prettier-ignore
 commander_1.program
@@ -99,14 +99,14 @@ commander_1.program
     .action((owner, options) => contracts.mintNfts(owner, options.tokens)).passCommandToAction(false);
 //prettier-ignore
 commander_1.program
-    .command('get-balance')
-    .alias('gb')
-    .description('gets NFT balances for the specified owner')
+    .command('show-balance')
+    .alias('showb')
+    .description('shows NFT balances for the specified owner')
     .requiredOption('-op, --operator <operator>', 'address that originates a query')
     .requiredOption('--nft <nft_address>', 'address of the NFT contract')
     .requiredOption('-o, --owner <owner>', 'token owner to check balances')
     .requiredOption('-t, --tokens <tokens...>', 'list of token IDs to check')
-    .action((options) => contracts.getBalances(options.operator, options.nft, options.owner, options.tokens)).passCommandToAction(false);
+    .action((options) => contracts.showBalances(options.operator, options.nft, options.owner, options.tokens)).passCommandToAction(false);
 //prettier-ignore
 commander_1.program
     .command('transfer')
@@ -116,10 +116,7 @@ commander_1.program
     .requiredOption('--nft <nft_address>', 'address of the NFT contract')
     .requiredOption('-t, --tokens <tokens...>', 'definitions of each transfer, a list of "from, to, token_id"', contracts.parseTransfers, [])
     .action((options) => contracts.transfer(options.operator, options.nft, options.tokens)).passCommandToAction(false);
-//prettier-ignore
-// program
-//   .command('node')
-//   .action(contracts.testNode)
+//debugging command
 //prettier-ignore
 commander_1.program
     .command('config-show-all')

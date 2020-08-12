@@ -28,7 +28,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.transfer = exports.parseTransfers = exports.getBalances = exports.parseTokens = exports.mintNfts = exports.originateInspector = exports.createToolkit = void 0;
+exports.transfer = exports.parseTransfers = exports.showBalances = exports.parseTokens = exports.mintNfts = exports.originateInspector = exports.createToolkit = void 0;
 const kleur = __importStar(require("kleur"));
 const path = __importStar(require("path"));
 const bignumber_js_1 = require("bignumber.js");
@@ -100,7 +100,7 @@ function createNftStorage(tokens, owner) {
         token_metadata
     };
 }
-function getBalances(operator, nft, owner, tokens) {
+function showBalances(operator, nft, owner, tokens) {
     return __awaiter(this, void 0, void 0, function* () {
         const config = config_util_1.loadUserConfig();
         const signer = yield config_aliases_1.resolveAlias2Signer(operator, config);
@@ -128,7 +128,7 @@ function getBalances(operator, nft, owner, tokens) {
         }
     });
 }
-exports.getBalances = getBalances;
+exports.showBalances = showBalances;
 function printBalances(balances) {
     console.log(kleur.green('requested NFT balances:'));
     for (let b of balances) {
