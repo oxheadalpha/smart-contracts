@@ -33,7 +33,6 @@ const child = __importStar(require("child_process"));
 const kleur = __importStar(require("kleur"));
 const taquito_1 = require("@taquito/taquito");
 const config_util_1 = require("./config-util");
-const config_aliases_1 = require("./config-aliases");
 const contracts_1 = require("./contracts");
 function start(bootstrap) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -99,8 +98,7 @@ function killSandbox() {
 function originateBalanceInspector(config, networkKey, orig_alias) {
     return __awaiter(this, void 0, void 0, function* () {
         console.log(kleur.yellow(`originating balance inspector contract...`));
-        const signer = yield config_aliases_1.resolveAlias2Signer(orig_alias, config);
-        const tezos = contracts_1.createToolkit(signer, config);
+        const tezos = yield contracts_1.createToolkit(orig_alias, config);
         const inspectorAddress = yield contracts_1.originateInspector(tezos);
         config.set(config_util_1.getInspectorKey(config), inspectorAddress);
         console.log(kleur.yellow(`originated balance inspector ${kleur.green(inspectorAddress)}`));

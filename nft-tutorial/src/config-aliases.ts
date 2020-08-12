@@ -8,7 +8,7 @@ import {
   loadUserConfig,
   loadFile
 } from './config-util';
-import { createToolkit } from './contracts';
+import { createToolkitFromSigner } from './contracts';
 
 export function showAlias(alias: string): void {
   const config = loadUserConfig();
@@ -98,7 +98,7 @@ async function activateFaucet(
   secret: string
 ): Promise<void> {
   const config = loadUserConfig();
-  const tz = createToolkit(signer, config);
+  const tz = createToolkitFromSigner(signer, config);
   const address = await signer.publicKeyHash();
   const bal = await tz.tz.getBalance(address);
   if (bal.eq(0)) {
