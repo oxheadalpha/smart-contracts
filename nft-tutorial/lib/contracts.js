@@ -225,6 +225,8 @@ function updateOperators(owner, nft, addOperators, removeOperators) {
         const tz = yield createToolkit(owner, config);
         const ownerAddress = yield tz.signer.publicKeyHash();
         const nftContract = yield tz.contract.at(nft);
+        console.log(addOperators);
+        console.log(removeOperators);
     });
 }
 exports.updateOperators = updateOperators;

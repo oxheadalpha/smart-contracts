@@ -135,7 +135,7 @@ commander_1.program
     .requiredOption('-n, --nft <nft_address>', 'address of the NFT contract')
     .option('-a, --add [add_operators...]', 'list of the operators to be added by the token owner')
     .option('-r, --remove [remove_operators...]', 'list of the operators to be removed by the token owner')
-    .action((owner, options) => contracts.updateOperators(owner, options.nft, options.add_operators, options.remove_operators)).passCommandToAction(false);
+    .action((owner, options) => contracts.updateOperators(owner, options.nft, options.add || [], options.remove || [])).passCommandToAction(false);
 //debugging command
 //prettier-ignore
 commander_1.program

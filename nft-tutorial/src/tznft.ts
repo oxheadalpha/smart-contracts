@@ -152,7 +152,7 @@ program
     '-r, --remove [remove_operators...]',
     'list of the operators to be removed by the token owner')
   .action((owner, options) => contracts.updateOperators(
-    owner, options.nft, options.add_operators, options.remove_operators)).passCommandToAction(false);
+    owner, options.nft, options.add || [], options.remove || [])).passCommandToAction(false);
 
 //debugging command
 
