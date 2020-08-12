@@ -10,8 +10,7 @@
   "scripts": {
     "build": "tsc -p .",
     "build:watch": "tsc -w -p .",
-    "test": "jest",
-    "tznft": "ts-node ./src/tznft.ts  && exit 0"
+    "test": "jest"
   },
   "bin": {
     "tznft": "./lib/tznft.js"
