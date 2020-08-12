@@ -163,7 +163,7 @@ function formatMichelsonMap(m) {
     result += '}';
     return result;
 }
-function parseTransfers(description, transfers) {
+function parseTransfers(description, batch) {
     const [from_, to_, token_id] = description.split(',').map(p => p.trim());
     const tx = {
         from_,
@@ -175,18 +175,18 @@ function parseTransfers(description, transfers) {
             }
         ]
     };
-    if (transfers.length > 0 && transfers[0].from_ === from_) {
+    if (batch.length > 0 && batch[0].from_ === from_) {
         //merge last two transfers if their from_ addresses are the same
-        transfers[0].txs = transfers[0].txs.concat(tx.txs);
-        return transfers;
+        batch[0].txs = batch[0].txs.concat(tx.txs);
+        return batch;
     }
-    return [tx].concat(transfers);
+    return batch.concat(tx);
 }
 exports.parseTransfers = parseTransfers;
-function transfer(operator, nft, tokens) {
+function transfer(operator, nft, batch) {
     return __awaiter(this, void 0, void 0, function* () {
         const config = config_util_1.loadUserConfig();
-        const txs = yield resolveTxAddresses(tokens, config);
+        const txs = yield resolveTxAddresses(batch, config);
         const signer = yield config_aliases_1.resolveAlias2Signer(operator, config);
         const operatorAddress = yield signer.publicKeyHash();
         const tz = createToolkit(signer, config);
@@ -194,9 +194,9 @@ function transfer(operator, nft, tokens) {
     });
 }
 exports.transfer = transfer;
-function resolveTxAddresses(tokens, config) {
+function resolveTxAddresses(transfers, config) {
     return __awaiter(this, void 0, void 0, function* () {
-        const resolved = tokens.map((t) => __awaiter(this, void 0, void 0, function* () {
+        const resolved = transfers.map((t) => __awaiter(this, void 0, void 0, function* () {
             return {
                 from_: yield config_aliases_1.resolveAlias2Address(t.from_, config),
                 txs: yield resolveTxDestinationAddresses(t.txs, config)

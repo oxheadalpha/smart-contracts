@@ -21,6 +21,7 @@ DONE    14. get token metadata
 NA           14.1 use metadata to query balances for all tokens
         15. Investigate dry run using taquito
         16. Replace conf with configstore (maybe)
+        17. catch unhandled rejected promise
 
 PHASE TWO
         1. Editable contracts

@@ -11,7 +11,7 @@ import * as contracts from './contracts';
 program
   .command('config-init')
   .alias('ci')
-  .description('creates tznft.config file')
+  .description('create tznft.config file')
   .action(networkConf.initUserConfig);
 
 // selecting network
@@ -21,7 +21,7 @@ program
   .command('show-network')
   .alias('shown')
   .description(
-    'shows currently selected active network', 
+    'show currently selected active network', 
     {'a': 'also shows all available networks'}
   )
   .option('-a --all', 'shows all available configured networks', false)
@@ -32,7 +32,7 @@ program
   .command('set-network')
   .alias('setn')
   .arguments('<network>')
-  .description('selected network to originate contracts')
+  .description('select network to originate contracts on')
   .action(networkConf.setNetwork);
 
 //prettier-ignore
@@ -43,14 +43,14 @@ program
     '-b, --bootstrap <alias>',
     'alias to use for the helper contract origination',
     'bob')
-  .description('starts and initializes network provider')
+  .description('start and initialize network provider')
   .action(options => bootstrap.start(options.bootstrap)).passCommandToAction(false);
 
 //prettier-ignore
 program
   .command('kill')
   .alias('k')
-  .description('kills running network provider')
+  .description('kill running network provider')
   .action(bootstrap.kill);
 
 //aliases
@@ -58,7 +58,8 @@ program
 //prettier-ignore
 program
     .command('show-alias')
-    .alias('showa')
+    .alias('sha')
+    .description('show details about configured address alias')
     .arguments('[alias]')
     .action(aliasConf.showAlias).passCommandToAction(false);
 
@@ -66,7 +67,7 @@ program
 program
   .command('add-alias')
   .alias('adda')
-  .description('adds new alias to the configuration')
+  .description('add new address alias to the configuration')
   .arguments('<alias> <key_or_address>')
   .action(aliasConf.addAlias).passCommandToAction(false);
 
@@ -74,7 +75,7 @@ program
 program
   .command('add-alias-faucet')
   .alias('addaf')
-  .description('adds new alias to the configuration from the faucet json file')
+  .description('add new address alias to the configuration from the faucet json file')
   .arguments('<alias> <faucet_file>')
   .action(aliasConf.addAliasFromFaucet).passCommandToAction(false);
 
@@ -82,7 +83,7 @@ program
 program
   .command('remove-alias')
   .alias('rma')
-  .description('removes alias from the configuration')
+  .description('remove address alias from the configuration')
   .arguments('<alias>')
   .action(aliasConf.removeAlias).passCommandToAction(false);
 
@@ -92,7 +93,7 @@ program
 program
   .command('mint')
   .alias('m')
-  .description('creates a new NFT contract and mint new tokens')
+  .description('create a new NFT contract and mint new tokens')
   .arguments('<owner>')
   .requiredOption(
     '-t, --tokens <tokens...>',
@@ -103,8 +104,8 @@ program
 //prettier-ignore
 program
   .command('show-balance')
-  .alias('showb')
-  .description('shows NFT balances for the specified owner')
+  .alias('shb')
+  .description('show NFT balances for the specified owner')
   .requiredOption('-op, --operator <operator>', 'address that originates a query')
   .requiredOption('-n, --nft <nft_address>', 'address of the NFT contract')
   .requiredOption('-o, --owner <owner>', 'token owner to check balances')
@@ -115,8 +116,8 @@ program
 //prettier-ignore
 program
   .command('show-meta')
-  .alias('showm')
-  .description('shows metadata for all tokens in the NFT contract')
+  .alias('shm')
+  .description('show metadata for all tokens in the NFT contract')
   .requiredOption('-op, --operator <operator>', 'address that originates a query')
   .requiredOption('-n, --nft <nft_address>', 'address of the NFT contract')
   .requiredOption('-t, --tokens <tokens...>', 'list of token IDs to check')
@@ -127,15 +128,27 @@ program
 program
   .command('transfer')
   .alias('tx')
-  .description('transfers NFT tokens')
+  .description('transfer NFT tokens')
   .requiredOption('-op, --operator <operator>', 'address that originates a transfer')
-  .requiredOption('--nft <nft_address>', 'address of the NFT contract')
+  .requiredOption('-n, --nft <nft_address>', 'address of the NFT contract')
   .requiredOption(
-    '-t, --tokens <tokens...>', 
-    'definitions of each transfer, a list of "from, to, token_id"',
+    '-b, --batch <batch...>', 
+    'definition of individual transfers, a list of "from, to, token_id"',
     contracts.parseTransfers, [])
     .action((options)=>contracts.transfer(
-      options.operator, options.nft, options.tokens)).passCommandToAction(false);
+      options.operator, options.nft, options.batch)).passCommandToAction(false);
+
+// //prettier-ignore
+// program
+//   .command('update-ops')
+//   .alias('uo')
+//   .description('update')
+//   .arguments('<owner>')
+//   .requiredOption(
+//     '-t, --tokens <tokens...>',
+//     'definitions of new tokens, a list of "id, symbol, name"',
+//     contracts.parseTokens, [])
+//   .action((owner, options) => contracts.mintNfts(owner, options.tokens)).passCommandToAction(false);
 
 //debugging command
 

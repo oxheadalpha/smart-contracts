@@ -194,7 +194,7 @@ function formatMichelsonMap(m: MichelsonMap<string, string>): string {
 
 export function parseTransfers(
   description: string,
-  transfers: fa2.Fa2Transfer[]
+  batch: fa2.Fa2Transfer[]
 ): fa2.Fa2Transfer[] {
   const [from_, to_, token_id] = description.split(',').map(p => p.trim());
   const tx: fa2.Fa2Transfer = {
@@ -207,22 +207,22 @@ export function parseTransfers(
       }
     ]
   };
-  if (transfers.length > 0 && transfers[0].from_ === from_) {
+  if (batch.length > 0 && batch[0].from_ === from_) {
     //merge last two transfers if their from_ addresses are the same
-    transfers[0].txs = transfers[0].txs.concat(tx.txs);
-    return transfers;
+    batch[0].txs = batch[0].txs.concat(tx.txs);
+    return batch;
   }
 
-  return [tx].concat(transfers);
+  return batch.concat(tx);
 }
 
 export async function transfer(
   operator: string,
   nft: string,
-  tokens: fa2.Fa2Transfer[]
+  batch: fa2.Fa2Transfer[]
 ): Promise<void> {
   const config = loadUserConfig();
-  const txs = await resolveTxAddresses(tokens, config);
+  const txs = await resolveTxAddresses(batch, config);
 
   const signer = await resolveAlias2Signer(operator, config);
   const operatorAddress = await signer.publicKeyHash();
@@ -232,10 +232,10 @@ export async function transfer(
 }
 
 async function resolveTxAddresses(
-  tokens: fa2.Fa2Transfer[],
+  transfers: fa2.Fa2Transfer[],
   config: Conf<Record<string, string>>
 ): Promise<fa2.Fa2Transfer[]> {
-  const resolved = tokens.map(async t => {
+  const resolved = transfers.map(async t => {
     return {
       from_: await resolveAlias2Address(t.from_, config),
       txs: await resolveTxDestinationAddresses(t.txs, config)
