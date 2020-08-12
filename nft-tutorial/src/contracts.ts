@@ -269,6 +269,9 @@ export async function updateOperators(
   const tz = await createToolkit(owner, config);
   const ownerAddress = await tz.signer.publicKeyHash();
   const nftContract = await tz.contract.at(nft);
+
+  console.log(addOperators);
+  console.log(removeOperators);
 }
 
 async function originateContract(
