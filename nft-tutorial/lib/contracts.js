@@ -28,7 +28,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.transfer = exports.parseTransfers = exports.showMetadata = exports.showBalances = exports.parseTokens = exports.mintNfts = exports.originateInspector = exports.createToolkit = void 0;
+exports.updateOperators = exports.transfer = exports.parseTransfers = exports.showMetadata = exports.showBalances = exports.parseTokens = exports.mintNfts = exports.originateInspector = exports.createToolkit = void 0;
 const kleur = __importStar(require("kleur"));
 const path = __importStar(require("path"));
 const bignumber_js_1 = require("bignumber.js");
@@ -217,6 +217,16 @@ function resolveTxDestinationAddresses(txs, config) {
         return Promise.all(resolved);
     });
 }
+function updateOperators(owner, nft, addOperators, removeOperators) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const config = config_util_1.loadUserConfig();
+        const signer = yield config_aliases_1.resolveAlias2Signer(owner, config);
+        const ownerAddress = yield signer.publicKeyHash();
+        const tz = createToolkit(signer, config);
+        const nftContract = yield tz.contract.at(nft);
+    });
+}
+exports.updateOperators = updateOperators;
 function originateContract(tz, code, storage, name) {
     return __awaiter(this, void 0, void 0, function* () {
         const origParam = typeof storage === 'string' ? { code, init: storage } : { code, storage };

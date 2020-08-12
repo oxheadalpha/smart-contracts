@@ -135,20 +135,24 @@ program
     '-b, --batch <batch...>', 
     'definition of individual transfers, a list of "from, to, token_id"',
     contracts.parseTransfers, [])
-    .action((options)=>contracts.transfer(
-      options.operator, options.nft, options.batch)).passCommandToAction(false);
+  .action(options=>contracts.transfer(
+    options.operator, options.nft, options.batch)).passCommandToAction(false);
 
-// //prettier-ignore
-// program
-//   .command('update-ops')
-//   .alias('uo')
-//   .description('update')
-//   .arguments('<owner>')
-//   .requiredOption(
-//     '-t, --tokens <tokens...>',
-//     'definitions of new tokens, a list of "id, symbol, name"',
-//     contracts.parseTokens, [])
-//   .action((owner, options) => contracts.mintNfts(owner, options.tokens)).passCommandToAction(false);
+//prettier-ignore
+program
+  .command('update-ops')
+  .alias('uo')
+  .description('update operators for the token owner')
+  .arguments('<owner>')
+  .requiredOption('-n, --nft <nft_address>', 'address of the NFT contract')
+  .option(
+    '-a, --add [add_operators...]',
+    'list of the operators to be added by the token owner')
+  .option(
+    '-r, --remove [remove_operators...]',
+    'list of the operators to be removed by the token owner')
+  .action((owner, options) => contracts.updateOperators(
+    owner, options.nft, options.add_operators, options.remove_operators)).passCommandToAction(false);
 
 //debugging command
 
