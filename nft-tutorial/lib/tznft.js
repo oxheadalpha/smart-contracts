@@ -103,10 +103,19 @@ commander_1.program
     .alias('showb')
     .description('shows NFT balances for the specified owner')
     .requiredOption('-op, --operator <operator>', 'address that originates a query')
-    .requiredOption('--nft <nft_address>', 'address of the NFT contract')
+    .requiredOption('-n, --nft <nft_address>', 'address of the NFT contract')
     .requiredOption('-o, --owner <owner>', 'token owner to check balances')
     .requiredOption('-t, --tokens <tokens...>', 'list of token IDs to check')
-    .action((options) => contracts.showBalances(options.operator, options.nft, options.owner, options.tokens)).passCommandToAction(false);
+    .action(options => contracts.showBalances(options.operator, options.nft, options.owner, options.tokens)).passCommandToAction(false);
+//prettier-ignore
+commander_1.program
+    .command('show-meta')
+    .alias('showm')
+    .description('shows metadata for all tokens in the NFT contract')
+    .requiredOption('-op, --operator <operator>', 'address that originates a query')
+    .requiredOption('-n, --nft <nft_address>', 'address of the NFT contract')
+    .requiredOption('-t, --tokens <tokens...>', 'list of token IDs to check')
+    .action(options => contracts.showMetadata(options.operator, options.nft, options.tokens)).passCommandToAction(false);
 //prettier-ignore
 commander_1.program
     .command('transfer')

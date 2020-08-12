@@ -151,6 +151,47 @@ function printBalances(balances: fa2.BalanceOfResponse[]): void {
   }
 }
 
+export async function showMetadata(
+  operator: string,
+  nft: string,
+  tokens: string[]
+): Promise<void> {
+  const config = loadUserConfig();
+
+  const signer = await resolveAlias2Signer(operator, config);
+  const tz = createToolkit(signer, config);
+  const nftContract = await tz.contract.at(nft);
+  const storage = await nftContract.storage<any>();
+  const meta: MichelsonMap<BigNumber, fa2.TokenMetadata> =
+    storage.token_metadata;
+
+  const tokensMetaP = tokens
+    .map(t => new BigNumber(t))
+    .map(async tid => meta.get(tid));
+  const tokensMeta = await Promise.all(tokensMetaP);
+
+  tokensMeta.forEach(m => {
+    if (m) printTokenMetadata(m);
+  });
+}
+
+function printTokenMetadata(m: fa2.TokenMetadata) {
+  console.log(
+    kleur.yellow(
+      `token_id: ${kleur.green(m.token_id.toString())}\tsymbol: ${kleur.green(
+        m.symbol
+      )}\tname: ${kleur.green(m.name)}\textras: ${formatMichelsonMap(m.extras)}`
+    )
+  );
+}
+
+function formatMichelsonMap(m: MichelsonMap<string, string>): string {
+  let result = '{ ';
+  m.forEach((v, k) => (result += `${kleur.dim().green(k)}=${kleur.green(v)} `));
+  result += '}';
+  return result;
+}
+
 export function parseTransfers(
   description: string,
   transfers: fa2.Fa2Transfer[]
