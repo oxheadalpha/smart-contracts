@@ -94,7 +94,7 @@ function createNftStorage(tokens: fa2.TokenMetadata[], owner: string) {
   };
 }
 
-export async function getBalances(
+export async function showBalances(
   operator: string,
   nft: string,
   owner: string,
