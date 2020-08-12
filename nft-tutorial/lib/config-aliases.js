@@ -106,7 +106,7 @@ exports.addAliasFromFaucet = addAliasFromFaucet;
 function activateFaucet(signer, secret) {
     return __awaiter(this, void 0, void 0, function* () {
         const config = config_util_1.loadUserConfig();
-        const tz = contracts_1.createToolkit(signer, config);
+        const tz = contracts_1.createToolkitFromSigner(signer, config);
         const address = yield signer.publicKeyHash();
         const bal = yield tz.tz.getBalance(address);
         if (bal.eq(0)) {

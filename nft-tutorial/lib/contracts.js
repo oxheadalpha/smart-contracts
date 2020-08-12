@@ -28,7 +28,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateOperators = exports.transfer = exports.parseTransfers = exports.showMetadata = exports.showBalances = exports.parseTokens = exports.mintNfts = exports.originateInspector = exports.createToolkit = void 0;
+exports.updateOperators = exports.transfer = exports.parseTransfers = exports.showMetadata = exports.showBalances = exports.parseTokens = exports.mintNfts = exports.originateInspector = exports.createToolkitFromSigner = exports.createToolkit = void 0;
 const kleur = __importStar(require("kleur"));
 const path = __importStar(require("path"));
 const bignumber_js_1 = require("bignumber.js");
@@ -36,7 +36,14 @@ const taquito_1 = require("@taquito/taquito");
 const config_util_1 = require("./config-util");
 const config_aliases_1 = require("./config-aliases");
 const fa2 = __importStar(require("./fa2-interface"));
-function createToolkit(signer, config) {
+function createToolkit(address_or_alias, config) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const signer = yield config_aliases_1.resolveAlias2Signer(address_or_alias, config);
+        return createToolkitFromSigner(signer, config);
+    });
+}
+exports.createToolkit = createToolkit;
+function createToolkitFromSigner(signer, config) {
     const { network, configKey } = config_util_1.getActiveNetworkCfg(config);
     const providerUrl = config.get(`${configKey}.providerUrl`);
     if (!providerUrl) {
@@ -52,7 +59,7 @@ function createToolkit(signer, config) {
     });
     return toolkit;
 }
-exports.createToolkit = createToolkit;
+exports.createToolkitFromSigner = createToolkitFromSigner;
 function originateInspector(tezos) {
     return __awaiter(this, void 0, void 0, function* () {
         const code = yield config_util_1.loadFile(path.join(__dirname, '../ligo/out/inspector.tz'));
@@ -64,9 +71,8 @@ exports.originateInspector = originateInspector;
 function mintNfts(owner, tokens) {
     return __awaiter(this, void 0, void 0, function* () {
         const config = config_util_1.loadUserConfig();
-        const signer = yield config_aliases_1.resolveAlias2Signer(owner, config);
-        const ownerAddress = yield signer.publicKeyHash();
-        const tz = createToolkit(signer, config);
+        const tz = yield createToolkit(owner, config);
+        const ownerAddress = yield tz.signer.publicKeyHash();
         const code = yield config_util_1.loadFile(path.join(__dirname, '../ligo/out/fa2_fixed_collection_token.tz'));
         const storage = createNftStorage(tokens, ownerAddress);
         console.log(kleur.yellow('originating new NFT contract'));
@@ -103,9 +109,8 @@ function createNftStorage(tokens, owner) {
 function showBalances(operator, nft, owner, tokens) {
     return __awaiter(this, void 0, void 0, function* () {
         const config = config_util_1.loadUserConfig();
-        const signer = yield config_aliases_1.resolveAlias2Signer(operator, config);
-        const tz = createToolkit(signer, config);
-        const ownerAddress = yield config_aliases_1.resolveAlias2Address(owner, config);
+        const tz = yield createToolkit(owner, config);
+        const ownerAddress = yield tz.signer.publicKeyHash();
         const requests = tokens.map(t => {
             return { token_id: new bignumber_js_1.BigNumber(t), owner: ownerAddress };
         });
@@ -138,8 +143,7 @@ function printBalances(balances) {
 function showMetadata(operator, nft, tokens) {
     return __awaiter(this, void 0, void 0, function* () {
         const config = config_util_1.loadUserConfig();
-        const signer = yield config_aliases_1.resolveAlias2Signer(operator, config);
-        const tz = createToolkit(signer, config);
+        const tz = yield createToolkit(operator, config);
         const nftContract = yield tz.contract.at(nft);
         const storage = yield nftContract.storage();
         const meta = storage.token_metadata;
@@ -187,9 +191,7 @@ function transfer(operator, nft, batch) {
     return __awaiter(this, void 0, void 0, function* () {
         const config = config_util_1.loadUserConfig();
         const txs = yield resolveTxAddresses(batch, config);
-        const signer = yield config_aliases_1.resolveAlias2Signer(operator, config);
-        const operatorAddress = yield signer.publicKeyHash();
-        const tz = createToolkit(signer, config);
+        const tz = yield createToolkit(operator, config);
         yield fa2.transfer(nft, tz, txs);
     });
 }
@@ -220,9 +222,8 @@ function resolveTxDestinationAddresses(txs, config) {
 function updateOperators(owner, nft, addOperators, removeOperators) {
     return __awaiter(this, void 0, void 0, function* () {
         const config = config_util_1.loadUserConfig();
-        const signer = yield config_aliases_1.resolveAlias2Signer(owner, config);
-        const ownerAddress = yield signer.publicKeyHash();
-        const tz = createToolkit(signer, config);
+        const tz = yield createToolkit(owner, config);
+        const ownerAddress = yield tz.signer.publicKeyHash();
         const nftContract = yield tz.contract.at(nft);
     });
 }

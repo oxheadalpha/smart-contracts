@@ -9,7 +9,6 @@ import {
   loadUserConfig,
   getInspectorKey
 } from './config-util';
-import { resolveAlias2Signer } from './config-aliases';
 import { createToolkit, originateInspector } from './contracts';
 
 export async function start(bootstrap: string): Promise<void> {
@@ -81,8 +80,7 @@ async function originateBalanceInspector(
 ): Promise<void> {
   console.log(kleur.yellow(`originating balance inspector contract...`));
 
-  const signer = await resolveAlias2Signer(orig_alias, config);
-  const tezos = createToolkit(signer, config);
+  const tezos = await createToolkit(orig_alias, config);
   const inspectorAddress = await originateInspector(tezos);
 
   config.set(getInspectorKey(config), inspectorAddress);

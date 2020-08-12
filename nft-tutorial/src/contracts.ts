@@ -15,7 +15,15 @@ import * as fa2 from './fa2-interface';
 
 type InspectorStorage = fa2.BalanceOfResponse[] | {};
 
-export function createToolkit(
+export async function createToolkit(
+  address_or_alias: string,
+  config: Conf<Record<string, string>>
+): Promise<TezosToolkit> {
+  const signer = await resolveAlias2Signer(address_or_alias, config);
+  return createToolkitFromSigner(signer, config);
+}
+
+export function createToolkitFromSigner(
   signer: InMemorySigner,
   config: Conf<Record<string, string>>
 ): TezosToolkit {
@@ -49,9 +57,8 @@ export async function mintNfts(
   tokens: fa2.TokenMetadata[]
 ): Promise<void> {
   const config = loadUserConfig();
-  const signer = await resolveAlias2Signer(owner, config);
-  const ownerAddress = await signer.publicKeyHash();
-  const tz = createToolkit(signer, config);
+  const tz = await createToolkit(owner, config);
+  const ownerAddress = await tz.signer.publicKeyHash();
 
   const code = await loadFile(
     path.join(__dirname, '../ligo/out/fa2_fixed_collection_token.tz')
@@ -102,9 +109,8 @@ export async function showBalances(
 ): Promise<void> {
   const config = loadUserConfig();
 
-  const signer = await resolveAlias2Signer(operator, config);
-  const tz = createToolkit(signer, config);
-  const ownerAddress = await resolveAlias2Address(owner, config);
+  const tz = await createToolkit(owner, config);
+  const ownerAddress = await tz.signer.publicKeyHash();
   const requests: fa2.BalanceOfRequest[] = tokens.map(t => {
     return { token_id: new BigNumber(t), owner: ownerAddress };
   });
@@ -158,8 +164,7 @@ export async function showMetadata(
 ): Promise<void> {
   const config = loadUserConfig();
 
-  const signer = await resolveAlias2Signer(operator, config);
-  const tz = createToolkit(signer, config);
+  const tz = await createToolkit(operator, config);
   const nftContract = await tz.contract.at(nft);
   const storage = await nftContract.storage<any>();
   const meta: MichelsonMap<BigNumber, fa2.TokenMetadata> =
@@ -223,11 +228,7 @@ export async function transfer(
 ): Promise<void> {
   const config = loadUserConfig();
   const txs = await resolveTxAddresses(batch, config);
-
-  const signer = await resolveAlias2Signer(operator, config);
-  const operatorAddress = await signer.publicKeyHash();
-  const tz = createToolkit(signer, config);
-
+  const tz = await createToolkit(operator, config);
   await fa2.transfer(nft, tz, txs);
 }
 
@@ -265,9 +266,8 @@ export async function updateOperators(
   removeOperators: string[]
 ): Promise<void> {
   const config = loadUserConfig();
-  const signer = await resolveAlias2Signer(owner, config);
-  const ownerAddress = await signer.publicKeyHash();
-  const tz = createToolkit(signer, config);
+  const tz = await createToolkit(owner, config);
+  const ownerAddress = await tz.signer.publicKeyHash();
   const nftContract = await tz.contract.at(nft);
 }
 
