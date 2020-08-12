@@ -258,6 +258,19 @@ async function resolveTxDestinationAddresses(
   return Promise.all(resolved);
 }
 
+export async function updateOperators(
+  owner: string,
+  nft: string,
+  addOperators: string[],
+  removeOperators: string[]
+): Promise<void> {
+  const config = loadUserConfig();
+  const signer = await resolveAlias2Signer(owner, config);
+  const ownerAddress = await signer.publicKeyHash();
+  const tz = createToolkit(signer, config);
+  const nftContract = await tz.contract.at(nft);
+}
+
 async function originateContract(
   tz: TezosToolkit,
   code: string,
