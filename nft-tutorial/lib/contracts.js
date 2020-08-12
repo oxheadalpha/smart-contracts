@@ -28,7 +28,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.transfer = exports.parseTransfers = exports.showBalances = exports.parseTokens = exports.mintNfts = exports.originateInspector = exports.createToolkit = void 0;
+exports.transfer = exports.parseTransfers = exports.showMetadata = exports.showBalances = exports.parseTokens = exports.mintNfts = exports.originateInspector = exports.createToolkit = void 0;
 const kleur = __importStar(require("kleur"));
 const path = __importStar(require("path"));
 const bignumber_js_1 = require("bignumber.js");
@@ -134,6 +134,34 @@ function printBalances(balances) {
     for (let b of balances) {
         console.log(kleur.yellow(`owner: ${kleur.green(b.request.owner)}\ttoken: ${kleur.green(b.request.token_id.toString())}\tbalance: ${kleur.green(b.balance.toString())}`));
     }
+}
+function showMetadata(operator, nft, tokens) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const config = config_util_1.loadUserConfig();
+        const signer = yield config_aliases_1.resolveAlias2Signer(operator, config);
+        const tz = createToolkit(signer, config);
+        const nftContract = yield tz.contract.at(nft);
+        const storage = yield nftContract.storage();
+        const meta = storage.token_metadata;
+        const tokensMetaP = tokens
+            .map(t => new bignumber_js_1.BigNumber(t))
+            .map((tid) => __awaiter(this, void 0, void 0, function* () { return meta.get(tid); }));
+        const tokensMeta = yield Promise.all(tokensMetaP);
+        tokensMeta.forEach(m => {
+            if (m)
+                printTokenMetadata(m);
+        });
+    });
+}
+exports.showMetadata = showMetadata;
+function printTokenMetadata(m) {
+    console.log(kleur.yellow(`token_id: ${kleur.green(m.token_id.toString())}\tsymbol: ${kleur.green(m.symbol)}\tname: ${kleur.green(m.name)}\textras: ${formatMichelsonMap(m.extras)}`));
+}
+function formatMichelsonMap(m) {
+    let result = '{ ';
+    m.forEach((v, k) => (result += `${kleur.dim().green(k)}=${kleur.green(v)} `));
+    result += '}';
+    return result;
 }
 function parseTransfers(description, transfers) {
     const [from_, to_, token_id] = description.split(',').map(p => p.trim());
