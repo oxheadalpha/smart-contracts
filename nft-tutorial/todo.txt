@@ -16,14 +16,14 @@ DONE        10.1 add alias from the faucet file (activate if necessary)
         11. Complete readme
 DONE    12. Inspect balances
 NA           12.1 print alias names when inspecting balance
-WIP     13. update operators
+DONE    13. update operators
 DONE    14. get token metadata
 NA           14.1 use metadata to query balances for all tokens
         15. Investigate dry run using taquito
         16. Replace conf with configstore (maybe)
 DONE    17. catch unhandled rejected promise
-        18. Use ASCII art as token image stored in metadata extras
-             18.1 generate ascii from image
+WIP     18. Use ASCII art as token image stored in metadata extras
+WIP          18.1 generate ascii from image
              18.2 add ascii to metadata when minting
              18.3 show ascii when printing balances
 

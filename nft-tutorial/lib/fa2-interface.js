@@ -53,7 +53,7 @@ function updateOperators(fa2, owner, addOperators, removeOperators) {
                 }
             };
         });
-        const removeParams = addOperators.map(operator => {
+        const removeParams = removeOperators.map(operator => {
             return {
                 remove_operator: {
                     owner: ownerAddress,
