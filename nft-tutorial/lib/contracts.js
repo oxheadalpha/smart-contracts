@@ -70,6 +70,8 @@ function originateInspector(tezos) {
 exports.originateInspector = originateInspector;
 function mintNfts(owner, tokens) {
     return __awaiter(this, void 0, void 0, function* () {
+        if (tokens.length === 0)
+            return Promise.reject('there are no token definitions provided');
         const config = config_util_1.loadUserConfig();
         const tz = yield createToolkit(owner, config);
         const ownerAddress = yield tz.signer.publicKeyHash();

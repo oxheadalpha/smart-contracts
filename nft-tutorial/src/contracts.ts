@@ -56,6 +56,9 @@ export async function mintNfts(
   owner: string,
   tokens: fa2.TokenMetadata[]
 ): Promise<void> {
+  if (tokens.length === 0)
+    return Promise.reject('there are no token definitions provided');
+
   const config = loadUserConfig();
   const tz = await createToolkit(owner, config);
   const ownerAddress = await tz.signer.publicKeyHash();
