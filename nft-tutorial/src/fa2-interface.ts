@@ -78,7 +78,7 @@ export async function updateOperators(
       }
     };
   });
-  const removeParams: UpdateOperator[] = addOperators.map(operator => {
+  const removeParams: UpdateOperator[] = removeOperators.map(operator => {
     return {
       remove_operator: {
         owner: ownerAddress,
