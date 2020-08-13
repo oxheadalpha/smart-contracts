@@ -21,6 +21,8 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const commander_1 = require("commander");
+const kleur = __importStar(require("kleur"));
+const taquito_1 = require("@taquito/taquito");
 const networkConf = __importStar(require("./config-network"));
 const aliasConf = __importStar(require("./config-aliases"));
 const bootstrap = __importStar(require("./bootstrap"));
@@ -142,4 +144,14 @@ commander_1.program
     .command('config-show-all')
     .description('shows whole raw config')
     .action(networkConf.showConfig);
-commander_1.program.parse();
+commander_1.program.parseAsync().catch(error => {
+    if (typeof error === 'string')
+        console.log(kleur.red(error));
+    else if (error instanceof taquito_1.TezosOperationError) {
+        console.log(kleur.red(`Tezos operation error: ${kleur.bold(error.message)}`));
+    }
+    else {
+        console.log(kleur.red('unknown error:'));
+        console.log(error);
+    }
+});

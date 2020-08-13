@@ -267,11 +267,17 @@ export async function updateOperators(
 ): Promise<void> {
   const config = loadUserConfig();
   const tz = await createToolkit(owner, config);
-  const ownerAddress = await tz.signer.publicKeyHash();
-  const nftContract = await tz.contract.at(nft);
+  const resolvedAdd = await resolveOperators(addOperators, config);
+  const resolvedRemove = await resolveOperators(removeOperators, config);
+  await fa2.updateOperators(nft, tz, resolvedAdd, resolvedRemove);
+}
 
-  console.log(addOperators);
-  console.log(removeOperators);
+async function resolveOperators(
+  operators: string[],
+  config: Conf<Record<string, string>>
+): Promise<string[]> {
+  const resolved = operators.map(async o => resolveAlias2Address(o, config));
+  return Promise.all(resolved);
 }
 
 async function originateContract(

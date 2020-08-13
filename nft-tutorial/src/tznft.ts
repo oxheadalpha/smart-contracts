@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 import { program } from 'commander';
+import * as kleur from 'kleur';
+import { TezosOperationError } from '@taquito/taquito';
 import * as networkConf from './config-network';
 import * as aliasConf from './config-aliases';
 import * as bootstrap from './bootstrap';
@@ -162,4 +164,14 @@ program
   .description('shows whole raw config')
   .action(networkConf.showConfig);
 
-program.parse();
+program.parseAsync().catch(error => {
+  if (typeof error === 'string') console.log(kleur.red(error));
+  else if (error instanceof TezosOperationError) {
+    console.log(
+      kleur.red(`Tezos operation error: ${kleur.bold(error.message)}`)
+    );
+  } else {
+    console.log(kleur.red('unknown error:'));
+    console.log(error);
+  }
+});

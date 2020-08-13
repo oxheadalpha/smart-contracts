@@ -223,13 +223,18 @@ function updateOperators(owner, nft, addOperators, removeOperators) {
     return __awaiter(this, void 0, void 0, function* () {
         const config = config_util_1.loadUserConfig();
         const tz = yield createToolkit(owner, config);
-        const ownerAddress = yield tz.signer.publicKeyHash();
-        const nftContract = yield tz.contract.at(nft);
-        console.log(addOperators);
-        console.log(removeOperators);
+        const resolvedAdd = yield resolveOperators(addOperators, config);
+        const resolvedRemove = yield resolveOperators(removeOperators, config);
+        yield fa2.updateOperators(nft, tz, resolvedAdd, resolvedRemove);
     });
 }
 exports.updateOperators = updateOperators;
+function resolveOperators(operators, config) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const resolved = operators.map((o) => __awaiter(this, void 0, void 0, function* () { return config_aliases_1.resolveAlias2Address(o, config); }));
+        return Promise.all(resolved);
+    });
+}
 function originateContract(tz, code, storage, name) {
     return __awaiter(this, void 0, void 0, function* () {
         const origParam = typeof storage === 'string' ? { code, init: storage } : { code, storage };
