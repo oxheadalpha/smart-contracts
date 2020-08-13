@@ -28,7 +28,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.addOperator = exports.transfer = void 0;
+exports.updateOperators = exports.transfer = void 0;
 const kleur = __importStar(require("kleur"));
 function transfer(fa2, operator, txs) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -40,23 +40,31 @@ function transfer(fa2, operator, txs) {
     });
 }
 exports.transfer = transfer;
-function addOperator(fa2, owner, operator) {
+function updateOperators(fa2, owner, addOperators, removeOperators) {
     return __awaiter(this, void 0, void 0, function* () {
-        console.log(kleur.yellow('adding operator...'));
+        console.log(kleur.yellow('updating operators...'));
         const fa2WithOwner = yield owner.contract.at(fa2);
         const ownerAddress = yield owner.signer.publicKeyHash();
-        const op = yield fa2WithOwner.methods
-            .update_operators([
-            {
+        const addParams = addOperators.map(operator => {
+            return {
                 add_operator: {
                     owner: ownerAddress,
                     operator
                 }
-            }
-        ])
-            .send();
+            };
+        });
+        const removeParams = addOperators.map(operator => {
+            return {
+                remove_operator: {
+                    owner: ownerAddress,
+                    operator
+                }
+            };
+        });
+        const allOperators = addParams.concat(removeParams);
+        const op = yield fa2WithOwner.methods.update_operators(allOperators).send();
         yield op.confirmation();
-        console.log(kleur.green('added operator'));
+        console.log(kleur.green('updated operators'));
     });
 }
-exports.addOperator = addOperator;
+exports.updateOperators = updateOperators;
