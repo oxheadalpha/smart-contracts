@@ -149,11 +149,15 @@ function showMetadata(operator, nft, tokens) {
         const meta = storage.token_metadata;
         const tokensMetaP = tokens
             .map(t => new bignumber_js_1.BigNumber(t))
-            .map((tid) => __awaiter(this, void 0, void 0, function* () { return meta.get(tid); }));
+            .map((tid) => __awaiter(this, void 0, void 0, function* () {
+            return { tid, meta: yield meta.get(tid) };
+        }));
         const tokensMeta = yield Promise.all(tokensMetaP);
         tokensMeta.forEach(m => {
-            if (m)
-                printTokenMetadata(m);
+            if (m.meta)
+                printTokenMetadata(m.meta);
+            else
+                console.log(kleur.red(`token ${m.tid} is missing`));
         });
     });
 }

@@ -172,11 +172,14 @@ export async function showMetadata(
 
   const tokensMetaP = tokens
     .map(t => new BigNumber(t))
-    .map(async tid => meta.get(tid));
+    .map(async tid => {
+      return { tid, meta: await meta.get(tid) };
+    });
   const tokensMeta = await Promise.all(tokensMetaP);
 
   tokensMeta.forEach(m => {
-    if (m) printTokenMetadata(m);
+    if (m.meta) printTokenMetadata(m.meta);
+    else console.log(kleur.red(`token ${m.tid} is missing`));
   });
 }
 
