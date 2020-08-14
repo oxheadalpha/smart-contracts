@@ -19,14 +19,15 @@ NA           12.1 print alias names when inspecting balance
 DONE    13. update operators
 DONE    14. get token metadata
 NA           14.1 use metadata to query balances for all tokens
-WIP     15. Investigate dry run using taquito
+DONE    15. Investigate dry run using taquito
 DONE    16. Replace conf with configstore (maybe)
 DONE    17. catch unhandled rejected promise
 DONE    18. Research using ASCII art as token image stored in metadata extras
             asciify-image, ascii-cats
 
 PHASE TWO
-        1. Editable contracts
-        2. custom contract origination
-        3. custom metadata
-        4. write tutorial
+        1. write tutorial
+        2. Editable contracts
+        3. custom contract origination
+        4. custom metadata
+        
