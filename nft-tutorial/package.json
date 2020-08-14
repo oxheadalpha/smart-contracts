@@ -10,7 +10,8 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/tqtezos/smart-contracts.git"
+    "url": "https://github.com/tqtezos/smart-contracts.git",
+    "directory": "nft-tutorial"
   },
   "scripts": {
     "build": "tsc -p .",
