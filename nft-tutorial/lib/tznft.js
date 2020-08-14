@@ -23,22 +23,25 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const commander_1 = require("commander");
 const kleur = __importStar(require("kleur"));
 const taquito_1 = require("@taquito/taquito");
+const config_util_1 = require("./config-util");
 const networkConf = __importStar(require("./config-network"));
 const aliasConf = __importStar(require("./config-aliases"));
 const bootstrap = __importStar(require("./bootstrap"));
 const contracts = __importStar(require("./contracts"));
+const packageJson = require('../package.json');
 // configuration
+commander_1.program.version(packageJson.version);
 //prettier-ignore
 commander_1.program
     .command('config-init')
     .alias('ci')
     .description('create tznft.config file')
-    .action(networkConf.initUserConfig);
+    .action(config_util_1.initUserConfig);
 // selecting network
 //prettier-ignore
 commander_1.program
     .command('show-network')
-    .alias('shown')
+    .alias('shn')
     .description('show currently selected active network', { 'a': 'also shows all available networks' })
     .option('-a --all', 'shows all available configured networks', false)
     .action((options) => networkConf.showActiveNetwork(options.all)).passCommandToAction(false);

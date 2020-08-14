@@ -19,13 +19,11 @@ NA           12.1 print alias names when inspecting balance
 DONE    13. update operators
 DONE    14. get token metadata
 NA           14.1 use metadata to query balances for all tokens
-        15. Investigate dry run using taquito
-        16. Replace conf with configstore (maybe)
+WIP     15. Investigate dry run using taquito
+DONE    16. Replace conf with configstore (maybe)
 DONE    17. catch unhandled rejected promise
-WIP     18. Use ASCII art as token image stored in metadata extras
-WIP          18.1 generate ascii from image
-             18.2 add ascii to metadata when minting
-             18.3 show ascii when printing balances
+DONE    18. Research using ASCII art as token image stored in metadata extras
+            asciify-image, ascii-cats
 
 PHASE TWO
         1. Editable contracts

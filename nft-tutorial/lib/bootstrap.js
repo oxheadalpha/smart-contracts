@@ -38,10 +38,10 @@ function start(bootstrap) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const config = config_util_1.loadUserConfig();
-            const { network, configKey } = config_util_1.getActiveNetworkCfg(config);
+            const network = config.get('activeNetwork');
             if (network === 'sandbox')
                 yield startSandbox();
-            yield originateBalanceInspector(config, configKey, bootstrap);
+            yield originateBalanceInspector(config, bootstrap);
         }
         catch (err) {
             console.log(kleur.red('failed to start. ' + JSON.stringify(err)));
@@ -53,7 +53,7 @@ exports.start = start;
 function kill() {
     return __awaiter(this, void 0, void 0, function* () {
         const config = config_util_1.loadUserConfig();
-        const { network, configKey } = config_util_1.getActiveNetworkCfg(config);
+        const network = config.get('activeNetwork');
         if (network === 'sandbox')
             yield killSandbox();
     });
@@ -95,12 +95,12 @@ function killSandbox() {
         console.log(kleur.yellow('killed sandbox.'));
     });
 }
-function originateBalanceInspector(config, networkKey, orig_alias) {
+function originateBalanceInspector(config, orig_alias) {
     return __awaiter(this, void 0, void 0, function* () {
         console.log(kleur.yellow(`originating balance inspector contract...`));
         const tezos = yield contracts_1.createToolkit(orig_alias, config);
         const inspectorAddress = yield contracts_1.originateInspector(tezos);
-        config.set(config_util_1.getInspectorKey(config), inspectorAddress);
+        config.set(config_util_1.inspectorKey(config), inspectorAddress);
         console.log(kleur.yellow(`originated balance inspector ${kleur.green(inspectorAddress)}`));
     });
 }

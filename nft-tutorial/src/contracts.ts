@@ -1,14 +1,14 @@
-import Conf from 'conf';
+import Configstore from 'configstore';
 import * as kleur from 'kleur';
 import * as path from 'path';
 import { BigNumber } from 'bignumber.js';
 import { TezosToolkit, MichelsonMap } from '@taquito/taquito';
 import { InMemorySigner } from '@taquito/signer';
 import {
-  getActiveNetworkCfg,
-  getInspectorKey,
   loadUserConfig,
-  loadFile
+  loadFile,
+  activeNetworkKey,
+  inspectorKey
 } from './config-util';
 import { resolveAlias2Signer, resolveAlias2Address } from './config-aliases';
 import * as fa2 from './fa2-interface';
@@ -17,7 +17,7 @@ type InspectorStorage = fa2.BalanceOfResponse[] | {};
 
 export async function createToolkit(
   address_or_alias: string,
-  config: Conf<Record<string, string>>
+  config: Configstore
 ): Promise<TezosToolkit> {
   const signer = await resolveAlias2Signer(address_or_alias, config);
   return createToolkitFromSigner(signer, config);
@@ -25,13 +25,13 @@ export async function createToolkit(
 
 export function createToolkitFromSigner(
   signer: InMemorySigner,
-  config: Conf<Record<string, string>>
+  config: Configstore
 ): TezosToolkit {
-  const { network, configKey } = getActiveNetworkCfg(config);
-  const providerUrl = config.get(`${configKey}.providerUrl`);
+  const pk = `${activeNetworkKey(config)}.providerUrl`;
+  const providerUrl = config.get(pk);
   if (!providerUrl) {
     const msg = `network provider for ${kleur.yellow(
-      network
+      config.get('activeNetwork')
     )} URL is not configured`;
     console.log(kleur.red(msg));
     throw new Error(msg);
@@ -118,9 +118,8 @@ export async function showBalances(
     return { token_id: new BigNumber(t), owner: ownerAddress };
   });
 
-  const inspectorKey = getInspectorKey(config);
-  const inspectorAddress = config.get(inspectorKey);
-  if (!inspectorAddress) {
+  const inspectorAddress = config.get(inspectorKey(config));
+  if (!inspectorAddress || typeof inspectorAddress !== 'string') {
     console.log(
       kleur.red(
         'Cannot find deployed balance inspector contract.\nTry to kill and start network again.'
@@ -240,7 +239,7 @@ export async function transfer(
 
 async function resolveTxAddresses(
   transfers: fa2.Fa2Transfer[],
-  config: Conf<Record<string, string>>
+  config: Configstore
 ): Promise<fa2.Fa2Transfer[]> {
   const resolved = transfers.map(async t => {
     return {
@@ -253,7 +252,7 @@ async function resolveTxAddresses(
 
 async function resolveTxDestinationAddresses(
   txs: fa2.Fa2TransferDestination[],
-  config: Conf<Record<string, string>>
+  config: Configstore
 ): Promise<fa2.Fa2TransferDestination[]> {
   const resolved = txs.map(async t => {
     return {
@@ -280,7 +279,7 @@ export async function updateOperators(
 
 async function resolveOperators(
   operators: string[],
-  config: Conf<Record<string, string>>
+  config: Configstore
 ): Promise<string[]> {
   const resolved = operators.map(async o => resolveAlias2Address(o, config));
   return Promise.all(resolved);

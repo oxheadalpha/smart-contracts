@@ -2,6 +2,7 @@
 import { program } from 'commander';
 import * as kleur from 'kleur';
 import { TezosOperationError } from '@taquito/taquito';
+import { initUserConfig } from './config-util';
 import * as networkConf from './config-network';
 import * as aliasConf from './config-aliases';
 import * as bootstrap from './bootstrap';
@@ -17,14 +18,14 @@ program
   .command('config-init')
   .alias('ci')
   .description('create tznft.config file')
-  .action(networkConf.initUserConfig);
+  .action(initUserConfig);
 
 // selecting network
 
 //prettier-ignore
 program
   .command('show-network')
-  .alias('shown')
+  .alias('shn')
   .description(
     'show currently selected active network', 
     {'a': 'also shows all available networks'}

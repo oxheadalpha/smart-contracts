@@ -1,23 +1,18 @@
 import * as child from 'child_process';
-import * as fs from 'fs';
-import * as path from 'path';
 import * as kleur from 'kleur';
-import Conf from 'conf';
 import { Tezos } from '@taquito/taquito';
-import {
-  getActiveNetworkCfg,
-  loadUserConfig,
-  getInspectorKey
-} from './config-util';
+import { loadUserConfig, activeNetworkKey, inspectorKey } from './config-util';
 import { createToolkit, originateInspector } from './contracts';
+import Configstore from 'configstore';
 
 export async function start(bootstrap: string): Promise<void> {
   try {
     const config = loadUserConfig();
-    const { network, configKey } = getActiveNetworkCfg(config);
+
+    const network = config.get('activeNetwork');
     if (network === 'sandbox') await startSandbox();
 
-    await originateBalanceInspector(config, configKey, bootstrap);
+    await originateBalanceInspector(config, bootstrap);
   } catch (err) {
     console.log(kleur.red('failed to start. ' + JSON.stringify(err)));
     return;
@@ -26,7 +21,7 @@ export async function start(bootstrap: string): Promise<void> {
 
 export async function kill(): Promise<void> {
   const config = loadUserConfig();
-  const { network, configKey } = getActiveNetworkCfg(config);
+  const network = config.get('activeNetwork');
   if (network === 'sandbox') await killSandbox();
 }
 
@@ -74,8 +69,7 @@ async function killSandbox(): Promise<void> {
 }
 
 async function originateBalanceInspector(
-  config: Conf<Record<string, string>>,
-  networkKey: string,
+  config: Configstore,
   orig_alias: string
 ): Promise<void> {
   console.log(kleur.yellow(`originating balance inspector contract...`));
@@ -83,7 +77,7 @@ async function originateBalanceInspector(
   const tezos = await createToolkit(orig_alias, config);
   const inspectorAddress = await originateInspector(tezos);
 
-  config.set(getInspectorKey(config), inspectorAddress);
+  config.set(inspectorKey(config), inspectorAddress);
 
   console.log(
     kleur.yellow(

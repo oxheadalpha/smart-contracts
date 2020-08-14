@@ -1,44 +1,37 @@
-import Conf from 'conf';
+import Configstore from 'configstore';
 import * as kleur from 'kleur';
 import * as path from 'path';
 import { validateAddress, ValidationResult } from '@taquito/utils';
 import { InMemorySigner } from '@taquito/signer';
 import {
-  getActiveAliasesCfgKey,
   loadUserConfig,
-  loadFile
+  loadFile,
+  allAliasesKey,
+  aliasKey
 } from './config-util';
 import { createToolkitFromSigner } from './contracts';
 
 export function showAlias(alias: string): void {
   const config = loadUserConfig();
-  const aliasesKey = getActiveAliasesCfgKey(config, false);
-
-  if (alias) printAlias(alias, aliasesKey, config);
-  else printAllAliases(aliasesKey, config);
+  if (alias) printAlias(alias, config);
+  else printAllAliases(config);
 }
 
-function printAllAliases(
-  aliasesKey: string,
-  config: Conf<Record<string, string>>
-) {
-  const allAliasesCfg = config.get(aliasesKey);
+function printAllAliases(config: Configstore) {
+  const allAliasesCfg = config.get(allAliasesKey(config));
+  console.log('ALIASES');
+  console.log(config.get('availableNetworks.testnet.aliases'));
+  // console.log(allAliasesCfg);
   if (allAliasesCfg) {
     const allAliases = Object.getOwnPropertyNames(allAliasesCfg);
     for (let a of allAliases) {
-      printAlias(a, aliasesKey, config);
+      printAlias(a, config);
     }
   } else console.log(kleur.yellow('there are no configured aliases'));
 }
 
-function printAlias(
-  alias: string,
-  aliasesKey: string,
-  config: Conf<Record<string, string>>
-) {
-  const aliasKey = `${aliasesKey}.${alias}`;
-  const aliasDef = config.get(aliasKey);
-
+function printAlias(alias: string, config: Configstore) {
+  const aliasDef = config.get(aliasKey(alias, config));
   if (aliasDef) console.log(formatAlias(alias, aliasDef));
   else console.log(kleur.red(`alias ${kleur.yellow(alias)} is not configured`));
 }
@@ -54,15 +47,15 @@ export async function addAlias(
   key_or_address: string
 ): Promise<void> {
   const config = loadUserConfig();
-  const aliasKey = `${getActiveAliasesCfgKey(config, false)}.${alias}`;
-  if (config.has(aliasKey)) {
+  const ak = aliasKey(alias, config);
+  if (config.has(ak)) {
     console.log(kleur.red(`alias ${kleur.yellow(alias)} already exists`));
     return;
   }
   const aliasDef = await validateKey(key_or_address);
   if (!aliasDef) console.log(kleur.red('invalid address or secret key'));
   else {
-    config.set(aliasKey, {
+    config.set(ak, {
       address: aliasDef.address,
       secret: aliasDef.secret
     });
@@ -131,21 +124,20 @@ async function validateKey(
 
 export function removeAlias(alias: string): void {
   const config = loadUserConfig();
-  const aliasKey = `${getActiveAliasesCfgKey(config)}.${alias}`;
-  if (!config.has(aliasKey)) {
+  const ak = aliasKey(alias, config);
+  if (!config.has(ak)) {
     console.log(kleur.red(`alias ${kleur.yellow(alias)} does not exists`));
     return;
   }
-  config.delete(aliasKey);
+  config.delete(ak);
   console.log(kleur.yellow(`alias ${kleur.green(alias)} has been deleted`));
 }
 
 export async function resolveAlias2Signer(
   alias_or_address: string,
-  config: Conf<Record<string, string>>
+  config: Configstore
 ): Promise<InMemorySigner> {
-  const aliasKey = `${getActiveAliasesCfgKey(config)}.${alias_or_address}`;
-  const aliasDef: any = config.get(aliasKey);
+  const aliasDef = config.get(aliasKey(alias_or_address, config));
   if (aliasDef?.secret) {
     const ad = await validateKey(aliasDef.secret);
     if (ad?.signer) return ad.signer;
@@ -161,14 +153,14 @@ export async function resolveAlias2Signer(
 }
 
 function findAlias(
-  config: Conf<Record<string, string>>,
+  config: Configstore,
   predicate: (aliasDef: any) => boolean
 ): any {
-  const aliasesKey = getActiveAliasesCfgKey(config);
-  const allAliases = Object.getOwnPropertyNames(config.get(aliasesKey));
+  const allAliases = Object.getOwnPropertyNames(
+    config.get(allAliasesKey(config))
+  );
   for (let a of allAliases) {
-    const aliasKey = `${aliasesKey}.${a}`;
-    const aliasDef: any = config.get(aliasKey);
+    const aliasDef: any = config.get(aliasKey(a, config));
     if (predicate(aliasDef)) return aliasDef;
   }
   return undefined;
@@ -176,15 +168,15 @@ function findAlias(
 
 export async function resolveAlias2Address(
   alias_or_address: string,
-  config: Conf<Record<string, string>>
+  config: Configstore
 ): Promise<string> {
   if (validateAddress(alias_or_address) === ValidationResult.VALID)
     return alias_or_address;
 
-  const aliasKey = `${getActiveAliasesCfgKey(config)}.${alias_or_address}`;
-  if (!config.has(aliasKey)) return cannotResolve(alias_or_address);
+  const ak = aliasKey(alias_or_address, config);
+  if (!config.has(ak)) return cannotResolve(alias_or_address);
 
-  const aliasDef: any = config.get(aliasKey);
+  const aliasDef: any = config.get(ak);
   return aliasDef.address;
 }
 

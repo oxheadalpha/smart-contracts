@@ -1,19 +1,33 @@
-import Conf from 'conf';
+// import Conf from 'conf';
+import Configstore from 'configstore';
 import * as path from 'path';
 import * as fs from 'fs';
 import * as kleur from 'kleur';
+const packageJson = require('../package.json');
 
 const userConfigFile = path.join(process.cwd(), 'tznft');
 export const userConfigFileWithExt = userConfigFile + '.json';
 
-export function loadUserConfig(): Conf<Record<string, string>> {
-  if (fs.existsSync(userConfigFileWithExt))
-    return new Conf({
-      configName: 'tznft',
-      cwd: process.cwd(),
-      serialize: v => JSON.stringify(v, null, 2)
-    });
-  else {
+export function initUserConfig(): void {
+  if (fs.existsSync(userConfigFileWithExt)) {
+    console.log(kleur.yellow('tznft.json config file already exists'));
+  } else {
+    fs.copyFileSync(
+      path.join(__dirname, '../tznft.json'),
+      userConfigFileWithExt
+    );
+    console.log(`${kleur.green('tznft.json')} config file created`);
+  }
+}
+
+export function loadUserConfig(): Configstore {
+  if (fs.existsSync(userConfigFileWithExt)) {
+    return new Configstore(
+      packageJson.name,
+      {},
+      { configPath: userConfigFileWithExt }
+    );
+  } else {
     const msg = 'no tznft.json config file found';
     console.log(kleur.red(msg));
     suggestCommand('config-int');
@@ -26,49 +40,26 @@ interface ActiveNetworkCfg {
   configKey: string;
 }
 
-export function getActiveNetworkCfg(
-  config: Conf<Record<string, string>>
-): ActiveNetworkCfg {
+export function activeNetworkKey(config: Configstore): string {
   const network = config.get('activeNetwork');
-  if (!network) {
-    console.log(kleur.red('No active network selected'));
-    suggestCommand('set-network <network>');
-    throw new Error('No active network selected');
-  }
-
-  const configKey = `availableNetworks.${network}`;
-  if (!config.has(configKey)) {
-    const msg = `Currently active network ${kleur.yellow(
-      network
-    )}  is not configured`;
+  if (typeof network === 'string') {
+    return `availableNetworks.${network}`;
+  } else {
+    const msg = 'no active network selected';
     console.log(kleur.red(msg));
-    suggestCommand('set-network <network>');
+    suggestCommand('set-network');
     throw new Error(msg);
   }
-
-  return { network, configKey };
 }
 
-export function getActiveAliasesCfgKey(
-  config: Conf<Record<string, string>>,
-  validate: boolean = true
-): string {
-  const { configKey } = getActiveNetworkCfg(config);
+export const allAliasesKey = (config: Configstore) =>
+  `${activeNetworkKey(config)}.aliases`;
 
-  const aliasesConfigKey = `${configKey}.aliases`;
-  if (!config.has(aliasesConfigKey) && validate) {
-    const msg = 'there are no configured account aliases';
-    console.log(kleur.red(msg));
-    throw new Error(msg);
-  }
+export const aliasKey = (alias: string, config: Configstore) =>
+  `${allAliasesKey(config)}.${alias}`;
 
-  return aliasesConfigKey;
-}
-
-export function getInspectorKey(config: Conf<Record<string, string>>): string {
-  const { configKey } = getActiveNetworkCfg(config);
-  return `${configKey}.inspector`;
-}
+export const inspectorKey = (config: Configstore) =>
+  `${activeNetworkKey(config)}.inspector`;
 
 export async function loadFile(filePath: string): Promise<string> {
   return new Promise<string>((resolve, reject) => {
