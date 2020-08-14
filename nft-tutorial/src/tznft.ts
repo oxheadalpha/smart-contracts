@@ -6,8 +6,11 @@ import * as networkConf from './config-network';
 import * as aliasConf from './config-aliases';
 import * as bootstrap from './bootstrap';
 import * as contracts from './contracts';
+const packageJson = require('../package.json');
 
 // configuration
+
+program.version(packageJson.version);
 
 //prettier-ignore
 program
