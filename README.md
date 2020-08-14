@@ -83,6 +83,6 @@ minted or burned.
 ### [nft-tutorial](nft-tutorial)
 
 [fa2_fixed_collection_token.mligo](nft-tutorial/ligo/src/fa2_fixed_collection_token.mligo)
-simplified implementation of the he fixed collection of NFT tokens (does not include
-administrator).
-The project also includes CLI tool to mint, transfer inspect NFTs.
+simplified implementation of the fixed collection of NFT tokens (does not include
+the administrator).
+The project also includes CLI tool to mint, transfer and inspect NFTs.
