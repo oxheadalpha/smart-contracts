@@ -1,20 +1,5 @@
-import Conf from 'conf';
-import * as path from 'path';
-import * as fs from 'fs';
 import * as kleur from 'kleur';
-import { userConfigFileWithExt, loadUserConfig } from './config-util';
-
-export function initUserConfig(): void {
-  if (fs.existsSync(userConfigFileWithExt)) {
-    console.log(kleur.yellow('tznft.json config file already exists'));
-  } else {
-    fs.copyFileSync(
-      path.join(__dirname, '../tznft.json'),
-      userConfigFileWithExt
-    );
-    console.log(`${kleur.green('tznft.json')} config file created`);
-  }
-}
+import { loadUserConfig } from './config-util';
 
 export function showActiveNetwork(all: boolean): void {
   const config = loadUserConfig();
@@ -27,7 +12,7 @@ export function showActiveNetwork(all: boolean): void {
     );
   else {
     const allNetworks = Object.getOwnPropertyNames(
-      config.store.availableNetworks
+      config.all.availableNetworks
     );
     for (let n of allNetworks) {
       if (n === network) console.log(kleur.bold().green(`* ${n}`));
@@ -53,6 +38,6 @@ export function setNetwork(network: string): void {
 
 export function showConfig(): void {
   const config = loadUserConfig();
-  const c = JSON.stringify(config.store, null, 2);
+  const c = JSON.stringify(config.all, null, 2);
   console.info(c);
 }

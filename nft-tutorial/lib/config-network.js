@@ -19,28 +19,16 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.showConfig = exports.setNetwork = exports.showActiveNetwork = exports.initUserConfig = void 0;
-const path = __importStar(require("path"));
-const fs = __importStar(require("fs"));
+exports.showConfig = exports.setNetwork = exports.showActiveNetwork = void 0;
 const kleur = __importStar(require("kleur"));
 const config_util_1 = require("./config-util");
-function initUserConfig() {
-    if (fs.existsSync(config_util_1.userConfigFileWithExt)) {
-        console.log(kleur.yellow('tznft.json config file already exists'));
-    }
-    else {
-        fs.copyFileSync(path.join(__dirname, '../tznft.json'), config_util_1.userConfigFileWithExt);
-        console.log(`${kleur.green('tznft.json')} config file created`);
-    }
-}
-exports.initUserConfig = initUserConfig;
 function showActiveNetwork(all) {
     const config = config_util_1.loadUserConfig();
     const network = config.get('activeNetwork');
     if (!all)
         console.log(`active network: ${network ? kleur.green(network) : kleur.red('not selected')}`);
     else {
-        const allNetworks = Object.getOwnPropertyNames(config.store.availableNetworks);
+        const allNetworks = Object.getOwnPropertyNames(config.all.availableNetworks);
         for (let n of allNetworks) {
             if (n === network)
                 console.log(kleur.bold().green(`* ${n}`));
@@ -64,7 +52,7 @@ function setNetwork(network) {
 exports.setNetwork = setNetwork;
 function showConfig() {
     const config = config_util_1.loadUserConfig();
-    const c = JSON.stringify(config.store, null, 2);
+    const c = JSON.stringify(config.all, null, 2);
     console.info(c);
 }
 exports.showConfig = showConfig;

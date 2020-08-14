@@ -44,10 +44,10 @@ function createToolkit(address_or_alias, config) {
 }
 exports.createToolkit = createToolkit;
 function createToolkitFromSigner(signer, config) {
-    const { network, configKey } = config_util_1.getActiveNetworkCfg(config);
-    const providerUrl = config.get(`${configKey}.providerUrl`);
+    const pk = `${config_util_1.activeNetworkKey(config)}.providerUrl`;
+    const providerUrl = config.get(pk);
     if (!providerUrl) {
-        const msg = `network provider for ${kleur.yellow(network)} URL is not configured`;
+        const msg = `network provider for ${kleur.yellow(config.get('activeNetwork'))} URL is not configured`;
         console.log(kleur.red(msg));
         throw new Error(msg);
     }
@@ -116,9 +116,8 @@ function showBalances(operator, nft, owner, tokens) {
         const requests = tokens.map(t => {
             return { token_id: new bignumber_js_1.BigNumber(t), owner: ownerAddress };
         });
-        const inspectorKey = config_util_1.getInspectorKey(config);
-        const inspectorAddress = config.get(inspectorKey);
-        if (!inspectorAddress) {
+        const inspectorAddress = config.get(config_util_1.inspectorKey(config));
+        if (!inspectorAddress || typeof inspectorAddress !== 'string') {
             console.log(kleur.red('Cannot find deployed balance inspector contract.\nTry to kill and start network again.'));
             return;
         }

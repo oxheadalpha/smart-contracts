@@ -37,27 +37,28 @@ const config_util_1 = require("./config-util");
 const contracts_1 = require("./contracts");
 function showAlias(alias) {
     const config = config_util_1.loadUserConfig();
-    const aliasesKey = config_util_1.getActiveAliasesCfgKey(config, false);
     if (alias)
-        printAlias(alias, aliasesKey, config);
+        printAlias(alias, config);
     else
-        printAllAliases(aliasesKey, config);
+        printAllAliases(config);
 }
 exports.showAlias = showAlias;
-function printAllAliases(aliasesKey, config) {
-    const allAliasesCfg = config.get(aliasesKey);
+function printAllAliases(config) {
+    const allAliasesCfg = config.get(config_util_1.allAliasesKey(config));
+    console.log('ALIASES');
+    console.log(config.get('availableNetworks.testnet.aliases'));
+    // console.log(allAliasesCfg);
     if (allAliasesCfg) {
         const allAliases = Object.getOwnPropertyNames(allAliasesCfg);
         for (let a of allAliases) {
-            printAlias(a, aliasesKey, config);
+            printAlias(a, config);
         }
     }
     else
         console.log(kleur.yellow('there are no configured aliases'));
 }
-function printAlias(alias, aliasesKey, config) {
-    const aliasKey = `${aliasesKey}.${alias}`;
-    const aliasDef = config.get(aliasKey);
+function printAlias(alias, config) {
+    const aliasDef = config.get(config_util_1.aliasKey(alias, config));
     if (aliasDef)
         console.log(formatAlias(alias, aliasDef));
     else
@@ -69,8 +70,8 @@ function formatAlias(alias, def) {
 function addAlias(alias, key_or_address) {
     return __awaiter(this, void 0, void 0, function* () {
         const config = config_util_1.loadUserConfig();
-        const aliasKey = `${config_util_1.getActiveAliasesCfgKey(config, false)}.${alias}`;
-        if (config.has(aliasKey)) {
+        const ak = config_util_1.aliasKey(alias, config);
+        if (config.has(ak)) {
             console.log(kleur.red(`alias ${kleur.yellow(alias)} already exists`));
             return;
         }
@@ -78,7 +79,7 @@ function addAlias(alias, key_or_address) {
         if (!aliasDef)
             console.log(kleur.red('invalid address or secret key'));
         else {
-            config.set(aliasKey, {
+            config.set(ak, {
                 address: aliasDef.address,
                 secret: aliasDef.secret
             });
@@ -134,19 +135,18 @@ function validateKey(key_or_address) {
 }
 function removeAlias(alias) {
     const config = config_util_1.loadUserConfig();
-    const aliasKey = `${config_util_1.getActiveAliasesCfgKey(config)}.${alias}`;
-    if (!config.has(aliasKey)) {
+    const ak = config_util_1.aliasKey(alias, config);
+    if (!config.has(ak)) {
         console.log(kleur.red(`alias ${kleur.yellow(alias)} does not exists`));
         return;
     }
-    config.delete(aliasKey);
+    config.delete(ak);
     console.log(kleur.yellow(`alias ${kleur.green(alias)} has been deleted`));
 }
 exports.removeAlias = removeAlias;
 function resolveAlias2Signer(alias_or_address, config) {
     return __awaiter(this, void 0, void 0, function* () {
-        const aliasKey = `${config_util_1.getActiveAliasesCfgKey(config)}.${alias_or_address}`;
-        const aliasDef = config.get(aliasKey);
+        const aliasDef = config.get(config_util_1.aliasKey(alias_or_address, config));
         if (aliasDef === null || aliasDef === void 0 ? void 0 : aliasDef.secret) {
             const ad = yield validateKey(aliasDef.secret);
             if (ad === null || ad === void 0 ? void 0 : ad.signer)
@@ -162,11 +162,9 @@ function resolveAlias2Signer(alias_or_address, config) {
 }
 exports.resolveAlias2Signer = resolveAlias2Signer;
 function findAlias(config, predicate) {
-    const aliasesKey = config_util_1.getActiveAliasesCfgKey(config);
-    const allAliases = Object.getOwnPropertyNames(config.get(aliasesKey));
+    const allAliases = Object.getOwnPropertyNames(config.get(config_util_1.allAliasesKey(config)));
     for (let a of allAliases) {
-        const aliasKey = `${aliasesKey}.${a}`;
-        const aliasDef = config.get(aliasKey);
+        const aliasDef = config.get(config_util_1.aliasKey(a, config));
         if (predicate(aliasDef))
             return aliasDef;
     }
@@ -176,10 +174,10 @@ function resolveAlias2Address(alias_or_address, config) {
     return __awaiter(this, void 0, void 0, function* () {
         if (utils_1.validateAddress(alias_or_address) === utils_1.ValidationResult.VALID)
             return alias_or_address;
-        const aliasKey = `${config_util_1.getActiveAliasesCfgKey(config)}.${alias_or_address}`;
-        if (!config.has(aliasKey))
+        const ak = config_util_1.aliasKey(alias_or_address, config);
+        if (!config.has(ak))
             return cannotResolve(alias_or_address);
-        const aliasDef = config.get(aliasKey);
+        const aliasDef = config.get(ak);
         return aliasDef.address;
     });
 }
