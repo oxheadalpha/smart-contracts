@@ -56,6 +56,10 @@ of the FA2 contract that supports single fungible tokens (a.k.a ERC-20).
 implementation of the FA2 contract that supports single fungible tokens (a.k.a ERC-20)
 and sender/receiver hooks.
 
+[fa12_lorentz.tz](single_asset/lorentz/out/fa12_lorentz.tz)
+implementation of the FA1.2 contract that supports single fungible tokens
+(a.k.a. ERC-20).
+
 ### [multi_asset](multi_asset)
 
 [fa2_multi_asset.mligo](multi_asset/ligo/src/fa2_multi_asset.mligo) implementation

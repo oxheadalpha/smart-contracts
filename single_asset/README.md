@@ -14,6 +14,10 @@ Implementation of the FA2 token contract (TZIP-12) for a single asset.
     FA2 contract, test helper contracts and code.
   * [`ligo/out`](ligo/out/) folder - multi-asset FA2 contract and helper contract
     compiled into Michelson.
+* [`lorentz`](lorentz/) - contracts code defined in [Lorentz](http://hackage.haskell.org/package/lorentz)
+  * [`lorentz/out/fa12_lorentz.tz`](lorentz/out/fa12_lorentz.tz) - FA1.2 contract
+  * [`lorentz/lorentz/Makefile`](lorentz/Makefile) - Makefile to compile the
+    FA1.2 contract, Haskell library, and tools
 * [`tezos_fa2_single_tests`](tezos_fa2_single_tests/) folder - Python single asset
 FA2  contract tests implemented with
 [Pytezos](https://github.com/baking-bad/pytezos) and
