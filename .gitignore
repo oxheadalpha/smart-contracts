@@ -9,3 +9,4 @@ node_modules
 **/__pycache__
 **/*.pyc
 **/*.egg-info
+single_asset/lorentz/morley-ledgers/
