@@ -12,7 +12,7 @@ build_morley_ledgers: get_stack get_morley_ledgers
 fa12: build_morley_ledgers
 	ls out || mkdir out
 	rm -f out/fa12_lorentz.tz
-	cd morley-ledgers && stack exec morley-ledgers -- print -n ManagedLedger > ../out/fa12_lorentz.tz
+	cd morley-ledgers && stack exec morley-ledgers -- print --name ManagedLedger --output ../out/fa12_lorentz.tz
 
 run: build_morley_ledgers
 	cd morley-ledgers && stack exec morley-ledgers -- $(ARG)
