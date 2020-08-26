@@ -8,13 +8,22 @@ type TestKeys = {
 };
 
 async function flextesaKeys(): Promise<TestKeys> {
-  const bobK = InMemorySigner.fromSecretKey(
+  const bob = await InMemorySigner.fromSecretKey(
     'edsk3RFgDiCt7tWB2oe96w1eRw72iYiiqZPLu9nnEY23MYRp2d8Kkx'
   );
-  const aliceK = InMemorySigner.fromSecretKey(
+  const alice = await InMemorySigner.fromSecretKey(
     'edsk3QoqBuvdamxouPhin7swCvkQNgq4jP5KZPbwWNnwdZpSpJiEbq'
   );
-  const [bob, alice] = await Promise.all([bobK, aliceK]);
+  return { bob, alice };
+}
+
+async function testnetKeys(): Promise<TestKeys> {
+  const bob = await InMemorySigner.fromSecretKey(
+    'edskRfLsHb49bP4dTpYzAZ7qHCX4ByK2g6Cwq2LWqRYAQSeRpziaZGBW72vrJnp1ahLGKd9rXUf7RHzm8EmyPgseUi3VS9putT'
+  );
+  const alice = await InMemorySigner.fromSecretKey(
+    'edskRqb8GgnD4d2B7nR3ofJajDU7kwooUzXz7yMwRdLDP9j7Z1DvhaeBcs8WkJ4ELXXJgVkq5tGwrFibojDjYVaG7n4Tq1qDxZ'
+  );
   return { bob, alice };
 }
 
@@ -23,11 +32,11 @@ export type TestTz = {
   alice: TezosToolkit;
 };
 
-function signerToToolkit(signer: Signer): TezosToolkit {
+function signerToToolkit(signer: Signer, rpc: string): TezosToolkit {
   const tezos = new TezosToolkit();
   tezos.setProvider({
     signer,
-    rpc: 'http://localhost:20000',
+    rpc,
     config: { confirmationPollingIntervalSecond: 3 }
   });
   return tezos;
@@ -35,9 +44,18 @@ function signerToToolkit(signer: Signer): TezosToolkit {
 
 export async function bootstrap(): Promise<TestTz> {
   const { bob, alice } = await flextesaKeys();
-  const result = {
-    bob: signerToToolkit(bob),
-    alice: signerToToolkit(alice)
+  const rpc = 'http://localhost:20000';
+  return {
+    bob: signerToToolkit(bob, rpc),
+    alice: signerToToolkit(alice, rpc)
   };
-  return Promise.resolve(result);
+}
+
+export async function bootstrapTestnet(): Promise<TestTz> {
+  const { bob, alice } = await testnetKeys();
+  const rpc = 'https://testnet-tezos.giganode.io';
+  return {
+    bob: signerToToolkit(bob, rpc),
+    alice: signerToToolkit(alice, rpc)
+  };
 }
