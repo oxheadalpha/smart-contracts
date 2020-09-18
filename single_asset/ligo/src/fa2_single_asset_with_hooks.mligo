@@ -31,7 +31,7 @@ let store : single_asset_storage = {
       };
       assets = {
           ledger = (Big_map.empty : (address, nat) big_map);
-          operators = (Big_map.empty : ((address * address), unit) big_map);
+          operators = (Big_map.empty : operator_storage);
           token_metadata = Big_map.literal [
             (
               0n, 
