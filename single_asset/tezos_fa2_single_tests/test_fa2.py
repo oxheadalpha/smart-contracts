@@ -68,7 +68,7 @@ class TestFa2SetUp(TestCase):
             };
             assets = {
                 ledger = (Big_map.empty : (address, nat) big_map);
-                operators = (Big_map.empty : ((address * address), unit) big_map);
+                operators = (Big_map.empty : operator_storage);
                 token_metadata = Big_map.literal [
                   (
                     0n, 
@@ -154,7 +154,7 @@ class TestOperator(TestFa2SetUp):
     def test_add_operator_to_receiver(self):
 
         op_add = self.alice_receiver.owner_add_operator(
-            fa2=self.fa2.address, operator=self.admin_key.public_key_hash()
+            fa2=self.fa2.address, operator=self.admin_key.public_key_hash(), token_id=0
         ).inject()
         self.util.wait_for_ops(op_add)
 
@@ -165,7 +165,7 @@ class TestTransfer(TestFa2SetUp):
         self.pause_fa2(False)
 
         op_op = self.alice_receiver.owner_add_operator(
-            fa2=self.fa2.address, operator=self.admin_key.public_key_hash()
+            fa2=self.fa2.address, operator=self.admin_key.public_key_hash(), token_id=0
         ).inject()
         self.util.wait_for_ops(op_op)
         print("transfer test setup completed")
