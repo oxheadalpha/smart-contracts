@@ -160,12 +160,13 @@
                                NEQ ;
                                IF { DROP }
                                   { DUP ;
+                                    DUG 2 ;
                                     CDR ;
                                     SENDER ;
                                     PAIR ;
-                                    DIG 2 ;
+                                    SWAP ;
                                     DUP ;
-                                    DUG 3 ;
+                                    DUG 2 ;
                                     SWAP ;
                                     DUP ;
                                     DUG 2 ;
@@ -173,7 +174,7 @@
                                     IF_NONE
                                       { DROP 3 ; PUSH string "UNKNOWN TOKEN" ; FAILWITH }
                                       { DUP ;
-                                        DIG 3 ;
+                                        DIG 4 ;
                                         CAR ;
                                         CAR ;
                                         DIG 2 ;
