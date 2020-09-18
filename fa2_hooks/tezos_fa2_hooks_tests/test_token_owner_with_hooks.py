@@ -32,7 +32,7 @@ class TestHooks(TestMacSetUp):
         self.pause_fa2(False)
 
         op_op = self.alice_receiver.owner_add_operator(
-            fa2=self.fa2.address, operator=self.admin_key.public_key_hash()
+            fa2=self.fa2.address, operator=self.admin_key.public_key_hash(), token_id=1
         ).inject()
         self.util.wait_for_ops(op_op)
         print("transfer test setup completed")

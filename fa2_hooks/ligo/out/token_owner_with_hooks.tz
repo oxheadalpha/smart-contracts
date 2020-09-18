@@ -1,7 +1,10 @@
 { parameter
     (or (or (or %owner
-               (or (unit %default) (pair %owner_add_operator (address %fa2) (address %operator)))
-               (pair %owner_remove_operator (address %fa2) (address %operator)))
+               (or (unit %default)
+                   (pair %owner_add_operator (pair (address %fa2) (address %operator)) (nat %token_id)))
+               (pair %owner_remove_operator
+                  (pair (address %fa2) (address %operator))
+                  (nat %token_id)))
             (pair %tokens_received
                (list %batch
                   (pair (option %from_ address)
@@ -40,24 +43,35 @@
              SWAP ;
              PAIR } ;
          LAMBDA
-           (pair address address)
-           (pair address address)
-           { DUP ; CAR ; SWAP ; CDR ; PAIR } ;
+           (pair (pair address address) nat)
+           (pair address (pair address nat))
+           { DUP ;
+             CDR ;
+             SWAP ;
+             DUP ;
+             DUG 2 ;
+             CAR ;
+             CAR ;
+             PAIR ;
+             SWAP ;
+             CAR ;
+             CDR ;
+             PAIR } ;
          LAMBDA
-           (pair (lambda (pair address address) (pair address address))
-                 (or (pair address address) (pair address address)))
-           (or (pair address address) (pair address address))
+           (pair (lambda (pair (pair address address) nat) (pair address (pair address nat)))
+                 (or (pair (pair address address) nat) (pair (pair address address) nat)))
+           (or (pair address (pair address nat)) (pair address (pair address nat)))
            { DUP ;
              CDR ;
              SWAP ;
              CAR ;
              SWAP ;
              IF_LEFT
-               { EXEC ; LEFT (pair (address %owner) (address %operator)) }
-               { EXEC ; RIGHT (pair (address %owner) (address %operator)) } ;
+               { EXEC ; LEFT (pair (address %owner) (pair (address %operator) (nat %token_id))) }
+               { EXEC ; RIGHT (pair (address %owner) (pair (address %operator) (nat %token_id))) } ;
              IF_LEFT
-               { LEFT (pair (address %owner) (address %operator)) }
-               { RIGHT (pair (address %owner) (address %operator)) } } ;
+               { LEFT (pair (address %owner) (pair (address %operator) (nat %token_id))) }
+               { RIGHT (pair (address %owner) (pair (address %operator) (nat %token_id))) } } ;
          SWAP ;
          APPLY ;
          DIG 2 ;
@@ -73,28 +87,33 @@
                  IF_LEFT
                    { IF_LEFT
                        { DIG 2 ; DROP 2 ; UNIT ; NIL operation ; PAIR }
-                       { SELF ;
+                       { DUP ;
+                         CDR ;
+                         SELF ;
                          ADDRESS ;
-                         SWAP ;
+                         DIG 2 ;
                          DUP ;
-                         DUG 2 ;
+                         DUG 3 ;
+                         CAR ;
                          CDR ;
                          PAIR ;
-                         LEFT (pair (address %operator) (address %owner)) ;
+                         PAIR ;
+                         LEFT (pair (pair (address %operator) (address %owner)) (nat %token_id)) ;
                          DIG 3 ;
                          SWAP ;
                          EXEC ;
                          SWAP ;
                          CAR ;
+                         CAR ;
                          CONTRACT %update_operators
-                           (list (or (pair %add_operator (address %owner) (address %operator))
-                                     (pair %remove_operator (address %owner) (address %operator)))) ;
+                           (list (or (pair %add_operator (address %owner) (pair (address %operator) (nat %token_id)))
+                                     (pair %remove_operator (address %owner) (pair (address %operator) (nat %token_id))))) ;
                          IF_NONE
                            { PUSH string "bad address for get_entrypoint (%update_operators)" ;
                              FAILWITH }
                            {} ;
                          PUSH mutez 0 ;
-                         NIL (or (pair address address) (pair address address)) ;
+                         NIL (or (pair address (pair address nat)) (pair address (pair address nat))) ;
                          DIG 3 ;
                          CONS ;
                          TRANSFER_TOKENS ;
@@ -103,28 +122,33 @@
                          DIG 2 ;
                          CONS ;
                          PAIR } }
-                   { SELF ;
+                   { DUP ;
+                     CDR ;
+                     SELF ;
                      ADDRESS ;
-                     SWAP ;
+                     DIG 2 ;
                      DUP ;
-                     DUG 2 ;
+                     DUG 3 ;
+                     CAR ;
                      CDR ;
                      PAIR ;
-                     RIGHT (pair (address %operator) (address %owner)) ;
+                     PAIR ;
+                     RIGHT (pair (pair (address %operator) (address %owner)) (nat %token_id)) ;
                      DIG 3 ;
                      SWAP ;
                      EXEC ;
                      SWAP ;
                      CAR ;
+                     CAR ;
                      CONTRACT %update_operators
-                       (list (or (pair %add_operator (address %owner) (address %operator))
-                                 (pair %remove_operator (address %owner) (address %operator)))) ;
+                       (list (or (pair %add_operator (address %owner) (pair (address %operator) (nat %token_id)))
+                                 (pair %remove_operator (address %owner) (pair (address %operator) (nat %token_id))))) ;
                      IF_NONE
                        { PUSH string "bad address for get_entrypoint (%update_operators)" ;
                          FAILWITH }
                        {} ;
                      PUSH mutez 0 ;
-                     NIL (or (pair address address) (pair address address)) ;
+                     NIL (or (pair address (pair address nat)) (pair address (pair address nat))) ;
                      DIG 3 ;
                      CONS ;
                      TRANSFER_TOKENS ;
@@ -149,28 +173,31 @@
                  CAR ;
                  ITER { CDR ;
                         ITER { DUP ;
+                               DUG 2 ;
                                CAR ;
                                CDR ;
                                IF_NONE
-                                 { DROP }
+                                 { SWAP ; DROP }
                                  { SELF ;
                                    ADDRESS ;
                                    SWAP ;
                                    COMPARE ;
                                    NEQ ;
-                                   IF { DROP }
-                                      { DUP ;
+                                   IF { SWAP ; DROP }
+                                      { SWAP ;
+                                        DUP ;
+                                        DUG 2 ;
                                         CDR ;
                                         SENDER ;
                                         PAIR ;
-                                        DIG 2 ;
+                                        SWAP ;
                                         DUP ;
-                                        DUG 3 ;
+                                        DUG 2 ;
                                         SWAP ;
                                         DUP ;
                                         DUG 2 ;
                                         GET ;
-                                        IF_NONE { SWAP ; CAR ; CAR } { DIG 2 ; CAR ; CAR ; ADD } ;
+                                        IF_NONE { DIG 2 ; CAR ; CAR } { DIG 3 ; CAR ; CAR ; ADD } ;
                                         DIG 2 ;
                                         SWAP ;
                                         SOME ;
@@ -202,10 +229,11 @@
                         IF { DROP }
                            { CDR ;
                              ITER { DUP ;
+                                    DUG 2 ;
                                     CDR ;
                                     SENDER ;
                                     PAIR ;
-                                    SWAP ;
+                                    DIG 2 ;
                                     CAR ;
                                     CAR ;
                                     DIG 2 ;

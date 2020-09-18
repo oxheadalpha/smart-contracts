@@ -53,18 +53,18 @@ let dec_balance (owner, token_id, amt, ledger
 Update leger balances according to the specified transfers. Fails if any of the
 permissions or constraints are violated.
 @param txs transfers to be applied to the ledger
-@param owner_validator function that validates of the tokens from the particular owner can be transferred. 
+@param validate_op function that validates of the tokens from the particular owner can be transferred. 
  *)
-let transfer (txs, owner_validator, storage
-    : (transfer list) * ((address * operator_storage) -> unit) * multi_token_storage)
+let transfer (txs, validate_op, storage
+    : (transfer list) * operator_validator * multi_token_storage)
     : ledger =
   let make_transfer = fun (l, tx : ledger * transfer) ->
-    let u = owner_validator (tx.from_, storage.operators) in
     List.fold 
       (fun (ll, dst : ledger * transfer_destination) ->
         if not Big_map.mem dst.token_id storage.token_metadata
         then (failwith fa2_token_undefined : ledger)
         else
+          let u = validate_op (tx.from_, Tezos.sender, dst.token_id, storage.operators) in
           let lll = dec_balance (tx.from_, dst.token_id, dst.amount, ll) in
           inc_balance(dst.to_, dst.token_id, dst.amount, lll)
       ) tx.txs l
@@ -101,8 +101,7 @@ let fa2_main (param, storage : fa2_entry_points * multi_token_storage)
     will validate that a sender is either `from_` parameter of each transfer
     or a permitted operator for the owner `from_` address.
     *)
-    let validator = make_default_operator_validator Tezos.sender in
-    let new_ledger = transfer (txs, validator, storage) in
+    let new_ledger = transfer (txs, default_operator_validator, storage) in
     let new_storage = { storage with ledger = new_ledger; } in
 
     let hook_ops = get_owner_hook_ops (txs, storage.permissions_descriptor) in
