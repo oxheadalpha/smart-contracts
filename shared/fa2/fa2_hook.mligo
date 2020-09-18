@@ -1,11 +1,11 @@
 (** 
-Optional FA2 contract entry point to setup a transfer hook contract.
+Optional FA2 contract entrypoint to setup a transfer hook contract.
 Transfer hook is one recommended design pattern to implement FA2 that enables
 separation of the core token transfer logic and a permission policy. Instead of
 implementing FA2 as a monolithic contract, a permission policy can be implemented
-as a separate contract. Permission policy contract provides an entry point invoked
+as a separate contract. Permission policy contract provides an entrypoint invoked
 by the core FA2 contract to accept or reject a particular transfer operation (such
-an entry point is called transfer hook)
+an entrypoint is called transfer hook)
  *)
 
 #if !FA2_HOOK

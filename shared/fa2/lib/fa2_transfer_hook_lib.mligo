@@ -3,7 +3,7 @@
  Each transfer hook contract maintains a registry of known FA2 contracts and
  validates that it is invoked from registered FA2 contracts.
  
- The implementation assumes that the transfer hook entry point is labeled as
+ The implementation assumes that the transfer hook entrypoint is labeled as
  `%tokens_transferred_hook`.
  *)
  
