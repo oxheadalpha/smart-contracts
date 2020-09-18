@@ -35,13 +35,12 @@ type fa2_collection_entrypoints =
 Update leger balances according to the specified transfers. Fails if any of the
 permissions or constraints are violated.
 @param txs transfers to be applied to the ledger
-@param owner_validator function that validates of the tokens from the particular owner can be transferred. 
+@param validate_op function that validates of the tokens from the particular owner can be transferred. 
  *)
-let transfer (txs, owner_validator, ops_storage, ledger
-    : (transfer list) * ((address * operator_storage) -> unit) * operator_storage * ledger) : ledger =
+let transfer (txs, validate_op, ops_storage, ledger
+    : (transfer list) * operator_validator * operator_storage * ledger) : ledger =
   (* process individual transfer *)
   let make_transfer = (fun (l, tx : ledger * transfer) ->
-    let u = owner_validator (tx.from_, ops_storage) in
     List.fold 
       (fun (ll, dst : ledger * transfer_destination) ->
         if dst.amount = 0n
@@ -55,7 +54,9 @@ let transfer (txs, owner_validator, ops_storage, ledger
           | Some o -> 
             if o <> tx.from_
             then (failwith fa2_insufficient_balance : ledger)
-            else Big_map.update dst.token_id (Some dst.to_) ll
+            else 
+              let u = validate_op (tx.from_, Tezos.sender, dst.token_id, ops_storage) in
+              Big_map.update dst.token_id (Some dst.to_) ll
       ) tx.txs l
   )
   in 
@@ -89,8 +90,7 @@ let fa2_collection_main (param, storage : fa2_entry_points * collection_storage)
   match param with
   | Transfer txs_michelson ->
     let txs = transfers_from_michelson txs_michelson in
-    let validator = make_default_operator_validator Tezos.sender in
-    let new_ledger = transfer (txs, validator, storage.operators, storage.ledger) in
+    let new_ledger = transfer (txs, default_operator_validator, storage.operators, storage.ledger) in
     let new_storage = { storage with ledger = new_ledger; } in
 
     let hook_ops = get_owner_hook_ops (txs, storage.permissions_descriptor) in
