@@ -72,7 +72,7 @@ let validate_owner(p, policy, get_owners, to_hook :
   | Required_owner_hook -> validate_owner_hook (p, get_owners, to_hook, true)
 
 (**
-Given an address of the token receiver, tries to get an entry point for
+Given an address of the token receiver, tries to get an entrypoint for
 `fa2_token_receiver` interface.
  *)
 let to_receiver_hook : to_hook = fun (a : address) ->
@@ -94,7 +94,7 @@ let validate_receivers (p, receiver_policy : transfer_descriptor_param * owner_h
   validate_owner (p, receiver_policy, get_receivers, to_receiver_hook)
 
 (**
-Given an address of the token sender, tries to get an entry point for
+Given an address of the token sender, tries to get an entrypoint for
 `fa2_token_sender` interface.
  *)
 let to_sender_hook : to_hook = fun (a : address) ->
