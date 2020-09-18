@@ -8,6 +8,7 @@ and can manage its own operators.
 type owner_operator_param = {
   fa2 : address;
   operator : address;
+  token_id : token_id;
 }
 
 type token_owner =
@@ -24,6 +25,7 @@ let token_owner_main (param, s : token_owner * unit)
     let param : operator_param = {
       operator = p.operator;
       owner = Current.self_address;
+      token_id = p.token_id;
     } in
     let param_michelson = operator_update_to_michelson (Add_operator_p param) in
     let fa2_update : (update_operator_michelson list) contract =
@@ -36,6 +38,7 @@ let token_owner_main (param, s : token_owner * unit)
     let param : operator_param = {
       operator = p.operator;
       owner = Current.self_address;
+      token_id = p.token_id;
     } in
     let param_michelson = operator_update_to_michelson (Remove_operator_p param) in
     let fa2_update : (update_operator_michelson list) contract =
