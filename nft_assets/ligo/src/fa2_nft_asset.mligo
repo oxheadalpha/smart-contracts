@@ -61,7 +61,7 @@ let store : nft_asset_storage = {
             };
             assets = {
                 ledger = (Big_map.empty : (token_id, address) big_map);
-                operators = (Big_map.empty : ((address * address), unit) big_map);
+                operators = (Big_map.empty : operator_storage);
                 metadata = {
                   token_defs = (Set.empty : token_def set);
                   last_used_id = 0n;
