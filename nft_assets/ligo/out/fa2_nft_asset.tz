@@ -34,14 +34,16 @@
           (pair %assets
              (pair (big_map %ledger nat address)
                    (pair %metadata
-                      (pair (nat %last_used_id)
-                            (big_map %metadata
-                               (pair nat nat)
+                      (pair (big_map %metadata
+                               (pair (nat %from_) (nat %to_))
                                (pair (pair (pair (nat %decimals) (map %extras string string))
                                            (pair (string %name) (string %symbol)))
-                                     (nat %token_id))))
-                      (set %token_defs (pair nat nat))))
-             (big_map %operators (pair address (pair address nat)) unit))) ;
+                                     (nat %token_id)))
+                            (nat %next_token_id))
+                      (set %token_defs (pair (nat %from_) (nat %to_)))))
+             (big_map %operators
+                (pair (address %owner) (pair (address %operator) (nat %token_id)))
+                unit))) ;
   code { PUSH string "FA2_TOKEN_UNDEFINED" ;
          PUSH string "FA2_INSUFFICIENT_BALANCE" ;
          LAMBDA
@@ -409,21 +411,11 @@
                              DUP ;
                              CAR ;
                              MAP { IF_LEFT
-                                     { LEFT (pair (address %owner) (pair (address %operator) (nat %token_id))) }
-                                     { RIGHT (pair (address %owner) (pair (address %operator) (nat %token_id))) } ;
+                                     { LEFT (pair address (pair address nat)) }
+                                     { RIGHT (pair address (pair address nat)) } ;
                                    IF_LEFT
-                                     { DIG 4 ;
-                                       DUP ;
-                                       DUG 5 ;
-                                       SWAP ;
-                                       EXEC ;
-                                       LEFT (pair (pair (address %operator) (address %owner)) (nat %token_id)) }
-                                     { DIG 4 ;
-                                       DUP ;
-                                       DUG 5 ;
-                                       SWAP ;
-                                       EXEC ;
-                                       RIGHT (pair (pair (address %operator) (address %owner)) (nat %token_id)) } } ;
+                                     { DIG 4 ; DUP ; DUG 5 ; SWAP ; EXEC ; LEFT (pair (pair address address) nat) }
+                                     { DIG 4 ; DUP ; DUG 5 ; SWAP ; EXEC ; RIGHT (pair (pair address address) nat) } } ;
                              DIG 4 ;
                              DROP ;
                              SENDER ;
@@ -555,7 +547,7 @@
                            DUP ;
                            DUG 3 ;
                            CAR ;
-                           CDR ;
+                           CAR ;
                            SWAP ;
                            GET ;
                            IF_NONE { DROP ; PUSH string "NO_DATA" ; FAILWITH } { CAR ; PAIR } } ;
@@ -652,7 +644,7 @@
                       CAR ;
                       PAIR ;
                       PAIR ;
-                      LEFT (pair (pair (nat %from_) (big_map %ledger nat address)) (nat %to_)) ;
+                      LEFT (pair (pair nat (big_map nat address)) nat) ;
                       LOOP_LEFT
                         { DUP ;
                           CDR ;
@@ -663,7 +655,7 @@
                           CAR ;
                           COMPARE ;
                           EQ ;
-                          IF { RIGHT (pair (pair (nat %from_) (big_map %ledger nat address)) (nat %to_)) }
+                          IF { RIGHT (pair (pair nat (big_map nat address)) nat) }
                              { DUP ;
                                CDR ;
                                SWAP ;
@@ -686,7 +678,7 @@
                                ADD ;
                                PAIR ;
                                PAIR ;
-                               LEFT (pair (pair (nat %from_) (big_map %ledger nat address)) (nat %to_)) } } ;
+                               LEFT (pair (pair nat (big_map nat address)) nat) } } ;
                       DIG 2 ;
                       DUP ;
                       DUP ;
@@ -712,13 +704,12 @@
                       CAR ;
                       CDR ;
                       CAR ;
-                      CDR ;
+                      CAR ;
                       DIG 4 ;
                       NONE (pair (pair (pair nat (map string string)) (pair string string)) nat) ;
                       SWAP ;
                       UPDATE ;
-                      DIP { DUP ; CDR ; SWAP ; CAR ; CAR } ;
-                      SWAP ;
+                      DIP { DUP ; CDR ; SWAP ; CAR ; CDR } ;
                       PAIR ;
                       PAIR ;
                       DIP { DUP ; CDR ; SWAP ; CAR ; CAR } ;
@@ -742,7 +733,7 @@
                  SUB ;
                  ISNAT ;
                  IF_NONE
-                   { PUSH string "INVALID_PARAM" ; FAILWITH }
+                   { PUSH string "EMPTY_TOKEN_DEF_RANGE" ; FAILWITH }
                    { SWAP ;
                      DUP ;
                      DUG 2 ;
@@ -752,7 +743,7 @@
                      SWAP ;
                      COMPARE ;
                      NEQ ;
-                     IF { PUSH string "INVALID_PARAM" ; FAILWITH } { UNIT } } ;
+                     IF { PUSH string "INVALID_OWNERS_LENGTH" ; FAILWITH } { UNIT } } ;
                  DROP ;
                  DUP ;
                  CDR ;
@@ -763,10 +754,10 @@
                  CAR ;
                  CDR ;
                  CAR ;
-                 CAR ;
+                 CDR ;
                  COMPARE ;
                  GT ;
-                 IF { DROP 2 ; PUSH string "INVALID_PARAM" ; FAILWITH }
+                 IF { DROP 2 ; PUSH string "USED_TOKEN_IDS" ; FAILWITH }
                     { DUP ;
                       CDR ;
                       CAR ;
@@ -825,27 +816,27 @@
                       PUSH bool True ;
                       SWAP ;
                       UPDATE ;
-                      DIG 4 ;
-                      CAR ;
-                      CDR ;
-                      CAR ;
-                      CDR ;
-                      DIG 4 ;
+                      DIG 3 ;
                       DUP ;
-                      DUG 5 ;
+                      DUG 4 ;
+                      CDR ;
+                      CDR ;
+                      DIG 5 ;
+                      CAR ;
+                      CDR ;
                       CAR ;
                       CAR ;
                       DIG 5 ;
                       DUP ;
                       DUG 6 ;
+                      CAR ;
+                      CAR ;
+                      DIG 6 ;
                       CDR ;
                       SWAP ;
                       SOME ;
                       SWAP ;
                       UPDATE ;
-                      DIG 4 ;
-                      CDR ;
-                      CDR ;
                       PAIR ;
                       PAIR ;
                       DIP { DUP ; CDR ; SWAP ; CAR ; CAR } ;

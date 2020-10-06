@@ -19,7 +19,7 @@ type nft_meta = (token_def, token_metadata) big_map
 
 type token_storage = {
   token_defs : token_def set;
-  last_used_id : token_id;
+  next_token_id : token_id;
   metadata : nft_meta;
 }
 

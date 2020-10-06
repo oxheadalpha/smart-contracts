@@ -30,11 +30,11 @@
              CAR ;
              SWAP ;
              IF_LEFT
-               { EXEC ; LEFT (pair (address %owner) (pair (address %operator) (nat %token_id))) }
-               { EXEC ; RIGHT (pair (address %owner) (pair (address %operator) (nat %token_id))) } ;
+               { EXEC ; LEFT (pair address (pair address nat)) }
+               { EXEC ; RIGHT (pair address (pair address nat)) } ;
              IF_LEFT
-               { LEFT (pair (address %owner) (pair (address %operator) (nat %token_id))) }
-               { RIGHT (pair (address %owner) (pair (address %operator) (nat %token_id))) } } ;
+               { LEFT (pair address (pair address nat)) }
+               { RIGHT (pair address (pair address nat)) } } ;
          SWAP ;
          APPLY ;
          SWAP ;
@@ -53,7 +53,7 @@
                  CDR ;
                  PAIR ;
                  PAIR ;
-                 LEFT (pair (pair (address %operator) (address %owner)) (nat %token_id)) ;
+                 LEFT (pair (pair address address) nat) ;
                  DIG 2 ;
                  SWAP ;
                  EXEC ;
@@ -88,7 +88,7 @@
              CDR ;
              PAIR ;
              PAIR ;
-             RIGHT (pair (pair (address %operator) (address %owner)) (nat %token_id)) ;
+             RIGHT (pair (pair address address) nat) ;
              DIG 2 ;
              SWAP ;
              EXEC ;
