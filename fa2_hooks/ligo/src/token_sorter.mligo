@@ -1,5 +1,4 @@
-#include "../fa2/lib/fa2_convertors.mligo"
-
+#include "../fa2/fa2_interface.mligo"
 
 type forward_param = {
   fa2 : address;
@@ -7,7 +6,7 @@ type forward_param = {
 }
 
 type sorter_entry_points =
-| Tokens_received of transfer_descriptor_param_michelson
+| Tokens_received of transfer_descriptor_param
 | Forward of forward_param
 
 (* (fa2, token_id) -> token_info *)
@@ -30,9 +29,8 @@ let inc_pending_balance (s, tx : dispatch_table * transfer_destination_descripto
     let new_info = {info with pending_balance = info.pending_balance + tx.amount; } in
     Big_map.update key (Some new_info) s
 
-let tokens_received (pm, storage
-    : transfer_descriptor_param_michelson * dispatch_table) : dispatch_table =
-  let p = transfer_descriptor_param_from_michelson pm in
+let tokens_received (p, storage
+    : transfer_descriptor_param * dispatch_table) : dispatch_table =
   List.fold
     (fun (s, td : dispatch_table * transfer_descriptor) ->
       List.fold 
@@ -78,13 +76,11 @@ let forward_tokens (p, storage : forward_param * dispatch_table)
       from_ = Tezos.self_address;
       txs = tx_dests;
     } in
-    let txm = transfer_to_michelson tx in
-
-    let fa2_entry : ((transfer_michelson list) contract) option = 
+    let fa2_entry : ((transfer list) contract) option = 
     Operation.get_entrypoint_opt "%transfer"  p.fa2 in
     let callback_op = match fa2_entry with
     | None -> (failwith "CANNOT CALLBACK FA2" : operation)
-    | Some c -> Operation.transaction [txm] 0mutez c
+    | Some c -> Operation.transaction [tx] 0mutez c
     in
     [callback_op], new_s
 
