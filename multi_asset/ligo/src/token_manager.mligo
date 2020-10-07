@@ -15,7 +15,9 @@
 
 #include "fa2_multi_token.mligo"
 
-type mint_burn_tx = {
+type mint_burn_tx =
+[@layout:comb]
+{
   owner : address;
   token_id : token_id;
   amount : nat;
@@ -26,17 +28,15 @@ type mint_burn_tokens_param = mint_burn_tx list
 
 (* `token_manager` entry points *)
 type token_manager =
-  | Create_token of token_metadata_michelson
+  | Create_token of token_metadata
   | Mint_tokens of mint_burn_tokens_param
   | Burn_tokens of mint_burn_tokens_param
 
 
 let create_token (metadata, storage
-    : token_metadata_michelson * multi_token_storage) : multi_token_storage =
+    : token_metadata * multi_token_storage) : multi_token_storage =
   (* extract token id *)
-  let meta : token_metadata = Layout.convert_from_right_comb metadata in
-  let new_token_id = meta.token_id in
-
+  let new_token_id = metadata.token_id in
   let existing_meta = Big_map.find_opt new_token_id storage.token_metadata in
   match existing_meta with
   | Some m -> (failwith "FA2_DUP_TOKEN_ID" : multi_token_storage)
