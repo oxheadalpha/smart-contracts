@@ -101,6 +101,6 @@ let generate_rainbow_collection_storage (owner_admin : address) : collection_ass
 
 (*
 CLI:
-ligo compile-storage collectibles/ligo/src/fa2_fixed_collection_asset.mligo collection_asset_main 
-  'generate_rainbow_collection_storage ("tz1YPSCGWXwBdTncK2aCctSZAXWvGsGwVJqU" : address)'
+ligo compile-storage collectibles/ligo/src/fa2_fixed_collection_asset.mligo collection_asset_main '
+generate_rainbow_collection_storage ("tz1YPSCGWXwBdTncK2aCctSZAXWvGsGwVJqU" : address)'
 *)

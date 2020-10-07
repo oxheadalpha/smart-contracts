@@ -55,7 +55,7 @@ async function compileContract(
   main: string,
   dstFilePath: string
 ): Promise<void> {
-  const cmd = `ligo compile-contract ${srcFilePath} ${main} --brief --output=${dstFilePath}`;
+  const cmd = `ligo compile-contract ${srcFilePath} ${main} --output=${dstFilePath}`;
   return runCmd(cwd, cmd);
 }
 
