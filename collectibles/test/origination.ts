@@ -29,7 +29,7 @@ export async function originateCollection(
                 Elt 5 "${owner}" ;
                 Elt 6 "${owner}" }
               {})
-        (Pair (Pair (Pair None (Left (Right Unit))) (Pair (Left (Left Unit)) (Left (Right Unit))))
+        (Pair (Pair (Right (Right Unit)) (Pair (Right (Left Unit)) (Pair (Left Unit) None)))
               { Elt 0 (Pair 0 (Pair "RED" (Pair "RAINBOW_TOKEN" (Pair 0 {})))) ;
                 Elt 1 (Pair 1 (Pair "ORANGE" (Pair "RAINBOW_TOKEN" (Pair 0 {})))) ;
                 Elt 2 (Pair 2 (Pair "YELLOW" (Pair "RAINBOW_TOKEN" (Pair 0 {})))) ;
