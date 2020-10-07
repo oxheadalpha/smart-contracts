@@ -12,7 +12,9 @@
 
 #include "fa2_nft_token.mligo"
 
-type mint_param = {
+type mint_param =
+[@layout:comb]
+{
   token_def : token_def;
   metadata : token_metadata;
   owners : address list;
