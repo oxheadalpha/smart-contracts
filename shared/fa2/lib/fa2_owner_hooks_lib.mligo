@@ -13,18 +13,13 @@ which supports sender/receiver hooks.
 
 type get_owners = transfer_descriptor -> (address option) list
 
-type hook_entry_point = transfer_descriptor_param_michelson contract
+type hook_entry_point = transfer_descriptor_param contract
 
 type hook_result =
   | Hook_entry_point of hook_entry_point
   | Hook_undefined of string
 
 type to_hook = address -> hook_result
-
-(* type transfer_hook_params = {
-  ligo_param : transfer_descriptor_param;
-  michelson_param : transfer_descriptor_param_michelson;
-} *)
 
 (**
 Extracts a set of unique `from_` or `to_` addresses from the transfer batch.
@@ -163,9 +158,8 @@ let get_owner_hook_ops_for (tx_descriptor, pd
   match hook_calls with
   | [] -> ([] : operation list)
   | h :: t -> 
-    let tx_descriptor_michelson = transfer_descriptor_param_to_michelson tx_descriptor in 
     List.map (fun(call: hook_entry_point) -> 
-      Operation.transaction tx_descriptor_michelson 0mutez call) 
+      Operation.transaction tx_descriptor 0mutez call) 
       hook_calls
 
 #endif
