@@ -66,7 +66,7 @@ let store : single_asset_storage = {
                 token_metadata = Big_map.literal [
                   (
                     0n, 
-                    Layout.convert_to_right_comb ({
+                    ({
                       token_id = 0n;
                       symbol = "TK1";
                       name = "Test Token";

@@ -8,7 +8,6 @@ Implementation of the FA2 interface for the single token contract.
 
 #include "../fa2/fa2_interface.mligo"
 #include "../fa2/fa2_errors.mligo"
-#include "../fa2/lib/fa2_convertors.mligo"
 #include "../fa2/lib/fa2_operator_lib.mligo"
 #include "../fa2/lib/fa2_owner_hooks_lib.mligo"
 
@@ -19,7 +18,7 @@ type ledger = (address, nat) big_map
 type single_token_storage = {
   ledger : ledger;
   operators : operator_storage;
-  token_metadata : (nat, token_metadata_michelson) big_map;
+  token_metadata : (nat, token_metadata) big_map;
   total_supply : nat;
 }
 
@@ -28,7 +27,7 @@ type single_token_storage = {
 type single_token_storage = {
   ledger : ledger;
   operators : operator_storage;
-  token_metadata : (nat, token_metadata_michelson) big_map;
+  token_metadata : (nat, token_metadata) big_map;
   total_supply : nat;
   permissions_descriptor : permissions_descriptor;
 }
@@ -94,11 +93,11 @@ Retrieve the balances for the specified tokens and owners
 let get_balance (p, ledger : balance_of_param * ledger) : operation =
   let to_balance = fun (r : balance_of_request) ->
     if r.token_id <> 0n
-    then (failwith fa2_token_undefined : balance_of_response_michelson)
+    then (failwith fa2_token_undefined : balance_of_response)
     else
       let bal = get_balance_amt (r.owner, ledger) in
-      let response = { request = r; balance = bal; } in
-      balance_of_response_to_michelson response
+      let response : balance_of_response = { request = r; balance = bal; } in
+      response
   in
   let responses = List.map to_balance p.requests in
   Operation.transaction responses 0mutez p.callback
@@ -140,9 +139,8 @@ let fa2_transfer (tx_descriptors, validate_op, storage
 let fa2_main (param, storage : fa2_entry_points * single_token_storage)
     : (operation  list) * single_token_storage =
   match param with
-  | Transfer txs_michelson -> 
+  | Transfer txs -> 
     (* convert transfer batch into `transfer_descriptor` batch *)
-    let txs = transfers_from_michelson txs_michelson in
     let tx_descriptors = transfers_to_descriptors txs in
     (* 
     will validate that a sender is either `from_` parameter of each transfer
@@ -150,13 +148,12 @@ let fa2_main (param, storage : fa2_entry_points * single_token_storage)
     *)
     fa2_transfer (tx_descriptors, default_operator_validator, storage)
 
-  | Balance_of pm ->
-    let p = balance_of_param_from_michelson pm in
+  | Balance_of p ->
     let op = get_balance (p, storage.ledger) in
     [op], storage
 
-  | Update_operators updates_michelson ->
-    let new_ops = fa2_update_operators (updates_michelson, storage.operators) in
+  | Update_operators updates ->
+    let new_ops = fa2_update_operators (updates, storage.operators) in
     let new_storage = { storage with operators = new_ops; } in
     ([] : operation list), new_storage
 

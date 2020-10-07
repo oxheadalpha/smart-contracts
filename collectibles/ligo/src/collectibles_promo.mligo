@@ -1,5 +1,4 @@
 #include "../fa2/fa2_interface.mligo"
-#include "../fa2/lib/fa2_convertors.mligo"
 
 (**
 A promoter who owns some collectible NFT tokens can create an instance of promotion.
@@ -69,7 +68,7 @@ type promotion_state =
 
 
 type promotion_entrypoints =
-  | Tokens_received of transfer_descriptor_param_michelson
+  | Tokens_received of transfer_descriptor_param
   | Refund_money 
   | Disburse_collectibles
   | Stop_promotion
@@ -109,12 +108,11 @@ let validate_no_tokens_received (txs, this_address
           else unit
     ) txs
 
-let accept_collectibles (tx_param_michelson, pdef
-    : transfer_descriptor_param_michelson * promotion_def) : promotion_state =
+let accept_collectibles (tx_param, pdef
+    : transfer_descriptor_param * promotion_def) : promotion_state =
   if Tezos.sender <> pdef.collectible_fa2
   then (failwith ("PROMO_COLLECTIBLES_EXPECTED") : promotion_state)
   else
-    let tx_param = transfer_descriptor_param_from_michelson tx_param_michelson in
     let collectibles = List.fold 
       (fun (acc, td : (token_id list) * transfer_descriptor) ->
         let is_from_promoter = match td.from_ with
@@ -206,12 +204,11 @@ let retrieve_money (txs, buyer, promo
         else buy_collectibles (buyer, tx.amount, p)
     ) txs promo
 
-let accept_money (tx_param_michelson, promo
-    : transfer_descriptor_param_michelson * promotion_in_progress) : promotion_state =
+let accept_money (tx_param, promo
+    : transfer_descriptor_param * promotion_in_progress) : promotion_state =
   if Tezos.sender <> promo.def.money_token.fa2
   then (failwith "PROMO_MONEY_TOKENS_EXPECTED" : promotion_state)
   else
-    let tx_param = transfer_descriptor_param_from_michelson tx_param_michelson in
     let new_promo = List.fold
       (fun (p, td : promotion_in_progress * transfer_descriptor) ->
         match td.from_ with
@@ -228,11 +225,11 @@ let accept_money (tx_param_michelson, promo
     }
     else In_progress new_promo
     
-let accept_tokens (tx_param_michelson, state
-    : transfer_descriptor_param_michelson * promotion_state) : promotion_state =
+let accept_tokens (tx_param, state
+    : transfer_descriptor_param * promotion_state) : promotion_state =
   match state with
-  | Initial pdef -> accept_collectibles (tx_param_michelson, pdef)
-  | In_progress promo -> accept_money (tx_param_michelson, promo)
+  | Initial pdef -> accept_collectibles (tx_param, pdef)
+  | In_progress promo -> accept_money (tx_param, promo)
   | Finished p -> (failwith "PROMO_FINISHED" : promotion_state)
 
 let disburse_collectibles (allocated_collectibles, collectible_fa2, owner, this
@@ -251,12 +248,11 @@ let disburse_collectibles (allocated_collectibles, collectible_fa2, owner, this
       from_ = this;
       txs = tx_destinations;
     } in
-    let txm = transfer_to_michelson tx in
-    let fa2_entry : ((transfer_michelson list) contract) option = 
+    let fa2_entry : ((transfer list) contract) option = 
       Operation.get_entrypoint_opt "%transfer"  collectible_fa2 in
     let transfer_op = match fa2_entry with
     | None -> (failwith "CANNOT_INVOKE_COLLECTIBLE_FA2" : operation)
-    | Some c -> Operation.transaction [txm] 0mutez c
+    | Some c -> Operation.transaction [tx] 0mutez c
     in
     [transfer_op], Map.remove owner allocated_collectibles
 
@@ -283,12 +279,11 @@ let refund_money (money_deposits, money_token, owner, this
       from_ = this;
       txs = [{to_ = owner; token_id = money_token.id; amount = m; }];
     } in
-    let txm = transfer_to_michelson tx in
-    let fa2_entry : ((transfer_michelson list) contract) option = 
+    let fa2_entry : ((transfer list) contract) option = 
       Operation.get_entrypoint_opt "%transfer"  money_token.fa2 in
     let transfer_op = match fa2_entry with
     | None -> (failwith "CANNOT_INVOKE_MONEY_FA2" : operation)
-    | Some c -> Operation.transaction [txm] 0mutez c
+    | Some c -> Operation.transaction [tx] 0mutez c
     in
     [transfer_op], Map.remove owner money_deposits
 
@@ -346,8 +341,8 @@ let main (param, state : promotion_entrypoints * promotion_state) : return_type 
     Accepts either collectible nfts during initial state to start the promotion
     or money tokens when promotion is in progress.
  *)
-  | Tokens_received tx_param_michelson ->
-    let new_state = accept_tokens (tx_param_michelson, state) in
+  | Tokens_received tx_param ->
+    let new_state = accept_tokens (tx_param, state) in
     ([] : operation list), new_state
 
   (*
