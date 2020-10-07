@@ -59,8 +59,7 @@ let generate_asset_storage (tokens, admin, permissions
           extras = Map.add "token_uri" uri m0.extras;
         }
       in
-      let m_michelson = Layout.convert_to_right_comb (m1 : token_metadata) in
-      Big_map.add td.id m_michelson meta
+      Big_map.add td.id m1 meta
   ) tokens (Big_map.empty : token_metadata_storage) in
 
   let admin : simple_admin_storage = {

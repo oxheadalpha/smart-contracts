@@ -1,11 +1,10 @@
 #define OWNER_HOOKS
 
 #include "fa2_single_asset.mligo"
-#include "../fa2/lib/fa2_convertors.mligo"
 
 type single_asset_with_hooks_param =
   | SA of single_asset_param
-  | Permissions_descriptor of permissions_descriptor_michelson contract
+  | Permissions_descriptor of permissions_descriptor contract
 
 
 let single_asset_with_hooks_main (param, storage
@@ -14,9 +13,8 @@ let single_asset_with_hooks_main (param, storage
   match param with
   | SA sap -> single_asset_main (sap, storage)
   | Permissions_descriptor callback ->
-    let pd_michelson =
-      permissions_descriptor_to_michelson storage.assets.permissions_descriptor in
-    let callback_op = Operation.transaction pd_michelson 0mutez callback in
+    let callback_op =
+        Operation.transaction storage.assets.permissions_descriptor 0mutez callback in
     [callback_op], storage
 
 (**
@@ -35,7 +33,7 @@ let store : single_asset_storage = {
           token_metadata = Big_map.literal [
             (
               0n, 
-              Layout.convert_to_right_comb ({
+              ({
                 token_id = 0n;
                 symbol = "TK1";
                 name = "Test Token";

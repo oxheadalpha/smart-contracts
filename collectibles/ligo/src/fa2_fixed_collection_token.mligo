@@ -15,7 +15,7 @@ The implementation may support sender/receiver hooks
 #include "../fa2/lib/fa2_owner_hooks_lib.mligo"
 
 (* token_id -> token_metadata *)
-type token_metadata_storage = (token_id, token_metadata_michelson) big_map
+type token_metadata_storage = (token_id, token_metadata) big_map
 
 (*  token_id -> owner_address *)
 type ledger = (token_id, address) big_map
@@ -29,7 +29,7 @@ type collection_storage = {
 
 type fa2_collection_entrypoints =
   | FA2 of fa2_entry_points
-  | Permissions_descriptor of permissions_descriptor_michelson contract
+  | Permissions_descriptor of permissions_descriptor contract
 
 (**
 Update leger balances according to the specified transfers. Fails if any of the
@@ -74,13 +74,11 @@ Retrieve the balances for the specified tokens and owners
 let get_balance (p, ledger : balance_of_param * ledger) : operation =
   let to_balance = fun (r : balance_of_request) ->
     let owner = Big_map.find_opt r.token_id ledger in
-    let response = match owner with
+    match owner with
     | None -> (failwith fa2_token_undefined : balance_of_response)
     | Some o ->
       let bal = if o = r.owner then 1n else 0n in
       { request = r; balance = bal; }
-    in
-    balance_of_response_to_michelson response
   in
   let responses = List.map to_balance p.requests in
   Operation.transaction responses 0mutez p.callback
@@ -88,8 +86,7 @@ let get_balance (p, ledger : balance_of_param * ledger) : operation =
 let fa2_collection_main (param, storage : fa2_entry_points * collection_storage)
     :  (operation list) * collection_storage =
   match param with
-  | Transfer txs_michelson ->
-    let txs = transfers_from_michelson txs_michelson in
+  | Transfer txs ->
     let new_ledger = transfer (txs, default_operator_validator, storage.operators, storage.ledger) in
     let new_storage = { storage with ledger = new_ledger; } in
 
@@ -97,13 +94,12 @@ let fa2_collection_main (param, storage : fa2_entry_points * collection_storage)
 
     hook_ops, new_storage
   
-  | Balance_of pm ->
-    let p = balance_of_param_from_michelson pm in
+  | Balance_of p ->
     let op = get_balance (p, storage.ledger) in
     [op], storage
 
-  | Update_operators updates_michelson ->
-    let new_operators = fa2_update_operators (updates_michelson, storage.operators) in
+  | Update_operators updates ->
+    let new_operators = fa2_update_operators (updates, storage.operators) in
     let new_storage = { storage with operators = new_operators; } in
     ([] : operation list), new_storage
 
@@ -113,10 +109,10 @@ let fa2_collection_main (param, storage : fa2_entry_points * collection_storage)
     [callback_op], storage
 
 let get_permissions_descriptor (callback, storage
-    : permissions_descriptor_michelson contract * collection_storage)
+    : permissions_descriptor contract * collection_storage)
     : (operation  list) * collection_storage =
-  let pdm = permissions_descriptor_to_michelson storage.permissions_descriptor in
-  let callback_op = Operation.transaction pdm 0mutez callback in
+  let callback_op =
+    Operation.transaction storage.permissions_descriptor 0mutez callback in
   [callback_op], storage
 
 let fixed_collection_token_main (param, storage : fa2_collection_entrypoints * collection_storage)
