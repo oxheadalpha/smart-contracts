@@ -6,7 +6,6 @@ helper functions
 #if !FA2_OPERATOR_LIB
 #define FA2_OPERATOR_LIB
 
-#include "fa2_convertors.mligo"
 #include "../fa2_errors.mligo"
 
 (** 
@@ -43,9 +42,8 @@ let validate_update_operators_by_owner (update, updater : update_operator * addr
   Generic implementation of the FA2 `%update_operators` entrypoint.
   Assumes that only the token owner can change its operators.
  *)
-let fa2_update_operators (updates_michelson, storage
-    : (update_operator_michelson list) * operator_storage) : operator_storage =
-  let updates = operator_updates_from_michelson updates_michelson in
+let fa2_update_operators (updates, storage
+    : (update_operator list) * operator_storage) : operator_storage =
   let updater = Tezos.sender in
   let process_update = (fun (ops, update : operator_storage * update_operator) ->
     let u = validate_update_operators_by_owner (update, updater) in
