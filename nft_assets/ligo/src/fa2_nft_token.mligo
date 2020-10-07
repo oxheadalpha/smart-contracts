@@ -10,7 +10,9 @@ types of NFTs. Each NFT type is represented by the range of token IDs - `token_d
 #include "../fa2/lib/fa2_operator_lib.mligo"
 
 (* range of nft tokens *)
-type token_def = {
+type token_def =
+[@layout:comb]
+{
   from_ : nat;
   to_ : nat;
 }
@@ -38,13 +40,11 @@ Retrieve the balances for the specified tokens and owners
 let get_balance (p, ledger : balance_of_param * ledger) : operation =
   let to_balance = fun (r : balance_of_request) ->
     let owner = Big_map.find_opt r.token_id ledger in
-    let response = match owner with
+    match owner with
     | None -> (failwith fa2_token_undefined : balance_of_response)
     | Some o ->
       let bal = if o = r.owner then 1n else 0n in
       { request = r; balance = bal; }
-    in
-    balance_of_response_to_michelson response
   in
   let responses = List.map to_balance p.requests in
   Operation.transaction responses 0mutez p.callback
@@ -109,20 +109,18 @@ let get_metadata (tokens, meta : (token_id list) * token_storage )
 let fa2_main (param, storage : fa2_entry_points * nft_token_storage)
     : (operation  list) * nft_token_storage =
   match param with
-  | Transfer txs_michelson ->
-    let txs = transfers_from_michelson txs_michelson in
+  | Transfer txs ->
     let new_ledger = transfer 
       (txs, default_operator_validator, storage.operators, storage.ledger) in
     let new_storage = { storage with ledger = new_ledger; } in
     ([] : operation list), new_storage
 
-  | Balance_of pm ->
-    let p = balance_of_param_from_michelson pm in
+  | Balance_of p ->
     let op = get_balance (p, storage.ledger) in
     [op], storage
 
-  | Update_operators updates_michelson ->
-    let new_ops = fa2_update_operators (updates_michelson, storage.operators) in
+  | Update_operators updates ->
+    let new_ops = fa2_update_operators (updates, storage.operators) in
     let new_storage = { storage with operators = new_ops; } in
     ([] : operation list), new_storage
 
@@ -142,11 +140,9 @@ let fa2_main (param, storage : fa2_entry_points * nft_token_storage)
     match param with
     | Fa2 fa2 -> fa2_main (fa2, storage)
     | Metadata m -> ( match m with
-      | Token_metadata pm ->
-        let p : token_metadata_param = Layout.convert_from_right_comb pm in
+      | Token_metadata p ->
         let metas = get_metadata (p.token_ids, storage.metadata) in
-        let metas_michelson = token_metas_to_michelson metas in
-        let u = p.handler metas_michelson in
+        let u = p.handler metas in
         ([] : operation list), storage
     )
 

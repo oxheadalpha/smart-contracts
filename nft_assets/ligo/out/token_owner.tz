@@ -5,58 +5,21 @@
            (pair (address %fa2) (address %operator))
            (nat %token_id))) ;
   storage unit ;
-  code { LAMBDA
-           (pair (pair address address) nat)
-           (pair address (pair address nat))
-           { DUP ;
-             CDR ;
-             SWAP ;
-             DUP ;
-             DUG 2 ;
-             CAR ;
-             CAR ;
-             PAIR ;
-             SWAP ;
-             CAR ;
-             CDR ;
-             PAIR } ;
-         LAMBDA
-           (pair (lambda (pair (pair address address) nat) (pair address (pair address nat)))
-                 (or (pair (pair address address) nat) (pair (pair address address) nat)))
-           (or (pair address (pair address nat)) (pair address (pair address nat)))
-           { DUP ;
-             CDR ;
-             SWAP ;
-             CAR ;
-             SWAP ;
-             IF_LEFT
-               { EXEC ; LEFT (pair address (pair address nat)) }
-               { EXEC ; RIGHT (pair address (pair address nat)) } ;
-             IF_LEFT
-               { LEFT (pair address (pair address nat)) }
-               { RIGHT (pair address (pair address nat)) } } ;
-         SWAP ;
-         APPLY ;
-         SWAP ;
-         CAR ;
+  code { CAR ;
          IF_LEFT
            { IF_LEFT
-               { SWAP ; DROP 2 ; UNIT ; NIL operation ; PAIR }
+               { DROP ; UNIT ; NIL operation ; PAIR }
                { DUP ;
                  CDR ;
-                 SELF ;
-                 ADDRESS ;
-                 DIG 2 ;
+                 SWAP ;
                  DUP ;
-                 DUG 3 ;
+                 DUG 2 ;
                  CAR ;
                  CDR ;
                  PAIR ;
+                 SELF ;
+                 ADDRESS ;
                  PAIR ;
-                 LEFT (pair (pair address address) nat) ;
-                 DIG 2 ;
-                 SWAP ;
-                 EXEC ;
                  SWAP ;
                  CAR ;
                  CAR ;
@@ -70,6 +33,7 @@
                  PUSH mutez 0 ;
                  NIL (or (pair address (pair address nat)) (pair address (pair address nat))) ;
                  DIG 3 ;
+                 LEFT (pair address (pair address nat)) ;
                  CONS ;
                  TRANSFER_TOKENS ;
                  UNIT ;
@@ -79,19 +43,15 @@
                  PAIR } }
            { DUP ;
              CDR ;
-             SELF ;
-             ADDRESS ;
-             DIG 2 ;
+             SWAP ;
              DUP ;
-             DUG 3 ;
+             DUG 2 ;
              CAR ;
              CDR ;
              PAIR ;
+             SELF ;
+             ADDRESS ;
              PAIR ;
-             RIGHT (pair (pair address address) nat) ;
-             DIG 2 ;
-             SWAP ;
-             EXEC ;
              SWAP ;
              CAR ;
              CAR ;
@@ -105,6 +65,7 @@
              PUSH mutez 0 ;
              NIL (or (pair address (pair address nat)) (pair address (pair address nat))) ;
              DIG 3 ;
+             RIGHT (pair address (pair address nat)) ;
              CONS ;
              TRANSFER_TOKENS ;
              UNIT ;
