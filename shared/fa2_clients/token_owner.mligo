@@ -3,7 +3,7 @@ A simple token owner which works with FA2 instance and supports operators permis
 and can manage its own operators.
  *)
 
-#include "../fa2/lib/fa2_convertors.mligo"
+#include "../fa2/fa2_interface.mligo"
 
 type owner_operator_param = {
   fa2 : address;
@@ -27,10 +27,9 @@ let token_owner_main (param, s : token_owner * unit)
       owner = Current.self_address;
       token_id = p.token_id;
     } in
-    let param_michelson = operator_update_to_michelson (Add_operator_p param) in
-    let fa2_update : (update_operator_michelson list) contract =
+    let fa2_update : (update_operator list) contract =
       Operation.get_entrypoint "%update_operators" p.fa2 in
-    let update_op = Operation.transaction [param_michelson] 0mutez fa2_update in
+    let update_op = Operation.transaction [Add_operator param] 0mutez fa2_update in
     [update_op], unit
 
   | Owner_remove_operator p ->
@@ -40,10 +39,9 @@ let token_owner_main (param, s : token_owner * unit)
       owner = Current.self_address;
       token_id = p.token_id;
     } in
-    let param_michelson = operator_update_to_michelson (Remove_operator_p param) in
-    let fa2_update : (update_operator_michelson list) contract =
+    let fa2_update : (update_operator list) contract =
       Operation.get_entrypoint "%update_operators" p.fa2 in
-    let update_op = Operation.transaction [param_michelson] 0mutez fa2_update in
+    let update_op = Operation.transaction [Remove_operator param] 0mutez fa2_update in
     [update_op], unit
 
   | Default u -> ([] : operation list), unit
