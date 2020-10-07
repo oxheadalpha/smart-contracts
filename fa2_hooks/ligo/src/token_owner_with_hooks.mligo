@@ -3,8 +3,8 @@
 (* just keeps balances of received tokens *)
 type dummy_entry_points =
 | Owner of token_owner
-| Tokens_received of transfer_descriptor_param_michelson
-| Tokens_sent of transfer_descriptor_param_michelson
+| Tokens_received of transfer_descriptor_param
+| Tokens_sent of transfer_descriptor_param
 
 (** (fa2, token_id) -> own_balance *)
 type balance_storage = ((address * nat), nat) map
@@ -25,9 +25,8 @@ let inc_balance (s, tx_dest
       in
       Big_map.update key (Some new_bal) s
 
-let update_balance_on_receive (pm, storage
-    : transfer_descriptor_param_michelson * balance_storage) : balance_storage =
-  let p = transfer_descriptor_param_from_michelson pm in
+let update_balance_on_receive (p, storage
+    : transfer_descriptor_param * balance_storage) : balance_storage =
   List.fold 
     (fun (s, tx : balance_storage * transfer_descriptor) -> 
       List.fold (fun (s, tx_dest : balance_storage * transfer_destination_descriptor) ->
@@ -49,9 +48,8 @@ let dec_balance (s, tx_dest
   in
   Big_map.update key (Some new_bal) s
 
-let update_balance_on_sent (pm, storage
-    : transfer_descriptor_param_michelson * balance_storage) : balance_storage =
-  let p = transfer_descriptor_param_from_michelson pm in
+let update_balance_on_sent (p, storage
+    : transfer_descriptor_param * balance_storage) : balance_storage =
   List.fold 
     (fun (s, tx : balance_storage * transfer_descriptor) ->
       match tx.from_ with

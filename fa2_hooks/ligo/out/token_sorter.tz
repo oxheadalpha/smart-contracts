@@ -15,7 +15,7 @@
            { DUP ;
              DUG 2 ;
              SWAP ;
-             NIL (pair (pair nat address) nat) ;
+             NIL (pair address (pair nat nat)) ;
              PAIR ;
              SWAP ;
              DUP ;
@@ -54,14 +54,14 @@
                         UPDATE ;
                         DIG 2 ;
                         CAR ;
-                        DIG 3 ;
-                        DIG 3 ;
+                        DIG 2 ;
                         DUP ;
-                        DUG 4 ;
-                        CAR ;
-                        DIG 4 ;
+                        DUG 3 ;
                         CDR ;
+                        DIG 4 ;
                         PAIR ;
+                        DIG 3 ;
+                        CAR ;
                         PAIR ;
                         CONS ;
                         PAIR } } ;
@@ -83,23 +83,6 @@
                   SELF ;
                   ADDRESS ;
                   PAIR ;
-                  DUP ;
-                  CDR ;
-                  MAP { DUP ;
-                        CAR ;
-                        CAR ;
-                        SWAP ;
-                        DUP ;
-                        DUG 2 ;
-                        CDR ;
-                        PAIR ;
-                        SWAP ;
-                        CAR ;
-                        CDR ;
-                        PAIR } ;
-                  SWAP ;
-                  CAR ;
-                  PAIR ;
                   DIG 2 ;
                   CAR ;
                   CONTRACT %transfer
@@ -117,40 +100,10 @@
                   DIG 2 ;
                   CONS ;
                   PAIR } }
-           { PAIR ;
-             DUP ;
-             CAR ;
-             DUP ;
-             CAR ;
-             MAP { DUP ;
-                   CDR ;
-                   MAP { DUP ;
-                         CDR ;
-                         CAR ;
-                         SWAP ;
-                         DUP ;
-                         DUG 2 ;
-                         CAR ;
-                         DIG 2 ;
-                         CDR ;
-                         CDR ;
-                         PAIR ;
-                         PAIR } ;
-                   SWAP ;
-                   CAR ;
-                   PAIR } ;
-             SWAP ;
-             CDR ;
-             SWAP ;
-             PAIR ;
-             SWAP ;
-             CDR ;
-             SWAP ;
-             CAR ;
+           { CAR ;
              ITER { CDR ;
                     ITER { DUP ;
                            CAR ;
-                           CDR ;
                            IF_NONE
                              { DROP }
                              { SELF ;
@@ -162,6 +115,7 @@
                                   { DUP ;
                                     DUG 2 ;
                                     CDR ;
+                                    CAR ;
                                     SENDER ;
                                     PAIR ;
                                     SWAP ;
@@ -175,8 +129,8 @@
                                       { DROP 3 ; PUSH string "UNKNOWN TOKEN" ; FAILWITH }
                                       { DUP ;
                                         DIG 4 ;
-                                        CAR ;
-                                        CAR ;
+                                        CDR ;
+                                        CDR ;
                                         DIG 2 ;
                                         CDR ;
                                         ADD ;
