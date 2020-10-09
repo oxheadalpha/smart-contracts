@@ -13,7 +13,7 @@
                       (list %update_operators
                          (or (pair %add_operator (address %owner) (pair (address %operator) (nat %token_id)))
                              (pair %remove_operator (address %owner) (pair (address %operator) (nat %token_id)))))))
-               (pair %metadata
+               (pair %token_metadata
                   (list %token_ids nat)
                   (lambda %handler
                      (list (pair (nat %token_id)

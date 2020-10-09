@@ -75,8 +75,8 @@ type fa2_entry_points =
   | Update_operators of update_operator list
   | Token_metadata_registry of address contract
 
-type fa2_token_metadata =
-  | Token_metadata of token_metadata_param
+(* type fa2_token_metadata =
+  | Token_metadata of token_metadata_param *)
 
 (* permission policy definition *)
 
