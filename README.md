@@ -11,9 +11,6 @@ The FA2-related LIGO artifacts are:
 - [shared/fa2](shared/fa2) - FA2 interface and standard errors definition.
 - [shared/fa2/lib](shared/fa2/lib) - Helpers, various bits and pieces
   used by the FA2 implementation.
-  - [shared/fa2/lib/fa2_convertors.mligo](shared/fa2/lib/fa2_convertors.mligo) -
-    functions to convert the FA2 entry points input parameters to and from the Michelson
-    right-comb representation, required by the FA2 interface, and LIGO internal types.
   - [shared/fa2/lib/fa2_operator_lib.mligo](shared/fa2/lib/fa2_operator_lib.mligo) -
     helper functions to manage and validate FA2 operators.
   - [shared/fa2/lib/fa2_owner_hook_lib.mligo](shared/fa2/lib/fa2_owner_hook_lib.mligo) -
