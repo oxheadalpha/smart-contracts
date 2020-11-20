@@ -7,27 +7,27 @@ values initialized when the FA2 contract is originated.
 
 There are two example contracts that implement a receiver hook:
 
-* `token_owner_with_hooks.mligo` tracks its own token balances within its own storage
-* `token_sorter.mligo` forwards received tokens to other accounts according to its
-dispatch table.
+- `token_owner_with_hooks.mligo` tracks its own token balances within its own storage
+- `token_sorter.mligo` forwards received tokens to other accounts according to its
+  dispatch table.
 
 ## Project Structure
 
-* [`multi_asset.md`](multi_asset.md) - description
-* [`ligo`](ligo/) - contracts code defined in [LIGO](https://ligolang.org/),
+- [`multi_asset.md`](multi_asset.md) - description
+- [`ligo`](ligo/) - contracts code defined in [LIGO](https://ligolang.org/),
   smart-contract language for Tezos.
-  * [`ligo/fa2`](ligo/fa2/) - FA2 contract interfaces and libraries
-  * [`ligo/fa2_modules`](ligo/fa2_modules/) - reusable contract implementation modules
-  * [`ligo/fa2_clients`](ligo/fa2_clients/) - test client contracts interacting
+  - [`ligo/fa2`](ligo/fa2/) - FA2 contract interfaces and libraries
+  - [`ligo/fa2_modules`](ligo/fa2_modules/) - reusable contract implementation modules
+  - [`ligo/fa2_clients`](ligo/fa2_clients/) - test client contracts interacting
     with FA2 contract
-  * [`ligo/src`](ligo/src/) folder - reference implementation of the multi-asset
+  - [`ligo/src`](ligo/src/) folder - reference implementation of the multi-asset
     FA2 contract, test helper contracts and code.
-  * [`ligo/out`](ligo/out/) folder - multi-asset FA2 contract and helper contract
+  - [`ligo/out`](ligo/out/) folder - multi-asset FA2 contract and helper contract
     compiled into Michelson.
-* [`tezos_fa2_hooks_tests`](tezos_fa2_hooks_tests/) folder - Python multi_asset
-contract tests implemented with
-[Pytezos](https://github.com/baking-bad/pytezos) and
-[unittest](https://docs.python.org/3/library/unittest.html).
+- [`tezos_fa2_hooks_tests`](tezos_fa2_hooks_tests/) folder - Python multi_asset
+  contract tests implemented with
+  [Pytezos](https://github.com/baking-bad/pytezos) and
+  [unittest](https://docs.python.org/3/library/unittest.html).
 
 ## Test Dependencies
 
@@ -66,21 +66,21 @@ $ brew tap cuber/homebrew-libsecp256k1
 $ brew install libsodium libsecp256k1 gmp
 ```
 
-### Flextesa Sanbox
+### Flextesa Sandbox
 
 Tests are configured to run on [Flextesa sandbox](https://assets.tqtezos.com/sandbox-quickstart).
 There are two helper scripts in `tezos_mac_tests` module:
 
-* [`start-sandbox.sh`](tezos_mac_tests/start-sandbox.sh) - starts Flextesa sandbox
-from the docker image
-* [`kill-sandbox.sh`](tezos_mac_tests/kill-sandbox.sh) - kills running Flextesa
-sandbox docker container
+- [`start-sandbox.sh`](tezos_mac_tests/start-sandbox.sh) - starts Flextesa sandbox
+  from the docker image
+- [`kill-sandbox.sh`](tezos_mac_tests/kill-sandbox.sh) - kills running Flextesa
+  sandbox docker container
 
 ## Installation and Running The Tests
 
 ### Install dependencies
 
-#### LIGO 
+#### LIGO
 
 `curl https://gitlab.com/ligolang/ligo/raw/dev/scripts/installer.sh | bash -s "next"`
 

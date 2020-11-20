@@ -4,24 +4,24 @@ Implementation of the FA2 token contract (TZIP-12) for a single asset.
 
 ## Project Structure
 
-* [`ligo`](ligo/) - contracts code defined in [LIGO](https://ligolang.org/),
+- [`ligo`](ligo/) - contracts code defined in [LIGO](https://ligolang.org/),
   smart-contract language for Tezos.
-  * [`ligo/fa2`](ligo/fa2/) - FA2 contract interfaces and libraries
-  * [`ligo/fa2_modules`](ligo/fa2_modules/) - reusable contract implementation modules
-  * [`ligo/fa2_clients`](ligo/fa2_clients/) - test client contracts interacting
+  - [`ligo/fa2`](ligo/fa2/) - FA2 contract interfaces and libraries
+  - [`ligo/fa2_modules`](ligo/fa2_modules/) - reusable contract implementation modules
+  - [`ligo/fa2_clients`](ligo/fa2_clients/) - test client contracts interacting
     with FA2 contract
-  * [`ligo/src`](ligo/src/) folder - reference implementation of the multi-asset
+  - [`ligo/src`](ligo/src/) folder - reference implementation of the multi-asset
     FA2 contract, test helper contracts and code.
-  * [`ligo/out`](ligo/out/) folder - multi-asset FA2 contract and helper contract
+  - [`ligo/out`](ligo/out/) folder - multi-asset FA2 contract and helper contract
     compiled into Michelson.
-* [`lorentz`](lorentz/) - contracts code defined in [Lorentz](http://hackage.haskell.org/package/lorentz)
-  * [`lorentz/out/fa12_lorentz.tz`](lorentz/out/fa12_lorentz.tz) - FA1.2 contract
-  * [`lorentz/lorentz/Makefile`](lorentz/Makefile) - Makefile to compile the
+- [`lorentz`](lorentz/) - contracts code defined in [Lorentz](http://hackage.haskell.org/package/lorentz)
+  - [`lorentz/out/fa12_lorentz.tz`](lorentz/out/fa12_lorentz.tz) - FA1.2 contract
+  - [`lorentz/lorentz/Makefile`](lorentz/Makefile) - Makefile to compile the
     FA1.2 contract, Haskell library, and tools
-* [`tezos_fa2_single_tests`](tezos_fa2_single_tests/) folder - Python single asset
-FA2  contract tests implemented with
-[Pytezos](https://github.com/baking-bad/pytezos) and
-[unittest](https://docs.python.org/3/library/unittest.html).
+- [`tezos_fa2_single_tests`](tezos_fa2_single_tests/) folder - Python single asset
+  FA2 contract tests implemented with
+  [Pytezos](https://github.com/baking-bad/pytezos) and
+  [unittest](https://docs.python.org/3/library/unittest.html).
 
 ## Test Dependencies
 
@@ -60,15 +60,15 @@ $ brew tap cuber/homebrew-libsecp256k1
 $ brew install libsodium libsecp256k1 gmp
 ```
 
-### Flextesa Sanbox
+### Flextesa Sandbox
 
 Tests are configured to run on [Flextesa sandbox](https://assets.tqtezos.com/sandbox-quickstart).
 There are two helper scripts in `tezos_fa2_single_tests` module:
 
-* [`start-sandbox.sh`](./tezos_fa2_single_tests/start-sandbox.sh) - starts Flextesa
-sandbox from the docker image
-* [`kill-sandbox.sh`](./tezos_fa2_single_tests/kill-sandbox.sh) - kills running Flextesa
-sandbox docker container
+- [`start-sandbox.sh`](./tezos_fa2_single_tests/start-sandbox.sh) - starts Flextesa
+  sandbox from the docker image
+- [`kill-sandbox.sh`](./tezos_fa2_single_tests/kill-sandbox.sh) - kills running Flextesa
+  sandbox docker container
 
 ## Installation and Running The Tests
 
