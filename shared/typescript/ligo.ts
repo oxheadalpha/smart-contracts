@@ -6,6 +6,9 @@ import { $log } from '@tsed/logger';
 import { TezosToolkit } from '@taquito/taquito';
 import { Contract } from './type-aliases';
 
+const ligoVersion = '0.4.0';
+const ligoCmd = `docker run --rm -v "$PWD":"$PWD" -w "$PWD" ligolang/ligo:${ligoVersion} "$@"`;
+
 export class LigoEnv {
   readonly cwd: string;
   readonly srcDir: string;
@@ -55,7 +58,7 @@ async function compileContract(
   main: string,
   dstFilePath: string
 ): Promise<void> {
-  const cmd = `ligo compile-contract ${srcFilePath} ${main} --output=${dstFilePath}`;
+  const cmd = `${ligoCmd} compile-contract ${srcFilePath} ${main} --output=${dstFilePath}`;
   return runCmd(cwd, cmd);
 }
 

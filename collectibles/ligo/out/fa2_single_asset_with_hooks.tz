@@ -25,8 +25,8 @@
                          (or (pair %add_operator (address %owner) (pair (address %operator) (nat %token_id)))
                              (pair %remove_operator (address %owner) (pair (address %operator) (nat %token_id))))))))
            (or %tokens
-              (list %burn_tokens (pair (nat %amount) (address %owner)))
-              (list %mint_tokens (pair (nat %amount) (address %owner)))))) ;
+              (list %burn_tokens (pair (address %owner) (nat %amount)))
+              (list %mint_tokens (pair (address %owner) (nat %amount)))))) ;
   storage
     (pair (pair %admin (pair (address %admin) (bool %paused)) (option %pending_admin address))
           (pair %assets
@@ -527,11 +527,11 @@
          SWAP ;
          APPLY ;
          LAMBDA
-           (list (pair nat address))
+           (list (pair address nat))
            nat
            { PUSH nat 0 ;
              SWAP ;
-             ITER { SWAP ; PAIR ; DUP ; CDR ; CAR ; SWAP ; CAR ; ADD } } ;
+             ITER { SWAP ; PAIR ; DUP ; CDR ; CDR ; SWAP ; CAR ; ADD } } ;
          LAMBDA
            (pair (pair address bool) (option address))
            unit
@@ -650,8 +650,7 @@
                      CAR ;
                      CAR ;
                      CDR ;
-                     IF { PUSH string "PAUSED" ; FAILWITH } { UNIT } ;
-                     DROP ;
+                     IF { PUSH string "PAUSED" ; FAILWITH } {} ;
                      SWAP ;
                      DUP ;
                      DUG 2 ;
@@ -820,8 +819,7 @@
                                     CAR ;
                                     COMPARE ;
                                     EQ ;
-                                    IF { UNIT } { PUSH string "FA2_NOT_OWNER" ; FAILWITH } ;
-                                    DROP ;
+                                    IF {} { PUSH string "FA2_NOT_OWNER" ; FAILWITH } ;
                                     SWAP ;
                                     CAR ;
                                     SWAP ;
@@ -901,14 +899,14 @@
                            SWAP ;
                            DUP ;
                            DUG 2 ;
-                           CAR ;
+                           CDR ;
                            PUSH nat 0 ;
                            PAIR ;
                            NONE address ;
                            PAIR ;
                            CONS ;
                            SWAP ;
-                           CDR ;
+                           CAR ;
                            SOME ;
                            PAIR } ;
                      DIG 2 ;
@@ -945,7 +943,7 @@
                    { DIG 5 ;
                      DROP ;
                      DUP ;
-                     MAP { DUP ; CAR ; PUSH nat 0 ; PAIR ; SWAP ; CDR ; SOME ; PAIR } ;
+                     MAP { DUP ; CDR ; PUSH nat 0 ; PAIR ; SWAP ; CAR ; SOME ; PAIR } ;
                      NIL (pair (option address) (list (pair (option address) (pair nat nat)))) ;
                      SWAP ;
                      NONE address ;
