@@ -33,9 +33,8 @@ There are two example contracts that implement a receiver hook:
 
 ### LIGO
 
-Install LIGO docker image by running the following command:
-
-`curl https://gitlab.com/ligolang/ligo/raw/dev/scripts/installer.sh | bash -s "next"`
+If you are running the tests, the correct LIGO docker image version will be
+downloaded automatically when used first time.
 
 See [LIGO installation](https://ligolang.org/docs/intro/installation/) instructions
 for more details or alternative installation options.
