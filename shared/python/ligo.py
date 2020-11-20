@@ -9,6 +9,11 @@ from pytezos.operation.result import OperationResult
 from pytezos.rpc.errors import RpcError
 from pytezos.operation import fees
 
+ligo_version = "0.4.0"
+ligo_cmd = (
+    f'docker run --rm -v "$PWD":"$PWD" -w "$PWD" ligolang/ligo:{ligo_version} "$@"'
+)
+
 
 class LigoEnv:
     def __init__(self, src_dir, out_dir):
@@ -48,7 +53,7 @@ class LigoContract:
         pytezos.
         :return: pytezos.ContractInterface
         """
-        command = f"ligo compile-contract {self.ligo_file} {self.main_func}"
+        command = f"{ligo_cmd} compile-contract {self.ligo_file} {self.main_func}"
         michelson = self._ligo_to_michelson(command)
         self.tz_file.write_text(michelson)
         self.contract_interface = ContractInterface.create_from(michelson)
@@ -70,9 +75,7 @@ class LigoContract:
         Compiles LIGO encoded storage to Python object to be used with pytezos.
         :return:  object
         """
-        command = (
-            f"ligo compile-storage {self.ligo_file} {self.main_func} '{ligo_storage}'"
-        )
+        command = f"{ligo_cmd} compile-storage {self.ligo_file} {self.main_func} '{ligo_storage}'"
         michelson = self._ligo_to_michelson_sanitized(command)
         c = self.get_contract()
         return c.contract.storage.decode(michelson)
@@ -83,7 +86,7 @@ class LigoContract:
         :param ligo_parameter: LIGO string encoding entry point and parameter
         :return: object:
         """
-        command = f"ligo compile-parameter {self.ligo_file} {self.main_func} '{ligo_parameter}'"
+        command = f"{ligo_cmd} compile-parameter {self.ligo_file} {self.main_func} '{ligo_parameter}'"
         michelson = self._ligo_to_michelson_sanitized(command)
         c = self.get_contract()
         return c.contract.parameter.decode(michelson)
