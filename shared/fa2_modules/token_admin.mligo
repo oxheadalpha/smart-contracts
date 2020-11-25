@@ -55,8 +55,8 @@ let pause (tokens, s: (pause_param list) * token_admin_storage) : token_admin_st
   let new_paused = List.fold 
     (fun (paused_set, t : paused_tokens_set * pause_param) -> 
       if t.paused
-      then Big_map.remove t.token_id paused_set
-      else Big_map.add t.token_id unit paused_set
+      then Big_map.add t.token_id unit paused_set
+      else Big_map.remove t.token_id paused_set
     )
     tokens s.paused in
   { s with paused = new_paused; }
