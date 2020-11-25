@@ -129,8 +129,7 @@
                  CAR ;
                  CAR ;
                  CDR ;
-                 IF { PUSH string "PAUSED" ; FAILWITH } { UNIT } ;
-                 DROP ;
+                 IF { PUSH string "PAUSED" ; FAILWITH } {} ;
                  SWAP ;
                  DUP ;
                  DUG 2 ;
@@ -369,8 +368,7 @@
                                     CAR ;
                                     COMPARE ;
                                     EQ ;
-                                    IF { UNIT } { PUSH string "FA2_NOT_OWNER" ; FAILWITH } ;
-                                    DROP ;
+                                    IF {} { PUSH string "FA2_NOT_OWNER" ; FAILWITH } ;
                                     SWAP ;
                                     CAR ;
                                     SWAP ;
@@ -638,8 +636,7 @@
                      SWAP ;
                      COMPARE ;
                      NEQ ;
-                     IF { PUSH string "INVALID_OWNERS_LENGTH" ; FAILWITH } { UNIT } } ;
-                 DROP ;
+                     IF { PUSH string "INVALID_OWNERS_LENGTH" ; FAILWITH } {} } ;
                  DUP ;
                  CAR ;
                  CAR ;
