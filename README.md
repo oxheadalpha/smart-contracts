@@ -20,6 +20,9 @@ The FA2-related LIGO artifacts are:
   - [shared/fa2_modules/simple_admin.mligo](shared/fa2_modules/simple_admin.mligo) -
     implementation of the admin entry points that let to pause/unpause the contract
     and change the admin.
+  - [shared/fa2_modules/token_admin.mligo](shared/fa2_modules/token_admin.mligo) -
+    implementation of the admin entry points that let change the admin and
+    pause/unpause transfers per individual tokens.
 - [shared/fa2_clients](shared/fa2_clients) - FA2 client contracts used for testing.
 
 ## Sub-Projects Structure
@@ -61,6 +64,10 @@ implementation of the FA1.2 contract that supports single fungible tokens
 
 [fa2_multi_asset.mligo](multi_asset/ligo/src/fa2_multi_asset.mligo) implementation
 of the FA2 contract that supports multiple fungible tokens (a.k.a. ERC-1155).
+
+[fa2_granular_multi_asset.mligo](multi_asset/ligo/src/fa2_granular_multi_asset.mligo)
+implementation of the FA2 contract that supports multiple fungible tokens
+(a.k.a. ERC-1155) that allows pausing/un-pausing transfers on individual tokens.
 
 ### [fa2_hooks](fa2_hooks)
 
