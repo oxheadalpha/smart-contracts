@@ -17,7 +17,13 @@ ligo_client_env = LigoEnv(root_dir / "fa2_clients", root_dir / "out")
 
 
 def balance_response(owner, token_id, balance):
-    return {"balance": balance, "request": {"owner": owner, "token_id": token_id,}}
+    return {
+        "balance": balance,
+        "request": {
+            "owner": owner,
+            "token_id": token_id,
+        },
+    }
 
 
 class TestMacSetUp(TestCase):
@@ -246,4 +252,3 @@ class TestTransfer(TestMacSetUp):
                 balance_response(mike_address, 2, 5),
             ]
         )
-
