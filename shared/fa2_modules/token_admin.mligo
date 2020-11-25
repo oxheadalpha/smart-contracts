@@ -17,7 +17,7 @@
 type paused_tokens_set = (token_id, unit) big_map
 
 type pause_param = 
-(* [@layout:comb] *)
+[@layout:comb]
 {
   token_id : token_id;
   paused : bool;
