@@ -20,30 +20,45 @@ type multi_asset_param =
   | Assets of fa2_entry_points
   | Admin of token_admin
   | Tokens of token_manager
+  | Permissions_descriptor of permissions_descriptor contract
+
+let get_permissions_descriptor (callback : permissions_descriptor contract) : operation =
+  let descriptor =  {
+    operator = Owner_or_operator_transfer;
+    receiver = Owner_no_hook;
+    sender = Owner_no_hook;
+    custom = Some {tag = "PAUSABLE_TOKENS"; config_api = Some Current.self_address; };
+  } in
+  Operation.transaction descriptor 0mutez callback
 
 let multi_asset_main 
     (param, s : multi_asset_param * multi_asset_storage)
     : (operation list) * multi_asset_storage =
   match param with
   | Admin p ->  
-      let ops, admin = token_admin (p, s.admin) in
-      let new_s = { s with admin = admin; } in
-      (ops, new_s)
+    let ops, admin = token_admin (p, s.admin) in
+    let new_s = { s with admin = admin; } in
+    (ops, new_s)
 
   | Tokens p ->
-      let u1 = fail_if_not_admin s.admin in
-      let ops, assets = token_manager (p, s.assets) in 
-      let new_s = { s with
-        assets = assets
-      } in 
-      (ops, new_s)
+    let u1 = fail_if_not_admin s.admin in
+    let ops, assets = token_manager (p, s.assets) in 
+    let new_s = { s with
+      assets = assets
+    } in 
+    (ops, new_s)
 
   | Assets p -> 
-      let u2 = fail_if_paused (s.admin, p) in
-        
-      let ops, assets = fa2_main (p, s.assets) in
-      let new_s = { s with assets = assets } in
-      (ops, new_s)
+    let u2 = fail_if_paused (s.admin, p) in
+      
+    let ops, assets = fa2_main (p, s.assets) in
+    let new_s = { s with assets = assets } in
+    (ops, new_s)
+
+  | Permissions_descriptor callback ->
+    let callback_op = get_permissions_descriptor callback in
+      
+    [callback_op], s
 
 (**
 This is a sample initial fa2_multi_asset storage.
