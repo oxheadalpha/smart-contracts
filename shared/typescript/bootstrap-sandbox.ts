@@ -1,4 +1,5 @@
-import { TezosToolkit } from '@taquito/taquito';
+import { $log } from '@tsed/logger';
+import { TezosToolkit, VIEW_LAMBDA } from '@taquito/taquito';
 import { Signer } from '@taquito/taquito/dist/types/signer/interface';
 import { InMemorySigner } from '@taquito/signer';
 
@@ -30,6 +31,7 @@ async function testnetKeys(): Promise<TestKeys> {
 export type TestTz = {
   bob: TezosToolkit;
   alice: TezosToolkit;
+  lambdaView?: string;
 };
 
 function signerToToolkit(signer: Signer, rpc: string): TezosToolkit {
@@ -45,9 +47,19 @@ function signerToToolkit(signer: Signer, rpc: string): TezosToolkit {
 export async function bootstrap(): Promise<TestTz> {
   const { bob, alice } = await flextesaKeys();
   const rpc = 'http://localhost:20000';
+  const bobTz = signerToToolkit(bob, rpc);
+
+  $log.info('originating lambda view contract...');
+  const op = await bobTz.contract.originate({
+    code: VIEW_LAMBDA.code,
+    storage: VIEW_LAMBDA.storage
+  });
+  const lambdaContract = await op.contract();
+  $log.info(`originated lambda view contract ${lambdaContract.address}`);
   return {
-    bob: signerToToolkit(bob, rpc),
-    alice: signerToToolkit(alice, rpc)
+    bob: bobTz,
+    alice: signerToToolkit(alice, rpc),
+    lambdaView: lambdaContract.address
   };
 }
 

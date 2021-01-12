@@ -1,53 +1,22 @@
 import * as path from 'path';
 import { $log } from '@tsed/logger';
 
-import { TezosToolkit } from '@taquito/taquito';
-
-import { compileAndLoadContract, originateContract, LigoEnv } from './ligo';
 import { address, Contract } from './type-aliases';
 import { BalanceOfRequest, BalanceOfResponse } from './fa2-interface';
 
-export type InspectorStorage = BalanceOfResponse[] | {};
-
-export async function originateInspector(
-  defaultEnv: LigoEnv,
-  tz: TezosToolkit
-): Promise<Contract> {
-  const inspectorSrcDir = path.join(defaultEnv.srcDir, '../fa2_clients');
-  const env = new LigoEnv(defaultEnv.cwd, inspectorSrcDir, defaultEnv.outDir);
-
-  const code = await compileAndLoadContract(
-    env,
-    'inspector.mligo',
-    'main',
-    'inspector.tz'
-  );
-  const storage = `(Left Unit)`;
-  return originateContract(tz, code, storage, 'inspector');
-}
-
-export async function queryBalances(
-  inspector: Contract,
-  fa2: address,
-  requests: BalanceOfRequest[]
-): Promise<BalanceOfResponse[]> {
-  $log.info('checking token balance');
-
-  const op = await inspector.methods.query(fa2, requests).send();
-  const hash = await op.confirmation(3);
-  $log.info(`consumed gas: ${op.consumedGas}`);
-
-  const storage = await inspector.storage<InspectorStorage>();
-  if (Array.isArray(storage)) return storage;
-  else return Promise.reject('Invalid inspector storage state Empty.');
-}
+export const queryBalances = async (
+  fa2: Contract,
+  requests: BalanceOfRequest[],
+  lambdaView?: address
+): Promise<BalanceOfResponse[]> =>
+  fa2.views.balance_of(requests).read(lambdaView);
 
 export async function hasNftTokens(
-  inspector: Contract,
-  nft: address,
-  requests: BalanceOfRequest[]
+  nft: Contract,
+  requests: BalanceOfRequest[],
+  lambdaView?: address
 ): Promise<boolean[]> {
-  const responses = await queryBalances(inspector, nft, requests);
+  const responses = await queryBalances(nft, requests, lambdaView);
   const results = responses.map(r => {
     if (r.balance.eq(1)) return true;
     else if (r.balance.eq(0)) return false;
