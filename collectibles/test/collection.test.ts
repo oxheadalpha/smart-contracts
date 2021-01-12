@@ -6,15 +6,10 @@ import { bootstrap, TestTz } from 'smart-contracts-common/bootstrap-sandbox';
 import { Contract, address, nat } from 'smart-contracts-common/type-aliases';
 import { defaultLigoEnv } from 'smart-contracts-common/ligo';
 import {
-  originateInspector,
   queryBalances,
   hasNftTokens
 } from 'smart-contracts-common/fa2-balance-inspector';
-import {
-  BalanceOfRequest,
-  BalanceOfResponse,
-  transfer
-} from 'smart-contracts-common/fa2-interface';
+import { transfer } from 'smart-contracts-common/fa2-interface';
 
 import {
   originateCollection,
@@ -46,7 +41,7 @@ interface MoneyBalance {
 
 describe('collectibles test', () => {
   let tezos: TestTz;
-  let inspector: Contract;
+  // let inspector: Contract;
 
   let collection: Contract;
   let money: Contract;
@@ -56,7 +51,6 @@ describe('collectibles test', () => {
 
   beforeAll(async () => {
     tezos = await bootstrap();
-    inspector = await originateInspector(ligoEnv, tezos.bob);
   });
 
   beforeEach(async () => {
@@ -94,15 +88,19 @@ describe('collectibles test', () => {
   };
 
   async function getOwnedCollectibles(owner: address): Promise<Set<number>> {
-    const responses = await queryBalances(inspector, collection.address, [
-      { owner: owner, token_id: new BigNumber(0) },
-      { owner: owner, token_id: new BigNumber(1) },
-      { owner: owner, token_id: new BigNumber(2) },
-      { owner: owner, token_id: new BigNumber(3) },
-      { owner: owner, token_id: new BigNumber(4) },
-      { owner: owner, token_id: new BigNumber(5) },
-      { owner: owner, token_id: new BigNumber(6) }
-    ]);
+    const responses = await queryBalances(
+      collection,
+      [
+        { owner: owner, token_id: new BigNumber(0) },
+        { owner: owner, token_id: new BigNumber(1) },
+        { owner: owner, token_id: new BigNumber(2) },
+        { owner: owner, token_id: new BigNumber(3) },
+        { owner: owner, token_id: new BigNumber(4) },
+        { owner: owner, token_id: new BigNumber(5) },
+        { owner: owner, token_id: new BigNumber(6) }
+      ],
+      tezos.lambdaView
+    );
     return responses
       .filter(r => r.balance.eq(1))
       .reduce(
@@ -125,9 +123,9 @@ describe('collectibles test', () => {
     });
 
     const balances = await queryBalances(
-      inspector,
-      money.address,
-      expectedResponses.map(r => r.request)
+      money,
+      expectedResponses.map(r => r.request),
+      tezos.lambdaView
     );
     expect(balances).toEqual(expectedResponses);
   }
