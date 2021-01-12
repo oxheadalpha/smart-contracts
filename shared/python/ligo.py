@@ -9,7 +9,7 @@ from pytezos.operation.result import OperationResult
 from pytezos.rpc.errors import RpcError
 from pytezos.operation import fees
 
-ligo_version = "0.4.0"
+ligo_version = "0.7.1"
 ligo_cmd = (
     f'docker run --rm -v "$PWD":"$PWD" -w "$PWD" ligolang/ligo:{ligo_version} "$@"'
 )

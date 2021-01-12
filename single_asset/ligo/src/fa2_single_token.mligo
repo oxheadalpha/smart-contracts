@@ -100,7 +100,7 @@ let get_balance (p, ledger : balance_of_param * ledger) : operation =
       response
   in
   let responses = List.map to_balance p.requests in
-  Operation.transaction responses 0mutez p.callback
+  Tezos.transaction responses 0mutez p.callback
 
 (** Validate if all provided token_ids are `0n` and correspond to a single token ID *)
 let validate_token_ids (tokens : token_id list) : unit =
@@ -159,7 +159,7 @@ let fa2_main (param, storage : fa2_entry_points * single_token_storage)
 
   | Token_metadata_registry callback ->
     (* the contract storage holds `token_metadata` big_map*)
-    let callback_op = Operation.transaction Tezos.self_address 0mutez callback in
+    let callback_op = Tezos.transaction Tezos.self_address 0mutez callback in
     [callback_op], storage
 
 

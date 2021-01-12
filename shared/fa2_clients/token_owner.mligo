@@ -27,9 +27,11 @@ let token_owner_main (param, s : token_owner * unit)
       owner = Current.self_address;
       token_id = p.token_id;
     } in
-    let fa2_update : (update_operator list) contract =
-      Operation.get_entrypoint "%update_operators" p.fa2 in
-    let update_op = Operation.transaction [Add_operator param] 0mutez fa2_update in
+    let fa2_update : update_operator list contract option =
+      Tezos.get_entrypoint_opt "%update_operators" p.fa2 in
+    let update_op = match fa2_update with
+    | None -> (failwith "NO_UPDATE_OPERATORS" : operation)
+    | Some entry -> Tezos.transaction [Add_operator param] 0mutez entry in
     [update_op], unit
 
   | Owner_remove_operator p ->
@@ -39,9 +41,11 @@ let token_owner_main (param, s : token_owner * unit)
       owner = Current.self_address;
       token_id = p.token_id;
     } in
-    let fa2_update : (update_operator list) contract =
-      Operation.get_entrypoint "%update_operators" p.fa2 in
-    let update_op = Operation.transaction [Remove_operator param] 0mutez fa2_update in
+    let fa2_update : update_operator list contract option =
+      Tezos.get_entrypoint_opt "%update_operators" p.fa2 in
+    let update_op = match fa2_update with
+    | None -> (failwith "NO_UPDATE_OPERATORS" : operation)
+    | Some entry -> Tezos.transaction [Remove_operator param] 0mutez entry in
     [update_op], unit
 
   | Default u -> ([] : operation list), unit

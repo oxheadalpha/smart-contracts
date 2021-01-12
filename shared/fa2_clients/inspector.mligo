@@ -20,15 +20,22 @@ let main (p, s : param * storage) : (operation list) * storage =
 
   | Query q ->
     (* preparing balance_of request and invoking FA2 *)
+    let cb_opt : balance_of_response list contract option =
+      Tezos.get_entrypoint_opt "%response" Current.self_address in
+    let cb = match cb_opt with
+    | None -> (failwith "NO_RESPONSE_ENTRYPOINT" : balance_of_response list contract)
+    | Some ep -> ep
+    in
     let bp : balance_of_param = {
       requests = q.requests;
-      callback =
-        (Operation.get_entrypoint "%response" Current.self_address :
-          (balance_of_response list) contract);
+      callback = cb;
     } in
-    let fa2 : balance_of_param contract = 
-      Operation.get_entrypoint "%balance_of" q.fa2 in
-    let q_op = Operation.transaction bp 0mutez fa2 in
+    let fa2 : balance_of_param contract option = 
+      Tezos.get_entrypoint_opt "%balance_of" q.fa2 in
+    let q_op = match fa2 with
+    | None -> (failwith "NO_BALANCE_OF_ENTRYPOINT" : operation)
+    | Some ep -> Tezos.transaction bp 0mutez ep
+    in
     [q_op], s
 
   | Response responses ->
