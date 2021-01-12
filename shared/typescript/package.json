@@ -9,8 +9,11 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@taquito/taquito": "^6.3.5-beta.0",
+    "@taquito/signer": "7.2.0-alpha.2",
+    "@taquito/taquito": "7.2.0-alpha.2",
+    "@taquito/tzip16": "7.2.0-alpha.2",
     "@tsed/logger": "^5.5.3",
+    "bignumber.js": "^9.0.1",
     "child_process": "^1.0.2",
     "fs": "0.0.1-security",
     "path": "^0.12.7",
