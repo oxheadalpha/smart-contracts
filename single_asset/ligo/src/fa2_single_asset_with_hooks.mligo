@@ -14,7 +14,7 @@ let single_asset_with_hooks_main (param, storage
   | SA sap -> single_asset_main (sap, storage)
   | Permissions_descriptor callback ->
     let callback_op =
-        Operation.transaction storage.assets.permissions_descriptor 0mutez callback in
+        Tezos.transaction storage.assets.permissions_descriptor 0mutez callback in
     [callback_op], storage
 
 (**

@@ -249,10 +249,10 @@ let disburse_collectibles (allocated_collectibles, collectible_fa2, owner, this
       txs = tx_destinations;
     } in
     let fa2_entry : ((transfer list) contract) option = 
-      Operation.get_entrypoint_opt "%transfer"  collectible_fa2 in
+      Tezos.get_entrypoint_opt "%transfer"  collectible_fa2 in
     let transfer_op = match fa2_entry with
     | None -> (failwith "CANNOT_INVOKE_COLLECTIBLE_FA2" : operation)
-    | Some c -> Operation.transaction [tx] 0mutez c
+    | Some c -> Tezos.transaction [tx] 0mutez c
     in
     [transfer_op], Map.remove owner allocated_collectibles
 
@@ -280,10 +280,10 @@ let refund_money (money_deposits, money_token, owner, this
       txs = [{to_ = owner; token_id = money_token.id; amount = m; }];
     } in
     let fa2_entry : ((transfer list) contract) option = 
-      Operation.get_entrypoint_opt "%transfer"  money_token.fa2 in
+      Tezos.get_entrypoint_opt "%transfer"  money_token.fa2 in
     let transfer_op = match fa2_entry with
     | None -> (failwith "CANNOT_INVOKE_MONEY_FA2" : operation)
-    | Some c -> Operation.transaction [tx] 0mutez c
+    | Some c -> Tezos.transaction [tx] 0mutez c
     in
     [transfer_op], Map.remove owner money_deposits
 

@@ -81,7 +81,7 @@ let get_balance (p, ledger : balance_of_param * ledger) : operation =
       { request = r; balance = bal; }
   in
   let responses = List.map to_balance p.requests in
-  Operation.transaction responses 0mutez p.callback
+  Tezos.transaction responses 0mutez p.callback
 
 let fa2_collection_main (param, storage : fa2_entry_points * collection_storage)
     :  (operation list) * collection_storage =
@@ -105,14 +105,14 @@ let fa2_collection_main (param, storage : fa2_entry_points * collection_storage)
 
   | Token_metadata_registry callback ->
     (* the contract stores its own token metadata and exposes `token_metadata` entry point *)
-    let callback_op = Operation.transaction Tezos.self_address 0mutez callback in
+    let callback_op = Tezos.transaction Tezos.self_address 0mutez callback in
     [callback_op], storage
 
 let get_permissions_descriptor (callback, storage
     : permissions_descriptor contract * collection_storage)
     : (operation  list) * collection_storage =
   let callback_op =
-    Operation.transaction storage.permissions_descriptor 0mutez callback in
+    Tezos.transaction storage.permissions_descriptor 0mutez callback in
   [callback_op], storage
 
 let fixed_collection_token_main (param, storage : fa2_collection_entrypoints * collection_storage)
