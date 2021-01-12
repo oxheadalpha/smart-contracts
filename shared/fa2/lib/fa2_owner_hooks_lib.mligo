@@ -72,7 +72,7 @@ Given an address of the token receiver, tries to get an entrypoint for
  *)
 let to_receiver_hook : to_hook = fun (a : address) ->
     let c : hook_entry_point option = 
-    Operation.get_entrypoint_opt "%tokens_received" a in
+    Tezos.get_entrypoint_opt "%tokens_received" a in
     match c with
     | Some c -> Hook_entry_point c
     | None -> Hook_undefined fa2_receiver_hook_undefined
@@ -94,7 +94,7 @@ Given an address of the token sender, tries to get an entrypoint for
  *)
 let to_sender_hook : to_hook = fun (a : address) ->
     let c : hook_entry_point option = 
-    Operation.get_entrypoint_opt "%tokens_sent" a in
+    Tezos.get_entrypoint_opt "%tokens_sent" a in
     match c with
     | Some c -> Hook_entry_point c
     | None -> Hook_undefined fa2_sender_hook_undefined
@@ -159,7 +159,7 @@ let get_owner_hook_ops_for (tx_descriptor, pd
   | [] -> ([] : operation list)
   | h :: t -> 
     List.map (fun(call: hook_entry_point) -> 
-      Operation.transaction tx_descriptor 0mutez call) 
+      Tezos.transaction tx_descriptor 0mutez call) 
       hook_calls
 
 #endif
