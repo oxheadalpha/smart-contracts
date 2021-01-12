@@ -47,7 +47,7 @@ let get_balance (p, ledger : balance_of_param * ledger) : operation =
       { request = r; balance = bal; }
   in
   let responses = List.map to_balance p.requests in
-  Operation.transaction responses 0mutez p.callback
+  Tezos.transaction responses 0mutez p.callback
 
 (**
 Update leger balances according to the specified transfers. Fails if any of the
@@ -126,7 +126,7 @@ let fa2_main (param, storage : fa2_entry_points * nft_token_storage)
 
   | Token_metadata_registry callback ->
     (* the contract stores its own token metadata and exposes `token_metadata` entry point *)
-    let callback_op = Operation.transaction Tezos.self_address 0mutez callback in
+    let callback_op = Tezos.transaction Tezos.self_address 0mutez callback in
     [callback_op], storage
 
 
