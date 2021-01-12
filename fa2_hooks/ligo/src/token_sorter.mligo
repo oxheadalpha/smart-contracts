@@ -77,10 +77,10 @@ let forward_tokens (p, storage : forward_param * dispatch_table)
       txs = tx_dests;
     } in
     let fa2_entry : ((transfer list) contract) option = 
-    Operation.get_entrypoint_opt "%transfer"  p.fa2 in
+    Tezos.get_entrypoint_opt "%transfer"  p.fa2 in
     let callback_op = match fa2_entry with
     | None -> (failwith "CANNOT CALLBACK FA2" : operation)
-    | Some c -> Operation.transaction [tx] 0mutez c
+    | Some c -> Tezos.transaction [tx] 0mutez c
     in
     [callback_op], new_s
 

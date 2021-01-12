@@ -43,15 +43,13 @@
                            (list (or (pair %add_operator (address %owner) (pair (address %operator) (nat %token_id)))
                                      (pair %remove_operator (address %owner) (pair (address %operator) (nat %token_id))))) ;
                          IF_NONE
-                           { PUSH string "bad address for get_entrypoint (%update_operators)" ;
-                             FAILWITH }
-                           {} ;
-                         PUSH mutez 0 ;
-                         NIL (or (pair address (pair address nat)) (pair address (pair address nat))) ;
-                         DIG 3 ;
-                         LEFT (pair address (pair address nat)) ;
-                         CONS ;
-                         TRANSFER_TOKENS ;
+                           { DROP ; PUSH string "NO_UPDATE_OPERATORS" ; FAILWITH }
+                           { PUSH mutez 0 ;
+                             NIL (or (pair address (pair address nat)) (pair address (pair address nat))) ;
+                             DIG 3 ;
+                             LEFT (pair address (pair address nat)) ;
+                             CONS ;
+                             TRANSFER_TOKENS } ;
                          UNIT ;
                          NIL operation ;
                          DIG 2 ;
@@ -75,21 +73,24 @@
                        (list (or (pair %add_operator (address %owner) (pair (address %operator) (nat %token_id)))
                                  (pair %remove_operator (address %owner) (pair (address %operator) (nat %token_id))))) ;
                      IF_NONE
-                       { PUSH string "bad address for get_entrypoint (%update_operators)" ;
-                         FAILWITH }
-                       {} ;
-                     PUSH mutez 0 ;
-                     NIL (or (pair address (pair address nat)) (pair address (pair address nat))) ;
-                     DIG 3 ;
-                     RIGHT (pair address (pair address nat)) ;
-                     CONS ;
-                     TRANSFER_TOKENS ;
+                       { DROP ; PUSH string "NO_UPDATE_OPERATORS" ; FAILWITH }
+                       { PUSH mutez 0 ;
+                         NIL (or (pair address (pair address nat)) (pair address (pair address nat))) ;
+                         DIG 3 ;
+                         RIGHT (pair address (pair address nat)) ;
+                         CONS ;
+                         TRANSFER_TOKENS } ;
                      UNIT ;
                      NIL operation ;
                      DIG 2 ;
                      CONS ;
                      PAIR } ;
+                 DUP ;
+                 CDR ;
+                 SWAP ;
                  CAR ;
+                 SWAP ;
+                 DROP ;
                  PAIR }
                { CAR ;
                  ITER { CDR ;
