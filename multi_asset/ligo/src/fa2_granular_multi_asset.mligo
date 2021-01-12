@@ -29,7 +29,7 @@ let get_permissions_descriptor (callback : permissions_descriptor contract) : op
     sender = Owner_no_hook;
     custom = Some {tag = "PAUSABLE_TOKENS"; config_api = Some Current.self_address; };
   } in
-  Operation.transaction descriptor 0mutez callback
+  Tezos.transaction descriptor 0mutez callback
 
 let multi_asset_main 
     (param, s : multi_asset_param * multi_asset_storage)
