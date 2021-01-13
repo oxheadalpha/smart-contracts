@@ -70,7 +70,6 @@ class TestFa2SetUp(TestCase):
             "homepage": "https://github.com/tqtezos/smart-contracts",
             "license": "MIT",
         }
-
         meta_content = json.dumps(meta_content, indent=2).encode().hex()
         meta_uri = str.encode("tezos-storage:content").hex()
 

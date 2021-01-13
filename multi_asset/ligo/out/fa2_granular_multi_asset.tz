@@ -33,18 +33,19 @@
                             (pair (string %name) (pair (nat %decimals) (map %extras string string))))))
                (list %mint_tokens (pair (address %owner) (pair (nat %token_id) (nat %amount))))))) ;
   storage
-    (pair (pair %admin
-             (pair (address %admin) (big_map %paused nat unit))
-             (option %pending_admin address))
-          (pair %assets
-             (pair (big_map %ledger (pair address nat) nat)
-                   (big_map %operators (pair address (pair address nat)) unit))
-             (pair (big_map %token_metadata
-                      nat
-                      (pair (nat %token_id)
-                            (pair (string %symbol)
-                                  (pair (string %name) (pair (nat %decimals) (map %extras string string))))))
-                   (big_map %token_total_supply nat nat)))) ;
+    (pair (pair (pair %admin
+                   (pair (address %admin) (big_map %paused nat unit))
+                   (option %pending_admin address))
+                (pair %assets
+                   (pair (big_map %ledger (pair address nat) nat)
+                         (big_map %operators (pair address (pair address nat)) unit))
+                   (pair (big_map %token_metadata
+                            nat
+                            (pair (nat %token_id)
+                                  (pair (string %symbol)
+                                        (pair (string %name) (pair (nat %decimals) (map %extras string string))))))
+                         (big_map %token_total_supply nat nat))))
+          (big_map %metadata string bytes)) ;
   code { PUSH string "FA2_TOKEN_UNDEFINED" ;
          PUSH string "FA2_INSUFFICIENT_BALANCE" ;
          LAMBDA
@@ -194,6 +195,7 @@
                  DUP ;
                  DUG 2 ;
                  CAR ;
+                 CAR ;
                  SWAP ;
                  IF_LEFT
                    { IF_LEFT
@@ -264,8 +266,14 @@
                  SWAP ;
                  CAR ;
                  DIG 2 ;
+                 DUP ;
+                 DUG 3 ;
                  CDR ;
-                 DIG 2 ;
+                 DIG 3 ;
+                 CAR ;
+                 CDR ;
+                 DIG 3 ;
+                 PAIR ;
                  PAIR ;
                  SWAP ;
                  PAIR }
@@ -275,6 +283,7 @@
                  DIG 2 ;
                  DUP ;
                  DUG 3 ;
+                 CAR ;
                  CAR ;
                  PAIR ;
                  DUP ;
@@ -307,6 +316,7 @@
                  SWAP ;
                  DUP ;
                  DUG 2 ;
+                 CAR ;
                  CDR ;
                  SWAP ;
                  IF_LEFT
@@ -645,9 +655,15 @@
                  CDR ;
                  SWAP ;
                  CAR ;
-                 SWAP ;
                  DIG 2 ;
+                 DUP ;
+                 DUG 3 ;
+                 CDR ;
+                 DIG 2 ;
+                 DIG 3 ;
                  CAR ;
+                 CAR ;
+                 PAIR ;
                  PAIR ;
                  SWAP ;
                  PAIR } }
@@ -693,6 +709,7 @@
                  DUP ;
                  DUG 2 ;
                  CAR ;
+                 CAR ;
                  DIG 3 ;
                  SWAP ;
                  EXEC ;
@@ -700,6 +717,7 @@
                  SWAP ;
                  DUP ;
                  DUG 2 ;
+                 CAR ;
                  CDR ;
                  SWAP ;
                  IF_LEFT
@@ -944,9 +962,15 @@
                  CDR ;
                  SWAP ;
                  CAR ;
-                 SWAP ;
                  DIG 2 ;
+                 DUP ;
+                 DUG 3 ;
+                 CDR ;
+                 DIG 2 ;
+                 DIG 3 ;
                  CAR ;
+                 CAR ;
+                 PAIR ;
                  PAIR ;
                  SWAP ;
                  PAIR } } } }
