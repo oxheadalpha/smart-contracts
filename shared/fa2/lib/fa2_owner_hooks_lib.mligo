@@ -10,6 +10,7 @@ which supports sender/receiver hooks.
 
 #include "../fa2_interface.mligo"
 #include "../fa2_errors.mligo"
+#include "../fa2_permissions_descriptor.mligo"
 
 type get_owners = transfer_descriptor -> (address option) list
 

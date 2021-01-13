@@ -10,6 +10,7 @@
 
 #include "token_manager.mligo"
 #include "../fa2_modules/token_admin.mligo"
+#include "../fa2/fa2_permissions_descriptor.mligo"
 
 type multi_asset_storage = {
   admin : token_admin_storage;
@@ -21,16 +22,6 @@ type multi_asset_param =
   | Assets of fa2_entry_points
   | Admin of token_admin
   | Tokens of token_manager
-  | Permissions_descriptor of permissions_descriptor contract
-
-let get_permissions_descriptor (callback : permissions_descriptor contract) : operation =
-  let descriptor =  {
-    operator = Owner_or_operator_transfer;
-    receiver = Owner_no_hook;
-    sender = Owner_no_hook;
-    custom = Some {tag = "PAUSABLE_TOKENS"; config_api = Some Current.self_address; };
-  } in
-  Tezos.transaction descriptor 0mutez callback
 
 let multi_asset_main 
     (param, s : multi_asset_param * multi_asset_storage)
@@ -56,10 +47,6 @@ let multi_asset_main
     let new_s = { s with assets = assets } in
     (ops, new_s)
 
-  | Permissions_descriptor callback ->
-    let callback_op = get_permissions_descriptor callback in
-      
-    [callback_op], s
 
 (**
 This is a sample initial fa2_multi_asset storage.
@@ -82,4 +69,11 @@ let store : multi_asset_storage = {
     (* ("", 0x74657a6f732d73746f726167653a636f6e74656e74); *)
     ("content", 0x00) (* bytes encoded UTF-8 JSON *)
   ];
+}
+
+let descriptor: permissions_descriptor = {
+  operator = Owner_or_operator_transfer;
+  receiver = Owner_no_hook;
+  sender = Owner_no_hook;
+  custom = Some {tag = "PAUSABLE_TOKENS"; config_api = Some Current.self_address; };
 }

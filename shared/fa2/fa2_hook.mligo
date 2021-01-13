@@ -12,6 +12,7 @@ an entrypoint is called transfer hook)
 #define FA2_HOOK
 
 #include "fa2_interface.mligo"
+#include "fa2_permissions_descriptor.mligo"
 
 
 type set_hook_param =
