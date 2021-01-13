@@ -80,46 +80,7 @@ type fa2_entry_points =
 
 type contract_metadata = (string, bytes) big_map
 
-(* 
-  Permission policy definition. Not directly used in the contract code, but
-  stored in the TZIP-16 contract metadata JSON
-*)
-
-type operator_transfer_policy =
-  [@layout:comb]
-  | No_transfer
-  | Owner_transfer
-  | Owner_or_operator_transfer
-
-type owner_hook_policy =
-  [@layout:comb]
-  | Owner_no_hook
-  | Optional_owner_hook
-  | Required_owner_hook
-
-type custom_permission_policy =
-[@layout:comb]
-{
-  tag : string;
-  config_api: address option;
-}
-
-type permissions_descriptor =
-[@layout:comb]
-{
-  operator : operator_transfer_policy;
-  receiver : owner_hook_policy;
-  sender : owner_hook_policy;
-  custom : custom_permission_policy option;
-}
-
-(* permissions descriptor entrypoint
-type fa2_entry_points_custom =
-  ...
-  | Permissions_descriptor of permissions_descriptor contract
-
-*)
-
+(* FA2 hooks interface *)
 
 type transfer_destination_descriptor =
 [@layout:comb]

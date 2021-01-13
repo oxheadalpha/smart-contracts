@@ -7,6 +7,7 @@ helper functions
 #define FA2_OPERATOR_LIB
 
 #include "../fa2_errors.mligo"
+#include "../fa2_permissions_descriptor.mligo"
 
 (** 
 (owner, operator, token_id) -> unit
