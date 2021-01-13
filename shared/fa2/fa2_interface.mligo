@@ -78,7 +78,12 @@ type fa2_entry_points =
 (* type fa2_token_metadata =
   | Token_metadata of token_metadata_param *)
 
-(* permission policy definition *)
+type contract_metadata = (string, bytes) big_map
+
+(* 
+  Permission policy definition. Not directly used in the contract code, but
+  stored in the TZIP-16 contract metadata JSON
+*)
 
 type operator_transfer_policy =
   [@layout:comb]
