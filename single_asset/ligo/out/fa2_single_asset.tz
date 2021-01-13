@@ -16,16 +16,17 @@
            (list %burn_tokens (pair (address %owner) (nat %amount)))
            (list %mint_tokens (pair (address %owner) (nat %amount))))) ;
   storage
-    (pair (pair %admin (pair (address %admin) (bool %paused)) (option %pending_admin address))
-          (pair %assets
-             (pair (big_map %ledger address nat)
-                   (big_map %operators (pair address (pair address nat)) unit))
-             (pair (big_map %token_metadata
-                      nat
-                      (pair (nat %token_id)
-                            (pair (string %symbol)
-                                  (pair (string %name) (pair (nat %decimals) (map %extras string string))))))
-                   (nat %total_supply)))) ;
+    (pair (pair (pair %admin (pair (address %admin) (bool %paused)) (option %pending_admin address))
+                (pair %assets
+                   (pair (big_map %ledger address nat)
+                         (big_map %operators (pair address (pair address nat)) unit))
+                   (pair (big_map %token_metadata
+                            nat
+                            (pair (nat %token_id)
+                                  (pair (string %symbol)
+                                        (pair (string %name) (pair (nat %decimals) (map %extras string string))))))
+                         (nat %total_supply))))
+          (big_map %metadata string bytes)) ;
   code { PUSH string "FA2_TOKEN_UNDEFINED" ;
          PUSH string "FA2_INSUFFICIENT_BALANCE" ;
          LAMBDA
@@ -289,6 +290,7 @@
                  DUP ;
                  DUG 2 ;
                  CAR ;
+                 CAR ;
                  SWAP ;
                  IF_LEFT
                    { IF_LEFT
@@ -349,8 +351,14 @@
                  SWAP ;
                  CAR ;
                  DIG 2 ;
+                 DUP ;
+                 DUG 3 ;
                  CDR ;
-                 DIG 2 ;
+                 DIG 3 ;
+                 CAR ;
+                 CDR ;
+                 DIG 3 ;
+                 PAIR ;
                  PAIR ;
                  SWAP ;
                  PAIR }
@@ -361,11 +369,13 @@
                  DUG 2 ;
                  CAR ;
                  CAR ;
+                 CAR ;
                  CDR ;
                  IF { PUSH string "PAUSED" ; FAILWITH } {} ;
                  SWAP ;
                  DUP ;
                  DUG 2 ;
+                 CAR ;
                  CDR ;
                  SWAP ;
                  IF_LEFT
@@ -586,9 +596,15 @@
                  CDR ;
                  SWAP ;
                  CAR ;
-                 SWAP ;
                  DIG 2 ;
+                 DUP ;
+                 DUG 3 ;
+                 CDR ;
+                 DIG 2 ;
+                 DIG 3 ;
                  CAR ;
+                 CAR ;
+                 PAIR ;
                  PAIR ;
                  SWAP ;
                  PAIR } }
@@ -600,6 +616,7 @@
              DUP ;
              DUG 2 ;
              CAR ;
+             CAR ;
              DIG 3 ;
              SWAP ;
              EXEC ;
@@ -607,6 +624,7 @@
              SWAP ;
              DUP ;
              DUG 2 ;
+             CAR ;
              CDR ;
              SWAP ;
              IF_LEFT
@@ -712,9 +730,15 @@
              CDR ;
              SWAP ;
              CAR ;
-             SWAP ;
              DIG 2 ;
+             DUP ;
+             DUG 3 ;
+             CDR ;
+             DIG 2 ;
+             DIG 3 ;
              CAR ;
+             CAR ;
+             PAIR ;
              PAIR ;
              SWAP ;
              PAIR } } }

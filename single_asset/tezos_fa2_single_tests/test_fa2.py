@@ -1,6 +1,7 @@
 from pathlib import Path
 from decimal import *
 from unittest import TestCase
+import json
 
 from pytezos import Key, pytezos
 
@@ -18,7 +19,13 @@ ligo_client_env = LigoEnv(root_dir / "fa2_clients", root_dir / "out")
 
 
 def balance_response(owner, balance):
-    return {"balance": balance, "request": {"owner": owner, "token_id": 0,}}
+    return {
+        "balance": balance,
+        "request": {
+            "owner": owner,
+            "token_id": 0,
+        },
+    }
 
 
 class TestFa2SetUp(TestCase):
@@ -57,9 +64,17 @@ class TestFa2SetUp(TestCase):
         self.inspector = self.orig_inspector(ligo_inspector)
 
     def orig_fa2(self, ligo_fa2):
+        meta_content = {
+            "interfaces": ["TZIP-12"],
+            "name": "Single Asset FA2 Fungible Token",
+            "homepage": "https://github.com/tqtezos/smart-contracts",
+            "license": "MIT",
+        }
 
-        ligo_storage = (
-            """
+        meta_content = json.dumps(meta_content, indent=2).encode().hex()
+        meta_uri = str.encode("tezos-storage:content").hex()
+
+        ligo_storage = """
         {
             admin = {
               admin = ("%s" : address);
@@ -83,9 +98,15 @@ class TestFa2SetUp(TestCase):
                 ];
                 total_supply = 0n;
             };
+            metadata = Big_map.literal [
+              ("", 0x%s);
+              ("content", 0x%s)
+            ];
         }
-        """
-            % self.admin_key.public_key_hash()
+        """ % (
+            self.admin_key.public_key_hash(),
+            meta_uri,
+            meta_content,
         )
 
         ptz_storage = ligo_fa2.compile_storage(ligo_storage)
@@ -193,6 +214,8 @@ class TestTransfer(TestFa2SetUp):
         self.util.wait_for_ops(op_tx)
 
         self.assertBalances(
-            [balance_response(to_address, 3), balance_response(from_address, 7),]
+            [
+                balance_response(to_address, 3),
+                balance_response(from_address, 7),
+            ]
         )
-
