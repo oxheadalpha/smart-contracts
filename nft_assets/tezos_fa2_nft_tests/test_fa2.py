@@ -1,6 +1,7 @@
 from pathlib import Path
 from decimal import *
 from unittest import TestCase
+import json
 
 from pytezos import Key, pytezos
 from pytezos.rpc.errors import MichelsonRuntimeError
@@ -19,7 +20,13 @@ ligo_client_env = LigoEnv(root_dir / "fa2_clients", root_dir / "out")
 
 
 def balance_response(owner, token_id, balance):
-    return {"balance": balance, "request": {"owner": owner, "token_id": token_id,}}
+    return {
+        "balance": balance,
+        "request": {
+            "owner": owner,
+            "token_id": token_id,
+        },
+    }
 
 
 class TestFa2SetUp(TestCase):
@@ -56,9 +63,16 @@ class TestFa2SetUp(TestCase):
         self.inspector = self.orig_inspector(ligo_inspector)
 
     def orig_fa2(self, ligo_fa2):
+        meta_content = {
+            "interfaces": ["TZIP-12"],
+            "name": "FA2 Non-Fungible Tokens",
+            "homepage": "https://github.com/tqtezos/smart-contracts",
+            "license": "MIT",
+        }
+        meta_content = json.dumps(meta_content, indent=2).encode().hex()
+        meta_uri = str.encode("tezos-storage:content").hex()
 
-        ligo_storage = (
-            """
+        ligo_storage = """
         {
             admin = {
               admin = ("%s" : address);
@@ -74,9 +88,15 @@ class TestFa2SetUp(TestCase):
                   metadata = (Big_map.empty : (token_def, token_metadata) big_map);
                 };
             };
+             metadata = Big_map.literal [
+              ("", 0x%s);
+              ("content", 0x%s)
+            ];
         } 
-        """
-            % self.admin_key.public_key_hash()
+        """ % (
+            self.admin_key.public_key_hash(),
+            meta_uri,
+            meta_content,
         )
 
         ptz_storage = ligo_fa2.compile_storage(ligo_storage)
@@ -133,7 +153,10 @@ class TestMintBurn(TestFa2SetUp):
                     "token_id": 0,
                     "extras": {"0": "left", "1": "right"},
                 },
-                "token_def": {"from_": 0, "to_": 2,},
+                "token_def": {
+                    "from_": 0,
+                    "to_": 2,
+                },
                 "owners": [owner1_address, owner2_address],
             }
         ).inject()
@@ -210,7 +233,10 @@ class TestTransfer(TestFa2SetUp):
                     "token_id": 0,
                     "extras": {"0": "left", "1": "right"},
                 },
-                "token_def": {"from_": 0, "to_": 2,},
+                "token_def": {
+                    "from_": 0,
+                    "to_": 2,
+                },
                 "owners": [alice_a, bob_a],
             }
         ).inject()
@@ -250,4 +276,3 @@ class TestTransfer(TestFa2SetUp):
             ],
             "invalid mint balance",
         )
-

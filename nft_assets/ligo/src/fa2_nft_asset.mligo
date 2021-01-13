@@ -20,6 +20,7 @@
 type nft_asset_storage = {
   admin : simple_admin_storage;
   assets : nft_token_storage;
+  metadata : contract_metadata;
 }
 
 type nft_asset_param =
@@ -68,6 +69,11 @@ let store : nft_asset_storage = {
                   metadata = (Big_map.empty : (token_def, token_metadata) big_map);
                 };
             };
+            metadata = Big_map.literal [
+              ("", Bytes.pack "tezos-storage:content" );
+              (* ("", 0x74657a6f732d73746f726167653a636f6e74656e74); *)
+              ("content", 0x00) (* bytes encoded UTF-8 JSON *)
+            ];
         } 
 
 #endif
