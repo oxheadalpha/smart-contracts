@@ -27,7 +27,7 @@ export async function originateCollection(
     name: 'Rainbow Token',
     description: 'NFT collection of rainbow tokens',
     homepage: 'https://github.com/tqtezos/smart-contracts',
-    license: 'MIT'
+    license: { name: 'MIT' }
   };
   const meta_content = char2Bytes(JSON.stringify(meta, null, 2));
 
@@ -71,7 +71,7 @@ export async function originateMoney(
     interfaces: ['TZIP-12'],
     name: 'FA2 Single Fungible (Money) Token',
     homepage: 'https://github.com/tqtezos/smart-contracts',
-    license: 'MIT'
+    license: { name: 'MIT' }
   };
   const meta_content = char2Bytes(JSON.stringify(meta, null, 2));
 

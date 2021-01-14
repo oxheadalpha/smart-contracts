@@ -67,7 +67,7 @@ class TestFa2SetUp(TestCase):
             "interfaces": ["TZIP-12"],
             "name": "FA2 Non-Fungible Tokens",
             "homepage": "https://github.com/tqtezos/smart-contracts",
-            "license": "MIT",
+            "license": {"name": "MIT"},
         }
         meta_content = json.dumps(meta, indent=2).encode().hex()
         meta_uri = str.encode("tezos-storage:content").hex()
