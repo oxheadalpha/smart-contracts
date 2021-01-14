@@ -113,8 +113,8 @@ let token_manager (param, s : token_manager * multi_token_storage)
     : (operation list) * multi_token_storage =
   match param with
 
-  | Create_token metadata_michelson ->
-    let new_s = create_token (metadata_michelson, s) in
+  | Create_token token_metadata ->
+    let new_s = create_token (token_metadata, s) in
     (([]: operation list), new_s)
 
   | Mint_tokens param -> 
