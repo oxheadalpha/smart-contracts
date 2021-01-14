@@ -124,13 +124,6 @@ let fa2_main (param, storage : fa2_entry_points * nft_token_storage)
     let new_storage = { storage with operators = new_ops; } in
     ([] : operation list), new_storage
 
-  | Token_metadata_registry callback ->
-    (* the contract stores its own token metadata and exposes `token_metadata` entry point *)
-    let callback_op = Tezos.transaction Tezos.self_address 0mutez callback in
-    [callback_op], storage
-
-
-
   type nft_entry_points =
   | Fa2 of fa2_entry_points
   | Token_metadata of token_metadata_param
