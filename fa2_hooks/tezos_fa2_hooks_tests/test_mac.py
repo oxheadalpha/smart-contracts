@@ -1,5 +1,6 @@
 from pathlib import Path
 from decimal import *
+import json
 from unittest import TestCase
 
 from pytezos import Key, pytezos
@@ -64,9 +65,17 @@ class TestMacSetUp(TestCase):
         self.inspector = self.orig_inspector(ligo_inspector)
 
     def orig_mac(self, ligo_mac):
+        meta = {
+            "interfaces": ["TZIP-12"],
+            "name": "Multiple FA2 Fungible Token With Hooks",
+            "description": "Example of FA2 sender/receiver hooks",
+            "homepage": "https://github.com/tqtezos/smart-contracts",
+            "license": {"name": "MIT"},
+        }
+        meta_content = json.dumps(meta, indent=2).encode().hex()
+        meta_uri = str.encode("tezos-storage:content").hex()
 
-        ligo_storage = (
-            """
+        ligo_storage = """
         {
             admin = {
                 admin = ("%s" : address);
@@ -85,9 +94,15 @@ class TestMacSetUp(TestCase):
                     custom = (None : custom_permission_policy option);
                 };
             };
+            metadata = Big_map.literal [
+              ("", 0x%s);
+              ("content", 0x%s)
+            ];
         }
-        """
-            % self.admin_key.public_key_hash()
+        """ % (
+            self.admin_key.public_key_hash(),
+            meta_uri,
+            meta_uri,
         )
 
         ptz_storage = ligo_mac.compile_storage(ligo_storage)
