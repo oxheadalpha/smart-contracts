@@ -15,9 +15,6 @@ The implementation may support sender/receiver hooks
 #include "../fa2/lib/fa2_operator_lib.mligo"
 #include "../fa2/lib/fa2_owner_hooks_lib.mligo"
 
-(* token_id -> token_metadata *)
-type token_metadata_storage = (token_id, token_metadata) big_map
-
 (*  token_id -> owner_address *)
 type ledger = (token_id, address) big_map
 

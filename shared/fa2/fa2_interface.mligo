@@ -59,6 +59,12 @@ type token_metadata =
   extras : (string, bytes) map;
 }
 
+(*
+One of the options to make token metadata discoverable is to declare
+`token_metadata : token_metadata_storage` field inside the FA2 contract storage
+*)
+type token_metadata_storage = (token_id, token_metadata) big_map
+
 (**
 Optional type to define view entry point to expose token_metadata on chain or
 as an external view

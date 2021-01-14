@@ -2,8 +2,10 @@
 
 Implementation of the FA2 token contract (TZIP-12) for multiple fungible assets
 that supports sender/receiver hooks. Receiver/sender hooks behavior is controlled
-by the `permission_descriptor.sender` and `permissions_descriptor.receiver` field
-values initialized when the FA2 contract is originated.
+by the `permissions.sender` and `permissions.receiver` field
+values initialized when the FA2 contract is originated. Since the permissions are
+already represented on-chain as a contract storage field, they are not duplicated
+in the contract metadata as required by TZIP-12/TZIP-16.
 
 There are two example contracts that implement a receiver hook:
 

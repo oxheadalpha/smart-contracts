@@ -11,9 +11,6 @@ type ledger = ((address * token_id), nat) big_map
 (* token_id -> total_supply *)
 type token_total_supply = (token_id, nat) big_map
 
-(* token_id -> token_metadata *)
-type token_metadata_storage = (token_id, token_metadata) big_map
-
 type multi_token_storage = {
   ledger : ledger;
   operators : operator_storage;
