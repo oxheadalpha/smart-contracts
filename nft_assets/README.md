@@ -2,6 +2,10 @@
 
 Implementation of the FA2 token contract (TZIP-12) for a NFT asset.
 
+Instead of the off-chain view stored in the contract metadata as required
+by the TZIP-12/TZIP-16 standards, this implementation provides access to token
+metadata through on-chain `%token_metadata` view entry point.
+
 ## Project Structure
 
 - [`ligo`](ligo/) - contracts code defined in [LIGO](https://ligolang.org/),

@@ -129,6 +129,29 @@ class TestFa2SetUp(TestCase):
     def assertBalance(self, owner, token_id, expected_balance, msg=None):
         self.assertBalances([balance_response(owner, token_id, expected_balance)])
 
+    def mint_tokens_op(self, owner1_address, owner2_address):
+        token_metadata = {
+            # because of issue with pytezos, the keys must be sorted alphabetically
+            "token_id": 0,
+            "extras": {
+                "0": "left".encode().hex(),
+                "1": "right".encode().hex(),
+                "decimals": "0".encode().hex(),
+                "name": "socks token".encode().hex(),
+                "symbol": "SOCK".encode().hex(),
+            },
+        }
+        return self.fa2.mint_tokens(
+            {
+                "metadata": token_metadata,
+                "token_def": {
+                    "from_": 0,
+                    "to_": 2,
+                },
+                "owners": [owner1_address, owner2_address],
+            }
+        ).inject()
+
 
 class TestMintBurn(TestFa2SetUp):
     def setUp(self):
@@ -144,22 +167,7 @@ class TestMintBurn(TestFa2SetUp):
 
     def mint_burn(self, owner1_address, owner2_address):
         print("minting")
-        mint_op = self.fa2.mint_tokens(
-            {
-                "metadata": {
-                    "decimals": 0,
-                    "name": "socks token",
-                    "symbol": "SOCK",
-                    "token_id": 0,
-                    "extras": {"0": "left", "1": "right"},
-                },
-                "token_def": {
-                    "from_": 0,
-                    "to_": 2,
-                },
-                "owners": [owner1_address, owner2_address],
-            }
-        ).inject()
+        mint_op = self.mint_tokens_op(owner1_address, owner2_address)
         self.util.wait_for_ops(mint_op)
 
         self.assertBalances(
@@ -224,22 +232,7 @@ class TestTransfer(TestFa2SetUp):
         left_sock = 0
         right_sock = 1
 
-        mint_op = self.fa2.mint_tokens(
-            {
-                "metadata": {
-                    "decimals": 0,
-                    "name": "socks token",
-                    "symbol": "SOCK",
-                    "token_id": 0,
-                    "extras": {"0": "left", "1": "right"},
-                },
-                "token_def": {
-                    "from_": 0,
-                    "to_": 2,
-                },
-                "owners": [alice_a, bob_a],
-            }
-        ).inject()
+        mint_op = self.mint_tokens_op(alice_a, bob_a)
         self.util.wait_for_ops(mint_op)
 
         self.assertBalances(
