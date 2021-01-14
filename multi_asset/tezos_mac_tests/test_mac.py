@@ -9,6 +9,7 @@ from tezos_mac_tests.ligo import (
     LigoContract,
     PtzUtils,
     flextesa_sandbox,
+    token_metadata_object,
 )
 
 
@@ -127,9 +128,8 @@ class TestMacSetUp(TestCase):
         self.assertBalances([balance_response(owner, token_id, expected_balance)])
 
     def create_token(self, id, symbol):
-        op = self.fa2.create_token(
-            token_id=id, symbol=symbol, name=symbol, decimals=0, extras={}
-        ).inject()
+        param = token_metadata_object(id, symbol, symbol, 0)
+        op = self.fa2.create_token(param).inject()
         self.util.wait_for_ops(op)
 
 

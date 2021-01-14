@@ -240,3 +240,15 @@ def token_metadata_literal(token_id, symbol, name, decimals):
         bname,
         bdecimals,
     )
+
+
+def token_metadata_object(token_id, symbol, name, decimals):
+    return {
+        "token_id": token_id,
+        "extras": {
+            # because of issue with pytezos, the keys must be sorted alphabetically
+            "decimals": str(decimals).encode().hex(),
+            "name": name.encode().hex(),
+            "symbol": symbol.encode().hex(),
+        },
+    }
