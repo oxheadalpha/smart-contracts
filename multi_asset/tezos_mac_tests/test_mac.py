@@ -63,13 +63,13 @@ class TestMacSetUp(TestCase):
         self.inspector = self.orig_inspector(ligo_inspector)
 
     def orig_mac(self, ligo_mac):
-        meta_content = {
+        meta = {
             "interfaces": ["TZIP-12"],
             "name": "Multiple FA2 Fungible Tokens",
             "homepage": "https://github.com/tqtezos/smart-contracts",
             "license": "MIT",
         }
-        meta_content = json.dumps(meta_content, indent=2).encode().hex()
+        meta_content = json.dumps(meta, indent=2).encode().hex()
         meta_uri = str.encode("tezos-storage:content").hex()
 
         ligo_storage = """
