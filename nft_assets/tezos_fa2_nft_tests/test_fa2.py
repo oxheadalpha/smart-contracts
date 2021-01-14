@@ -131,7 +131,7 @@ class TestFa2SetUp(TestCase):
 
     def mint_tokens_op(self, owner1_address, owner2_address):
         token_metadata = {
-            # because of issue with pytezos, the keys must be sorted alphabetically
+            # because of an issue with pytezos, the keys must be sorted alphabetically
             "token_id": 0,
             "extras": {
                 "0": "left".encode().hex(),
