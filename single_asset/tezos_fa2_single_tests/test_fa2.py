@@ -105,8 +105,6 @@ class TestFa2SetUp(TestCase):
             meta_content,
         )
 
-        print(f"STORAGE {ligo_storage}")
-
         ptz_storage = ligo_fa2.compile_storage(ligo_storage)
         return ligo_fa2.originate(self.util, ptz_storage)
 
