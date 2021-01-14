@@ -7,9 +7,11 @@ Implementation of the FA2 interface for the single token contract.
 #define FA2_SINGLE_TOKEN
 
 #include "../fa2/fa2_interface.mligo"
+#include "../fa2/fa2_permissions_descriptor.mligo"
 #include "../fa2/fa2_errors.mligo"
 #include "../fa2/lib/fa2_operator_lib.mligo"
 #include "../fa2/lib/fa2_owner_hooks_lib.mligo"
+
 
 type ledger = (address, nat) big_map
 
@@ -29,7 +31,7 @@ type single_token_storage = {
   operators : operator_storage;
   token_metadata : (nat, token_metadata) big_map;
   total_supply : nat;
-  permissions_descriptor : permissions_descriptor;
+  permissions : permissions_descriptor;
 }
 
 #endif
@@ -123,7 +125,7 @@ let get_owner_hook_ops (tx_descriptors, storage
     batch = tx_descriptors;
     operator = Tezos.sender;
   } in
-  get_owner_hook_ops_for (tx_descriptor_param, storage.permissions_descriptor)
+  get_owner_hook_ops_for (tx_descriptor_param, storage.permissions)
 
 #endif
 

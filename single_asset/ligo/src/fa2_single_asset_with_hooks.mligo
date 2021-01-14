@@ -2,24 +2,18 @@
 
 #include "fa2_single_asset.mligo"
 
-type single_asset_with_hooks_param =
-  | SA of single_asset_param
-  | Permissions_descriptor of permissions_descriptor contract
+(* 
+use single_asset_main from  fa2_single_asset.mligo
+it will compile with hooks implementation because of OWNER_HOOKS macro
+*)
 
-
-let single_asset_with_hooks_main (param, storage
-    : single_asset_with_hooks_param * single_asset_storage)
-    : (operation list) * single_asset_storage =
-  match param with
-  | SA sap -> single_asset_main (sap, storage)
-  | Permissions_descriptor callback ->
-    let callback_op =
-        Tezos.transaction storage.assets.permissions_descriptor 0mutez callback in
-    [callback_op], storage
+#include "../fa2/fa2_permissions_descriptor.mligo"
 
 (**
 This is a sample initial fa2_single_asset storage.
  *)
+
+
 
 let store : single_asset_storage = {
       admin = {
@@ -43,11 +37,16 @@ let store : single_asset_storage = {
             );
           ];
           total_supply = 0n;
-          permissions_descriptor = {
+          permissions = {
             operator = Owner_or_operator_transfer;
             receiver = Optional_owner_hook;
             sender = Optional_owner_hook;
             custom = (None : custom_permission_policy option);
           };
       };
+      metadata = Big_map.literal [
+        ("", Bytes.pack "tezos-storage:content" );
+        (* ("", 0x74657a6f732d73746f726167653a636f6e74656e74); *)
+        ("content", 0x00) (* bytes encoded UTF-8 JSON *)
+      ];
   } 
