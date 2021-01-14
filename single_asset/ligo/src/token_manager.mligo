@@ -20,7 +20,6 @@ type mint_burn_tx =
 
 type mint_burn_tokens_param = mint_burn_tx list
 
-
 (* `token_manager` entry points *)
 type token_manager =
   | Mint_tokens of mint_burn_tokens_param

@@ -56,12 +56,13 @@ type token_metadata =
 [@layout:comb]
 {
   token_id : token_id;
-  symbol : string;
-  name : string;
-  decimals : nat;
-  extras : (string, string) map;
+  extras : (string, bytes) map;
 }
 
+(**
+Optional type to define view entry point to expose token_metadata on chain or
+as an external view
+ *)
 type token_metadata_param = 
 [@layout:comb]
 {
@@ -73,10 +74,6 @@ type fa2_entry_points =
   | Transfer of transfer list
   | Balance_of of balance_of_param
   | Update_operators of update_operator list
-  | Token_metadata_registry of address contract
-
-(* type fa2_token_metadata =
-  | Token_metadata of token_metadata_param *)
 
 (* 
  TZIP-16 contract metadata storage field type. 
