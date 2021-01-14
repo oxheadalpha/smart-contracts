@@ -68,7 +68,7 @@ class TestMacSetUp(TestCase):
             "interfaces": ["TZIP-12"],
             "name": "Multiple FA2 Pausable Fungible Tokens",
             "homepage": "https://github.com/tqtezos/smart-contracts",
-            "license": "MIT",
+            "license": {"name": "MIT"},
             "permissions": {
                 "operator": "owner-or-operator-transfer",
                 "receiver": "owner-no-hook",

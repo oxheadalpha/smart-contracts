@@ -67,7 +67,7 @@ class TestMacSetUp(TestCase):
             "interfaces": ["TZIP-12"],
             "name": "Multiple FA2 Fungible Tokens",
             "homepage": "https://github.com/tqtezos/smart-contracts",
-            "license": "MIT",
+            "license": {"name": "MIT"},
         }
         meta_content = json.dumps(meta, indent=2).encode().hex()
         meta_uri = str.encode("tezos-storage:content").hex()
