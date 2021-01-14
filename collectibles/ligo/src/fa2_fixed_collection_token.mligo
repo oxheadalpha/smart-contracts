@@ -11,6 +11,7 @@ The implementation may support sender/receiver hooks
 
 #include "../fa2/fa2_interface.mligo"
 #include "../fa2/fa2_errors.mligo"
+#include "../fa2/fa2_permissions_descriptor.mligo"
 #include "../fa2/lib/fa2_operator_lib.mligo"
 #include "../fa2/lib/fa2_owner_hooks_lib.mligo"
 
@@ -24,12 +25,8 @@ type collection_storage = {
   ledger : ledger;
   operators : operator_storage;
   token_metadata : token_metadata_storage;
-  permissions_descriptor : permissions_descriptor;
+  permissions : permissions_descriptor;
 }
-
-type fa2_collection_entrypoints =
-  | FA2 of fa2_entry_points
-  | Permissions_descriptor of permissions_descriptor contract
 
 (**
 Update leger balances according to the specified transfers. Fails if any of the
@@ -90,7 +87,7 @@ let fa2_collection_main (param, storage : fa2_entry_points * collection_storage)
     let new_ledger = transfer (txs, default_operator_validator, storage.operators, storage.ledger) in
     let new_storage = { storage with ledger = new_ledger; } in
 
-    let hook_ops = get_owner_hook_ops (txs, storage.permissions_descriptor) in
+    let hook_ops = get_owner_hook_ops (txs, storage.permissions) in
 
     hook_ops, new_storage
   
@@ -107,19 +104,6 @@ let fa2_collection_main (param, storage : fa2_entry_points * collection_storage)
     (* the contract stores its own token metadata and exposes `token_metadata` entry point *)
     let callback_op = Tezos.transaction Tezos.self_address 0mutez callback in
     [callback_op], storage
-
-let get_permissions_descriptor (callback, storage
-    : permissions_descriptor contract * collection_storage)
-    : (operation  list) * collection_storage =
-  let callback_op =
-    Tezos.transaction storage.permissions_descriptor 0mutez callback in
-  [callback_op], storage
-
-let fixed_collection_token_main (param, storage : fa2_collection_entrypoints * collection_storage)
-    : (operation list) * collection_storage =
-  match param with
-  | FA2 fa2 -> fa2_collection_main (fa2, storage)
-  | Permissions_descriptor callback -> get_permissions_descriptor (callback, storage)
 
 
 #endif
