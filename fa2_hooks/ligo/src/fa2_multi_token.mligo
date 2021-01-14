@@ -2,6 +2,7 @@
 #define FA2_MAC_TOKEN
 
 #include "../fa2/fa2_interface.mligo"
+#include "../fa2/fa2_permissions_descriptor.mligo"
 #include "../fa2/fa2_errors.mligo"
 #include "../fa2/lib/fa2_operator_lib.mligo"
 #include "../fa2/lib/fa2_owner_hooks_lib.mligo"
@@ -12,15 +13,12 @@ type ledger = ((address * token_id), nat) big_map
 (* token_id -> total_supply *)
 type token_total_supply = (token_id, nat) big_map
 
-(* token_id -> token_metadata *)
-type token_metadata_storage = (token_id, token_metadata) big_map
-
 type multi_token_storage = {
   ledger : ledger;
   operators : operator_storage;
   token_total_supply : token_total_supply;
   token_metadata : token_metadata_storage;
-  permissions_descriptor : permissions_descriptor;
+  permissions : permissions_descriptor;
 }
 
 let get_balance_amt (key, ledger : (address * nat) * ledger) : nat =
@@ -102,7 +100,7 @@ let fa2_main (param, storage : fa2_entry_points * multi_token_storage)
     let new_ledger = transfer (txs, default_operator_validator, storage) in
     let new_storage = { storage with ledger = new_ledger; } in
 
-    let hook_ops = get_owner_hook_ops (txs, storage.permissions_descriptor) in
+    let hook_ops = get_owner_hook_ops (txs, storage.permissions) in
     
     (hook_ops), new_storage
 
@@ -115,25 +113,4 @@ let fa2_main (param, storage : fa2_entry_points * multi_token_storage)
     let new_storage = { storage with operators = new_ops; } in
     ([] : operation list), new_storage
 
-  | Token_metadata_registry callback ->
-    (* the contract maintains token metadata in its storage - `token_metadata` big_map *)
-    let callback_op = Tezos.transaction Tezos.self_address 0mutez callback in
-    [callback_op], storage
-
-type fa2_multi_token_entry_points =
-  | FA2 of fa2_entry_points
-  | Permissions_descriptor of permissions_descriptor contract
-
-let get_permissions_descriptor (callback, storage
-    : permissions_descriptor contract * multi_token_storage)
-    : (operation  list) * multi_token_storage =
-  let callback_op =
-    Tezos.transaction storage.permissions_descriptor 0mutez callback in
-  [callback_op], storage
-
-let fa2_multi_token_main (param, storage : fa2_multi_token_entry_points * multi_token_storage)
-    : (operation  list) * multi_token_storage =
-  match param with
-  | FA2 fa2_param -> fa2_main (fa2_param, storage)
-  | Permissions_descriptor callback -> get_permissions_descriptor(callback, storage)
 #endif

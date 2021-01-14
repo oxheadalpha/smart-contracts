@@ -9,6 +9,7 @@ from tezos_fa2_hooks_tests.ligo import (
     LigoContract,
     PtzUtils,
     flextesa_sandbox,
+    token_metadata_object,
 )
 
 
@@ -18,7 +19,13 @@ ligo_client_env = LigoEnv(root_dir / "fa2_clients", root_dir / "out")
 
 
 def balance_response(owner, token_id, balance):
-    return {"balance": balance, "request": {"owner": owner, "token_id": token_id,}}
+    return {
+        "balance": balance,
+        "request": {
+            "owner": owner,
+            "token_id": token_id,
+        },
+    }
 
 
 class TestMacSetUp(TestCase):
@@ -71,7 +78,7 @@ class TestMacSetUp(TestCase):
                 operators = (Big_map.empty : operator_storage);
                 token_total_supply = (Big_map.empty : token_total_supply);
                 token_metadata = (Big_map.empty : token_metadata_storage);
-                permissions_descriptor = {
+                permissions = {
                     operator = Owner_or_operator_transfer;
                     receiver = Optional_owner_hook;
                     sender = Optional_owner_hook;
@@ -114,9 +121,8 @@ class TestMacSetUp(TestCase):
         self.assertBalances([balance_response(owner, token_id, expected_balance)])
 
     def create_token(self, id, symbol):
-        op = self.fa2.create_token(
-            token_id=id, symbol=symbol, name=symbol, decimals=0, extras={}
-        ).inject()
+        param = token_metadata_object(id, symbol, symbol, 0)
+        op = self.fa2.create_token(param).inject()
         self.util.wait_for_ops(op)
 
 
@@ -255,4 +261,3 @@ class TestTransfer(TestMacSetUp):
                 balance_response(mike_address, 2, 5),
             ]
         )
-

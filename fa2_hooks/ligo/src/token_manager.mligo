@@ -152,13 +152,13 @@ let token_manager (param, s : token_manager * multi_token_storage)
   | Mint_tokens param -> 
     let new_s = mint_tokens (param, s) in
     let tx_param = mint_txs_to_transfer_descriptor_param (param, Tezos.self_address) in
-    let ops = get_owner_hook_ops_for (tx_param, s.permissions_descriptor) in
+    let ops = get_owner_hook_ops_for (tx_param, s.permissions) in
     ops, new_s
 
   | Burn_tokens param -> 
     let new_s = burn_tokens (param, s) in
     let tx_param = burn_txs_to_transfer_descriptor_param (param, Tezos.self_address) in
-    let ops = get_owner_hook_ops_for (tx_param, s.permissions_descriptor) in
+    let ops = get_owner_hook_ops_for (tx_param, s.permissions) in
     ops, new_s
 
 #endif
