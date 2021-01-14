@@ -10,6 +10,7 @@ from tezos_fa2_single_tests.ligo import (
     LigoContract,
     PtzUtils,
     flextesa_sandbox,
+    token_metadata_literal,
 )
 
 
@@ -73,6 +74,9 @@ class TestFa2SetUp(TestCase):
         meta_content = json.dumps(meta, indent=2).encode().hex()
         meta_uri = str.encode("tezos-storage:content").hex()
 
+        token_id = 0
+        token_meta = token_metadata_literal(token_id, "TK1", "Test Token", 0)
+
         ligo_storage = """
         {
             admin = {
@@ -84,16 +88,7 @@ class TestFa2SetUp(TestCase):
                 ledger = (Big_map.empty : (address, nat) big_map);
                 operators = (Big_map.empty : operator_storage);
                 token_metadata = Big_map.literal [
-                  (
-                    0n, 
-                    ({
-                      token_id = 0n;
-                      symbol = "TK1";
-                      name = "Test Token";
-                      decimals = 0n;
-                      extras = (Map.empty : (string, string) map);
-                    } : token_metadata)
-                  );
+                 (%sn, %s);
                 ];
                 total_supply = 0n;
             };
@@ -104,9 +99,13 @@ class TestFa2SetUp(TestCase):
         }
         """ % (
             self.admin_key.public_key_hash(),
+            token_id,
+            token_meta,
             meta_uri,
             meta_content,
         )
+
+        print(f"STORAGE {ligo_storage}")
 
         ptz_storage = ligo_fa2.compile_storage(ligo_storage)
         return ligo_fa2.originate(self.util, ptz_storage)

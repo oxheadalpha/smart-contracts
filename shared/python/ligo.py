@@ -220,3 +220,23 @@ flextesa_sandbox = pytezos.using(
     shell="http://localhost:20000",
     key=Key.from_encoded_key("edsk3RFgDiCt7tWB2oe96w1eRw72iYiiqZPLu9nnEY23MYRp2d8Kkx"),
 )
+
+
+def token_metadata_literal(token_id, symbol, name, decimals):
+    bsymbol = symbol.encode().hex()
+    bname = name.encode().hex()
+    bdecimals = str(decimals).encode().hex()
+    return """{
+        token_id = %sn;
+        extras = Map.literal [
+          ("symbol", 0x%s);
+          ("name", 0x%s);
+          ("decimals", 0x%s);
+        ];
+    }
+    """ % (
+        token_id,
+        bsymbol,
+        bname,
+        bdecimals,
+    )
