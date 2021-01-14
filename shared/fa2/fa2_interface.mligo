@@ -78,6 +78,11 @@ type fa2_entry_points =
 (* type fa2_token_metadata =
   | Token_metadata of token_metadata_param *)
 
+(* 
+ TZIP-16 contract metadata storage field type. 
+ The contract storage MUST have a field
+ `metadata : contract_metadata`
+*)
 type contract_metadata = (string, bytes) big_map
 
 (* FA2 hooks interface *)
