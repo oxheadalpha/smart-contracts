@@ -14,9 +14,11 @@
 
 let get_hook_entrypoint (hook_contract : address) (u : unit) 
     : transfer_descriptor_param contract =
-  let hook_entry : transfer_descriptor_param contract = 
-    Operation.get_entrypoint "%tokens_transferred_hook" hook_contract in
-  hook_entry
+  let hook_entry : transfer_descriptor_param contract option = 
+    Tezos.get_entrypoint_opt "%tokens_transferred_hook" hook_contract in
+  match hook_entry with
+  | Some he -> he
+  | None -> (failwith "NO_TRANSFER_HOOK" : transfer_descriptor_param contract)
 
 
 let create_register_hook_op 
@@ -26,7 +28,7 @@ let create_register_hook_op
     hook = hook_fn;
     permissions_descriptor = descriptor;
   } in
-  Operation.transaction (Set_transfer_hook p) 0mutez fa2
+  Tezos.transaction (Set_transfer_hook p) 0mutez fa2
 
 
 type fa2_registry = address set
