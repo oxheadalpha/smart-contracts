@@ -97,10 +97,4 @@ let fa2_collection_main (param, storage : fa2_entry_points * collection_storage)
     let new_storage = { storage with operators = new_operators; } in
     ([] : operation list), new_storage
 
-  | Token_metadata_registry callback ->
-    (* the contract stores its own token metadata and exposes `token_metadata` entry point *)
-    let callback_op = Tezos.transaction Tezos.self_address 0mutez callback in
-    [callback_op], storage
-
-
 #endif

@@ -9,6 +9,14 @@ import {
   LigoEnv
 } from 'smart-contracts-common/ligo';
 
+function token_meta_literal(symbol: string, name: string): string {
+  return `{
+    Elt "decimals" 0x${char2Bytes('0')};
+    Elt "name" 0x${char2Bytes(name)};
+    Elt "symbol" 0x${char2Bytes(symbol)};
+  }`;
+}
+
 export async function originateCollection(
   env: LigoEnv,
   tz: TezosToolkit
@@ -42,13 +50,35 @@ export async function originateCollection(
                           Elt 6 "${owner}" }
                         {})
                   (Pair (Pair (Right (Right Unit)) (Pair (Right (Left Unit)) (Pair (Left Unit) None)))
-                        { Elt 0 (Pair 0 (Pair "RED" (Pair "RAINBOW_TOKEN" (Pair 0 {})))) ;
-                          Elt 1 (Pair 1 (Pair "ORANGE" (Pair "RAINBOW_TOKEN" (Pair 0 {})))) ;
-                          Elt 2 (Pair 2 (Pair "YELLOW" (Pair "RAINBOW_TOKEN" (Pair 0 {})))) ;
-                          Elt 3 (Pair 3 (Pair "GREEN" (Pair "RAINBOW_TOKEN" (Pair 0 {})))) ;
-                          Elt 4 (Pair 4 (Pair "BLUE" (Pair "RAINBOW_TOKEN" (Pair 0 {})))) ;
-                          Elt 5 (Pair 5 (Pair "INDIGO" (Pair "RAINBOW_TOKEN" (Pair 0 {})))) ;
-                          Elt 6 (Pair 6 (Pair "VIOLET" (Pair "RAINBOW_TOKEN" (Pair 0 {})))) })))
+                        { Elt 0 (Pair 0 ${token_meta_literal(
+                          'RED',
+                          'RAINBOW_TOKEN'
+                        )}) ;
+                        Elt 1 (Pair 1 ${token_meta_literal(
+                          'ORANGE',
+                          'RAINBOW_TOKEN'
+                        )}) ;
+                        Elt 2 (Pair 2 ${token_meta_literal(
+                          'YELLOW',
+                          'RAINBOW_TOKEN'
+                        )}) ;
+                        Elt 3 (Pair 3 ${token_meta_literal(
+                          'GREEN',
+                          'RAINBOW_TOKEN'
+                        )}) ;
+                        Elt 4 (Pair 4 ${token_meta_literal(
+                          'BLUE',
+                          'RAINBOW_TOKEN'
+                        )}) ;
+                        Elt 5 (Pair 5 ${token_meta_literal(
+                          'INDIGO',
+                          'RAINBOW_TOKEN'
+                        )}) ;
+                        Elt 6 (Pair 6 ${token_meta_literal(
+                          'VIOLET',
+                          'RAINBOW_TOKEN'
+                        )}) 
+                        })))
       { Elt "" 0x${meta_uri} ; Elt "content" 0x${meta_content} })
   `;
   return originateContract(tz, code, rainbow_storage, 'collection');
@@ -74,11 +104,12 @@ export async function originateMoney(
     license: { name: 'MIT' }
   };
   const meta_content = char2Bytes(JSON.stringify(meta, null, 2));
+  const token_meta = token_meta_literal('TK1', 'Test Token');
 
   const storage = `(Pair (Pair (Pair (Pair "${owner}" False) None)
         (Pair (Pair (Pair {} {})
                     (Pair (Pair (Right (Right Unit)) (Pair (Right (Left Unit)) (Pair (Right (Left Unit)) None)))
-                          { Elt 0 (Pair 0 (Pair "TK1" (Pair "Test Token" (Pair 0 {})))) }))
+                          { Elt 0 (Pair 0 ${token_meta}) }))
               0))
   { Elt "" 0x${meta_uri} ;
     Elt "content" 0x${meta_content} })`;
