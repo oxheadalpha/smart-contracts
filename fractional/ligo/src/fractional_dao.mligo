@@ -188,7 +188,7 @@ let vote_transfer (p, s : vote_transfer_param * dao_storage)
       voters = Set.add voter v.voters;
     }
   | None -> { 
-      vote_amount = 0n; 
+      vote_amount = voter_stake; 
       voters = Set.literal [voter];
       timestamp = Tezos.now;
     }

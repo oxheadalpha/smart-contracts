@@ -1009,13 +1009,12 @@
              CAR ;
              GET ;
              IF_NONE
-               { DROP ;
-                 EMPTY_SET address ;
-                 DIG 2 ;
+               { EMPTY_SET address ;
+                 DIG 3 ;
                  PUSH bool True ;
                  SWAP ;
                  UPDATE ;
-                 PUSH nat 0 ;
+                 SWAP ;
                  NOW ;
                  PAIR ;
                  PAIR }
