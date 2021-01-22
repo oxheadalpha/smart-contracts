@@ -206,11 +206,20 @@ let vote_transfer (p, s : vote_transfer_param * dao_storage)
     let new_s = clean_after_transfer (p.vote, ownership.ownership_token, s) in
     [tx_op], s
   
+let flush_expired (vote, voting_period, pending_votes
+    : transfer_vote * nat * pending_votes) : pending_votes =
+  match Big_map.find_opt vote pending_votes with
+  | None -> (failwith "VOTE_DOES_NOT_EXIST" : pending_votes)
+  | Some info ->
+    if Tezos.now - info.timestamp > int(voting_period)
+    then Big_map.remove vote pending_votes
+    else (failwith "VOTE_NOT_EXPIRED" : pending_votes)
 
 type dao_entrypoints =
   | Fa2 of fa2_entry_points (* handling ownership FA2 fungible tokens *)
   | Set_ownership of set_ownership_param
   | Vote_transfer of vote_transfer_param
+  | Flush_expired of transfer_vote
   | Admin of simple_admin
 
 let dao_main (p, s : dao_entrypoints * dao_storage) : operation list * dao_storage =
@@ -226,8 +235,18 @@ let dao_main (p, s : dao_entrypoints * dao_storage) : operation list * dao_stora
     ([] : operation list), new_s
 
   | Vote_transfer vp ->
+    let u = fail_if_paused s.admin in
     let ops, new_s = vote_transfer(vp, s) in
     ops, new_s
+
+  | Flush_expired vp ->
+    let u = fail_if_paused s.admin in
+    let ownership = match Big_map.find_opt vp.nft_token s.owned_nfts with
+    | None -> (failwith "NO_OWNERSHIP" : nft_ownership)
+    | Some o -> o
+    in
+    let new_pending = flush_expired (vp, ownership.voting_period, s.pending_votes) in
+    ([] : operation list), { s with pending_votes = new_pending; }
 
   | Admin ap -> 
     let ops, new_admin = simple_admin (ap, s.admin) in
