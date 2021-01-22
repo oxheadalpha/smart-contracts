@@ -66,12 +66,18 @@ type ownership = (global_token_id, nft_ownership) big_map;
 
 type transfer_votes = {
   to_ : address;
-  vote_nonce : nat;
   vote_amount : nat;
   voters : address set;
 }
 
-type pending_votes = (global_token_id, transfer_votes) big_map;
+type transfer_votes_key =
+[@layout:comb]
+{
+  vote_nonce : nat;
+  nft_token : global_token_id;
+}
+
+type pending_votes = (transfer_votes_key, transfer_votes) big_map;
 
 
 type dao_storage = {
