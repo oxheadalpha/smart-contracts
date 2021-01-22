@@ -51,7 +51,7 @@ let fail_if_paused (a : simple_admin_storage) : unit =
   then failwith "PAUSED"
   else unit
 
-let simple_admin (param, s : simple_admin *simple_admin_storage)
+let simple_admin (param, s : simple_admin * simple_admin_storage)
     : (operation list) * simple_admin_storage =
   match param with
   | Set_admin new_admin ->

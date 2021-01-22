@@ -1,0 +1,1 @@
+../../../multi_asset/ligo/src/fa2_multi_token.mligo
