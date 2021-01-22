@@ -1,0 +1,28 @@
+{
+  "name": "collectible-test",
+  "version": "1.0.0",
+  "scripts": {
+    "test": "jest --runInBand"
+  },
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/jest": "^26.0.7",
+    "jest": "^26.1.0",
+    "prettier": "^2.0.5",
+    "ts-jest": "^26.1.4",
+    "tslint": "^6.1.2",
+    "typescript": "^3.9.7"
+  },
+  "dependencies": {
+    "@taquito/signer": "8.0.0-beta.2",
+    "@taquito/taquito": "8.0.0-beta.2",
+    "@taquito/tzip16": "8.0.0-beta.2",
+    "@tsed/logger": "^5.5.2",
+    "bignumber.js": "^9.0.1",
+    "child_process": "^1.0.2",
+    "fs": "0.0.1-security",
+    "smart-contracts-common": "file:../../shared/typescript",
+    "source-map-support": "^0.5.19"
+  }
+}

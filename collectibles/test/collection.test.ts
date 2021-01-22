@@ -41,7 +41,6 @@ interface MoneyBalance {
 
 describe('collectibles test', () => {
   let tezos: TestTz;
-  // let inspector: Contract;
 
   let collection: Contract;
   let money: Contract;
