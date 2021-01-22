@@ -86,11 +86,30 @@ type dao_storage = {
   vote_nonce : nat;
   owned_nfts : ownership;
   pending_votes : pending_votes;
-  metada : contract_metadata;
+  metadata : contract_metadata;
 }
 
-let set_ownership (p, s : set_ownership_param * dao_storage) : dao_storage =
+let mint_token (ownership, token_id, s : 
+    ownership_stake list * token_id * multi_token_storage) : multi_token_storage =
   s
+
+let set_ownership (p, s : set_ownership_param * dao_storage) : dao_storage =
+  if Big_map.mem p.nft_token s.owned_nfts
+  then (failwith "DUP_OWNERSHIP" : dao_storage)
+  else
+    let token_ownership = {
+      voting_threshold = p.voting_threshold;
+      expiration = p.expiration;
+      ownership_token = s.next_ownership_token_id;
+    } in
+    let new_nfts = Big_map.add p.nft_token token_ownership s.owned_nfts in
+    let new_otokens = mint_token 
+      (p.ownership, s.next_ownership_token_id, s.ownership_tokens) in
+    { s with 
+      owned_nfts = new_nfts;
+      next_ownership_token_id = s.next_ownership_token_id + 1n;
+      ownership_tokens = new_otokens;
+    }
 
 let vote_transfer (p, s : vote_transfer_param * dao_storage)
     : operation list * dao_storage =
