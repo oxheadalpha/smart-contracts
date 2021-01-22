@@ -3,7 +3,7 @@ import { TezosToolkit } from '@taquito/taquito';
 import { Contract, address, nat } from './type-aliases';
 
 export interface Fa2TransferDestination {
-  to_?: address;
+  to_: address;
   token_id: nat;
   amount: nat;
 }
