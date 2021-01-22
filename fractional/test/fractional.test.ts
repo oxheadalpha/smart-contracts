@@ -103,7 +103,7 @@ describe('fractional ownership test', () => {
     await aliceVoteOp.confirmation();
     $log.info(`Alice voted. Consumed gas ${aliceVoteOp.consumedGas}`);
 
-    // await assertHasNft(aliceAddress, tokenId);
-    // $log.info('NFT is transferred from DAO to Alice');
+    await assertHasNft(aliceAddress, tokenId);
+    $log.info('NFT is transferred from DAO to Alice');
   });
 });
