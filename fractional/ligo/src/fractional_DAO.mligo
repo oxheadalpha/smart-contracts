@@ -4,7 +4,7 @@
 
 #include "../fa2/fa2_interface.mligo"
 #include "../fa2_modules/simple_admin.mligo"
-#include "fa2_multi_token_mligo"
+#include "fa2_multi_token.mligo"
 
 
 type permit = {
@@ -51,7 +51,7 @@ type set_ownership_param =
 [@layout:comb]
 {
   nft_token : global_token_id;
-  ownership : ownership_state list;
+  ownership : ownership_stake list;
   voting_threshold : nat;
   expiration : timestamp;
 }
@@ -62,7 +62,7 @@ type nft_ownership = {
   ownership_token : token_id;
 }
 
-type ownership = (global_token_id, nft_ownership) big_map;
+type ownership = (global_token_id, nft_ownership) big_map
 
 type transfer_votes = {
   to_ : address;
@@ -77,8 +77,7 @@ type transfer_votes_key =
   nft_token : global_token_id;
 }
 
-type pending_votes = (transfer_votes_key, transfer_votes) big_map;
-
+type pending_votes = (transfer_votes_key, transfer_votes) big_map
 
 type dao_storage = {
   ownership_tokens : multi_token_storage;
@@ -87,19 +86,27 @@ type dao_storage = {
   vote_nonce : nat;
   owned_nfts : ownership;
   pending_votes : pending_votes;
+  metada : contract_metadata;
 }
 
+let set_ownership (p, s : set_ownership_param * dao_storage) : dao_storage =
+  s
+
+let vote_transfer (p, s : vote_transfer_param * dao_storage)
+    : operation list * dao_storage =
+  ([] : operation list), s
+
 type dao_entrypoints =
-  | Fa2 of fa2_entrypoints (* handling ownership FA2 fungible tokens *)
+  | Fa2 of fa2_entry_points (* handling ownership FA2 fungible tokens *)
   | Set_ownership of set_ownership_param
   | Vote_transfer of vote_transfer_param
   | Admin of simple_admin
 
-let dao_main (p, s : dao_entrypoints, dao_storage) : operation list * dao_storage =
+let dao_main (p, s : dao_entrypoints * dao_storage) : operation list * dao_storage =
   match p with
   | Fa2 fa2 -> 
     let u = fail_if_paused s.admin in
-    let ops, new_ownership = fa2_main(p, s.ownership_tokens)
+    let ops, new_ownership = fa2_main(fa2, s.ownership_tokens) in
     ops, { s with ownership_tokens = new_ownership; }
 
   | Set_ownership op ->
@@ -108,8 +115,8 @@ let dao_main (p, s : dao_entrypoints, dao_storage) : operation list * dao_storag
     ([] : operation list), new_s
 
   | Vote_transfer vp ->
-    let new_s = vote_transfer(vp, s) in
-    ([] : operation list), new_s
+    let ops, new_s = vote_transfer(vp, s) in
+    ops, new_s
 
   | Admin ap -> 
     let ops, new_admin = simple_admin (ap, s.admin) in
