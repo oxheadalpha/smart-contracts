@@ -53,12 +53,12 @@ type set_ownership_param =
   nft_token : global_token_id;
   ownership : ownership_stake list;
   voting_threshold : nat;
-  expiration : timestamp;
+  voting_period : nat;
 }
 
 type nft_ownership = {
   voting_threshold : nat;
-  expiration : timestamp;
+  voting_period : nat;
   ownership_token : token_id;
 }
 
@@ -122,7 +122,7 @@ let set_ownership (p, s : set_ownership_param * dao_storage) : dao_storage =
   else
     let token_ownership = {
       voting_threshold = p.voting_threshold;
-      expiration = p.expiration;
+      voting_period = p.voting_period;
       ownership_token = s.next_ownership_token_id;
     } in
     let new_nfts = Big_map.add p.nft_token token_ownership s.owned_nfts in
