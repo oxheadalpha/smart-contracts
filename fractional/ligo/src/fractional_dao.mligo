@@ -233,4 +233,27 @@ let dao_main (p, s : dao_entrypoints * dao_storage) : operation list * dao_stora
     let ops, new_admin = simple_admin (ap, s.admin) in
     ops, { s with admin = new_admin; }
 
+
+let sample_storage : dao_storage = {
+  ownership_tokens = {
+    ledger = (Big_map.empty : ledger);
+    operators = (Big_map.empty : operator_storage);
+    token_total_supply = (Big_map.empty : token_total_supply);
+    token_metadata = (Big_map.empty : token_metadata_storage);
+  };
+  next_ownership_token_id = 0n;
+  admin  = {
+    admin = ("tz1YPSCGWXwBdTncK2aCctSZAXWvGsGwVJqU" : address);
+    pending_admin = (None : address option);
+    paused = false;
+  };
+  vote_nonce = 0n;
+  owned_nfts = (Big_map.empty : ownership);
+  pending_votes = (Big_map.empty : pending_votes);
+  metadata  = Big_map.literal [
+    ("", Bytes.pack "tezos-storage:content" );
+    (* ("", 0x74657a6f732d73746f726167653a636f6e74656e74); *)
+    ("content", 0x00) (* bytes encoded UTF-8 JSON *)
+  ];
+}
 #endif
