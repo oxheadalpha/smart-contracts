@@ -4,6 +4,7 @@ import * as path from 'path';
 import { $log } from '@tsed/logger';
 
 import { TezosToolkit } from '@taquito/taquito';
+import { char2Bytes } from '@taquito/tzip16';
 import { Contract } from './type-aliases';
 
 const ligoVersion = '0.7.1';
@@ -92,4 +93,16 @@ export async function originateContract(
     $log.fatal(`${name} origination error ${jsonError}`);
     return Promise.reject(error);
   }
+}
+
+export function token_meta_literal(
+  symbol: string,
+  name: string,
+  decimals: number = 0
+): string {
+  return `{
+    Elt "decimals" 0x${char2Bytes(decimals.toString())};
+    Elt "name" 0x${char2Bytes(name)};
+    Elt "symbol" 0x${char2Bytes(symbol)};
+  }`;
 }
