@@ -72,5 +72,39 @@ export async function originateNftCollection(
                         })))
       { Elt "" 0x${meta_uri} ; Elt "content" 0x${meta_content} })
   `;
-  return originateContract(tz, code, rainbow_storage, 'collection');
+  return originateContract(tz, code, rainbow_storage, 'NFT collection');
+}
+
+export async function originateFractionalDao(
+  env: LigoEnv,
+  tz: TezosToolkit
+): Promise<Contract> {
+  const code = await compileAndLoadContract(
+    env,
+    'fractional_dao.mligo',
+    'dao_main',
+    'fractional_dao.tz'
+  );
+  const admin = await tz.signer.publicKeyHash();
+
+  const meta_uri = char2Bytes('tezos-storage:content');
+  const meta = {
+    interfaces: ['TZIP-12'],
+    name: 'NFT Fractional DAO',
+    description:
+      'DAO that manages fractional ownership of a generic FA2 NFT tokens',
+    homepage: 'https://github.com/tqtezos/smart-contracts',
+    license: { name: 'MIT' }
+  };
+  const meta_content = char2Bytes(JSON.stringify(meta, null, 2));
+
+  const storage = `
+  (Pair (Pair (Pair (Pair (Pair "${admin}" False) None)
+                  { Elt "" 0x${meta_uri} ;
+                    Elt "content" 0x${meta_content} })
+            (Pair 0 {}))
+      (Pair (Pair (Pair (Pair {} {}) (Pair {} {})) {}) 0))
+  `;
+
+  return originateContract(tz, code, storage, 'fractional DAO');
 }
