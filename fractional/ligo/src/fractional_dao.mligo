@@ -65,7 +65,6 @@ type nft_ownership = {
 type ownership = (global_token_id, nft_ownership) big_map
 
 type transfer_votes = {
-  to_ : address;
   vote_amount : nat;
   voters : address set;
 }
@@ -73,7 +72,7 @@ type transfer_votes = {
 type transfer_votes_key =
 [@layout:comb]
 {
-  vote_nonce : nat;
+  to_ : address;
   nft_token : global_token_id;
 }
 
