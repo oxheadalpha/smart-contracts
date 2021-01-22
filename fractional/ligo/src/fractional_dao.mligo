@@ -89,9 +89,32 @@ type dao_storage = {
   metadata : contract_metadata;
 }
 
-let mint_token (ownership, token_id, s : 
+let mint_ownership_token (ownership, token_id, s : 
     ownership_stake list * token_id * multi_token_storage) : multi_token_storage =
-  s
+  let meta = { 
+    token_id = token_id;
+    extras = Map.literal [
+    ("symbol", Bytes.pack "OT");
+    ("name", Bytes.pack "Ownership Token");
+    ("decimals", Bytes.pack "0");
+  ]; } in
+  let new_token_meta = Big_map.add token_id meta s.token_metadata in
+  
+  let new_ledger, token_supply = List.fold 
+    (fun (acc, ownership : (ledger * nat) * ownership_stake ) ->
+      let ledger, supply = acc in
+      let new_ledger = 
+        Big_map.add (ownership.owner, token_id) ownership.amount ledger in
+      let new_supply = supply + ownership.amount in
+      (new_ledger, new_supply)
+    ) ownership (s.ledger, 0n) in
+
+  let new_supply = Big_map.add token_id token_supply s.token_total_supply in
+  { s with
+    token_metadata = new_token_meta;
+    ledger = new_ledger;
+    token_total_supply = new_supply;
+  }
 
 let set_ownership (p, s : set_ownership_param * dao_storage) : dao_storage =
   if Big_map.mem p.nft_token s.owned_nfts
@@ -103,7 +126,7 @@ let set_ownership (p, s : set_ownership_param * dao_storage) : dao_storage =
       ownership_token = s.next_ownership_token_id;
     } in
     let new_nfts = Big_map.add p.nft_token token_ownership s.owned_nfts in
-    let new_otokens = mint_token 
+    let new_otokens = mint_ownership_token 
       (p.ownership, s.next_ownership_token_id, s.ownership_tokens) in
     { s with 
       owned_nfts = new_nfts;
