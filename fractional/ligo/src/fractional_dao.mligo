@@ -22,9 +22,8 @@ type global_token_id =
 type transfer_vote =
 [@layout:comb]
 {
-  nft_token : global_token_id;
   to_ : address;
-  voter : address; (* part of a collective from_ represented by the DAO address *)
+  nft_token : global_token_id;
 }
 
 type vote_transfer_param =
@@ -64,19 +63,13 @@ type nft_ownership = {
 
 type ownership = (global_token_id, nft_ownership) big_map
 
-type transfer_votes = {
+type transfer_vote_info = {
   vote_amount : nat;
   voters : address set;
+  timestamp : timestamp;
 }
 
-type transfer_votes_key =
-[@layout:comb]
-{
-  to_ : address;
-  nft_token : global_token_id;
-}
-
-type pending_votes = (transfer_votes_key, transfer_votes) big_map
+type pending_votes = (transfer_vote, transfer_vote_info) big_map
 
 type dao_storage = {
   ownership_tokens : multi_token_storage;
@@ -133,9 +126,86 @@ let set_ownership (p, s : set_ownership_param * dao_storage) : dao_storage =
       ownership_tokens = new_otokens;
     }
 
+let validate_permit (vote, permit, nonce : transfer_vote * permit * nat) : address =
+  let signed_data = Bytes.pack (
+    (Tezos.chain_id, Tezos.self_address),
+    (nonce, vote)
+  ) in
+  if Crypto.check permit.key permit.signature signed_data
+  then Tezos.address (Tezos.implicit_account (Crypto.hash_key (permit.key)))
+  else (failwith "MISSIGNED" : address)
+
+let make_transfer (vote : transfer_vote): operation  =
+  let tx : transfer = {
+      from_ = Tezos.self_address;
+      txs = [{to_ = vote.to_; token_id = vote.nft_token.token_id ; amount = 1n; }];
+    } in
+  let fa2_entry : ((transfer list) contract) option = 
+    Tezos.get_entrypoint_opt "%transfer"  vote.nft_token.fa2 in
+  match fa2_entry with
+  | None -> (failwith "CANNOT_INVOKE_NFT_TRANSFER" : operation)
+  | Some c -> Tezos.transaction [tx] 0mutez c
+
+let burn_ownership_token(token_id, s : token_id * multi_token_storage) : multi_token_storage =
+  { s with
+    token_metadata = Big_map.remove token_id s.token_metadata;
+    token_total_supply = Big_map.remove token_id s.token_total_supply;
+  }
+
+let clean_after_transfer (vote, ownership_token, s 
+    : transfer_vote * token_id * dao_storage) : dao_storage =
+  { s with
+    vote_nonce = s.vote_nonce + 1n;
+    pending_votes = Big_map.remove vote s.pending_votes;
+    owned_nfts = Big_map.remove vote.nft_token s.owned_nfts;
+    ownership_tokens = burn_ownership_token (ownership_token, s.ownership_tokens);
+  }
+
 let vote_transfer (p, s : vote_transfer_param * dao_storage)
     : operation list * dao_storage =
-  ([] : operation list), s
+  let voter = match p.permit with
+  | None -> Tezos.sender
+  | Some permit -> validate_permit (p.vote, permit, s.vote_nonce)
+  in
+  let ownership = match Big_map.find_opt p.vote.nft_token s.owned_nfts with
+  | None -> (failwith "NO_OWNERSHIP" : nft_ownership)
+  | Some o -> o
+  in
+  let stake_key = (voter, ownership.ownership_token) in
+  let voter_stake = 
+    match Big_map.find_opt stake_key s.ownership_tokens.ledger with
+    | None -> (failwith "NOT_OWNER" : nat)
+    | Some bal -> bal
+  in
+  let updated_votes = match Big_map.find_opt p.vote s.pending_votes with
+  | Some v ->
+    if Set.mem voter v.voters
+    then (failwith "DUP_VOTE" : transfer_vote_info)
+    else if Tezos.now - v.timestamp > int(ownership.voting_period)
+    then (failwith "EXPIRED" : transfer_vote_info)
+    else { v with
+      vote_amount = v.vote_amount + voter_stake; 
+      voters = Set.add voter v.voters;
+    }
+  | None -> { 
+      vote_amount = 0n; 
+      voters = Set.literal [voter];
+      timestamp = Tezos.now;
+    }
+  in
+  if updated_votes.vote_amount < ownership.voting_threshold
+  then 
+    let new_pending_votes =
+      Big_map.update p.vote (Some updated_votes) s.pending_votes in
+      ([] : operation list), { s with 
+        pending_votes = new_pending_votes; 
+        vote_nonce = s.vote_nonce + 1n; 
+      }
+  else
+    let tx_op = make_transfer p.vote in
+    let new_s = clean_after_transfer (p.vote, ownership.ownership_token, s) in
+    [tx_op], s
+  
 
 type dao_entrypoints =
   | Fa2 of fa2_entry_points (* handling ownership FA2 fungible tokens *)
