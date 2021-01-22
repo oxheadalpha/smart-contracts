@@ -5,6 +5,7 @@ import { TezosToolkit } from '@taquito/taquito';
 import { bootstrap, TestTz } from 'smart-contracts-common/bootstrap-sandbox';
 import { Contract, address, nat } from 'smart-contracts-common/type-aliases';
 import { defaultLigoEnv } from 'smart-contracts-common/ligo';
+import { originateNftCollection } from './origination';
 import {
   queryBalances,
   hasNftTokens
@@ -17,12 +18,16 @@ const ligoEnv = defaultLigoEnv('../../', '../ligo');
 
 describe('fractional ownership test', () => {
   let tezos: TestTz;
+  let nftFa2: Contract;
+  let fractionalDao: Contract;
 
   beforeAll(async () => {
     tezos = await bootstrap();
   });
 
-  beforeEach(async () => {});
+  beforeEach(async () => {
+    nftFa2 = await originateNftCollection(ligoEnv, tezos.bob);
+  });
 
   test('hello', async () => {
     $log.info('This is hello test');
