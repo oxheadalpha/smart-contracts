@@ -1,6 +1,7 @@
 import { $log } from '@tsed/logger';
 import { BigNumber } from 'bignumber.js';
 import { TezosToolkit } from '@taquito/taquito';
+import { Parser } from '@taquito/michel-codec';
 
 import { bootstrap, TestTz } from 'smart-contracts-common/bootstrap-sandbox';
 import { Contract, address, nat } from 'smart-contracts-common/type-aliases';
@@ -121,9 +122,81 @@ describe('fractional ownership test', () => {
     const { vote_nonce } = await fractionalDao.storage();
     const targetContractAddress = fractionalDao.address;
 
+    //(pair %vote (address %to_) (pair %nft_token (address %fa2) (nat %token_id)))
+    // const data_to_sign = `
+    // (Pair
+    //   (Pair
+    //     (Pair
+    //       "${to_}"
+    //       (Pair
+    //         "${nftFa2}"
+    //         ${nftTokenId.toNumber()}
+    //       )
+    //     )
+    //     "${chain_id}"
+    //   )
+    //   (Pair
+    //     ${vote_nonce}
+    //     "${targetContractAddress}"
+    //   )
+    // )
+    // `;
+
+    // const p = new Parser();
+    // const parsed_data = p.parseMichelineExpression(data_to_sign);
+    // console.log('PARSED', parsed_data);
+
+    const nonceTargetD = {
+      prim: 'Pair',
+      args: [{ int: vote_nonce.toString() }, { string: targetContractAddress }]
+    };
+    const nonceTargetT = {
+      prim: 'pair',
+      args: [{ prim: 'nat' }, { prim: 'address' }]
+    };
+
+    const voteD = {
+      prim: 'Pair',
+      args: [
+        { string: to_ },
+        {
+          prim: 'Pair',
+          args: [{ string: nftFa2 }, { int: nftTokenId.toString() }]
+        }
+      ]
+    };
+    const voteT = {
+      prim: 'pair',
+      args: [
+        { prim: 'address' },
+        {
+          prim: 'pair',
+          args: [{ prim: 'address' }, { prim: 'nat' }]
+        }
+      ]
+    };
+
+    const voteChainD = {
+      prim: 'Pair',
+      args: [voteD, { string: chain_id }]
+    };
+    const voteChainT = {
+      prim: 'pair',
+      args: [voteT, { prim: 'chain_id' }]
+    };
+
+    const data = {
+      prim: 'Pair',
+      args: [voteChainD, nonceTargetD]
+    };
+    const type = {
+      prim: 'pair',
+      args: [voteChainT, nonceTargetT]
+    };
+
     const pack = await signer.rpc.packData({
-      data: { string: chain_id },
-      type: { prim: 'chain_id' }
+      data,
+      type
     });
     const sign = await signer.signer.sign(pack.packed);
 
