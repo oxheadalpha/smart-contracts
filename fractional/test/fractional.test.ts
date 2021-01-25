@@ -187,11 +187,11 @@ describe('fractional ownership test', () => {
 
     const data = {
       prim: 'Pair',
-      args: [voteChainD, nonceTargetD]
+      args: [nonceTargetD, voteChainD]
     };
     const type = {
       prim: 'pair',
-      args: [voteChainT, nonceTargetT]
+      args: [nonceTargetT, voteChainT]
     };
 
     const pack = await signer.rpc.packData({
