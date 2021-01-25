@@ -102,15 +102,26 @@ describe('fractional ownership test', () => {
     nftTokenId: nat
   ): Promise<void> {
     const dao = await tz.contract.at(fractionalDao.address);
-    const chain_id = await tz.rpc.getChainId();
-    const { vote_nonce } = await dao.storage();
     const key = await signer.signer.publicKey();
-    const signature = '74657a6f732d73746f726167653a636f6e74656e74'; //dummy
+    const signature = await signPermit(signer, to_, nftFa2, nftTokenId);
     const voteOp = await dao.methods
       .vote_transfer(to_, nftFa2, nftTokenId, key, signature)
       .send();
     await voteOp.confirmation();
     $log.info(`Vote with permit consumed gas ${voteOp.consumedGas}`);
+  }
+
+  async function signPermit(
+    signer: TezosToolkit,
+    to_: address,
+    nftFa2: address,
+    nftTokenId: nat
+  ): Promise<string> {
+    const chain_id = await signer.rpc.getChainId();
+    const { vote_nonce } = await fractionalDao.storage();
+    const targetContractAddress = fractionalDao.address;
+    //pack and sign
+    return '74657a6f732d73746f726167653a636f6e74656e74'; //dummy
   }
 
   test('direct transfer', async () => {
