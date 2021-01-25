@@ -102,6 +102,8 @@ describe('fractional ownership test', () => {
     nftTokenId: nat
   ): Promise<void> {
     const dao = await tz.contract.at(fractionalDao.address);
+    const chain_id = await tz.rpc.getChainId();
+    const { vote_nonce } = await dao.storage();
     const key = await signer.signer.publicKey();
     const signature = '74657a6f732d73746f726167653a636f6e74656e74'; //dummy
     const voteOp = await dao.methods
