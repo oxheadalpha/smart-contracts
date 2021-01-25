@@ -1,7 +1,6 @@
 import { $log } from '@tsed/logger';
 import { BigNumber } from 'bignumber.js';
 import { TezosToolkit } from '@taquito/taquito';
-import { Parser } from '@taquito/michel-codec';
 
 import { bootstrap, TestTz } from 'smart-contracts-common/bootstrap-sandbox';
 import { Contract, address, nat } from 'smart-contracts-common/type-aliases';
@@ -122,39 +121,6 @@ describe('fractional ownership test', () => {
     const { vote_nonce } = await fractionalDao.storage();
     const targetContractAddress = fractionalDao.address;
 
-    //(pair %vote (address %to_) (pair %nft_token (address %fa2) (nat %token_id)))
-    // const data_to_sign = `
-    // (Pair
-    //   (Pair
-    //     (Pair
-    //       "${to_}"
-    //       (Pair
-    //         "${nftFa2}"
-    //         ${nftTokenId.toNumber()}
-    //       )
-    //     )
-    //     "${chain_id}"
-    //   )
-    //   (Pair
-    //     ${vote_nonce}
-    //     "${targetContractAddress}"
-    //   )
-    // )
-    // `;
-
-    // const p = new Parser();
-    // const parsed_data = p.parseMichelineExpression(data_to_sign);
-    // console.log('PARSED', parsed_data);
-
-    const nonceTargetD = {
-      prim: 'Pair',
-      args: [{ int: vote_nonce.toString() }, { string: targetContractAddress }]
-    };
-    const nonceTargetT = {
-      prim: 'pair',
-      args: [{ prim: 'nat' }, { prim: 'address' }]
-    };
-
     const voteD = {
       prim: 'Pair',
       args: [
@@ -176,28 +142,34 @@ describe('fractional ownership test', () => {
       ]
     };
 
-    const voteChainD = {
+    const nonceVoteD = {
       prim: 'Pair',
-      args: [voteD, { string: chain_id }]
+      args: [{ int: vote_nonce.toString() }, voteD]
     };
-    const voteChainT = {
+    const nonceVoteT = {
       prim: 'pair',
-      args: [voteT, { prim: 'chain_id' }]
+      args: [{ prim: 'nat' }, voteT]
+    };
+
+    const chainTargetD = {
+      prim: 'Pair',
+      args: [{ string: chain_id }, { string: targetContractAddress }]
+    };
+    const chainTargetT = {
+      prim: 'pair',
+      args: [{ prim: 'chain_id' }, { prim: 'address' }]
     };
 
     const data = {
       prim: 'Pair',
-      args: [nonceTargetD, voteChainD]
+      args: [chainTargetD, nonceVoteD]
     };
     const type = {
       prim: 'pair',
-      args: [nonceTargetT, voteChainT]
+      args: [chainTargetT, nonceVoteT]
     };
 
-    const pack = await signer.rpc.packData({
-      data,
-      type
-    });
+    const pack = await signer.rpc.packData({ data, type });
     const sign = await signer.signer.sign(pack.packed);
 
     return sign.sig;
@@ -224,7 +196,7 @@ describe('fractional ownership test', () => {
     $log.info('NFT is transferred from DAO to Alice');
   });
 
-  test.only('permit transfer', async () => {
+  test('permit transfer', async () => {
     const aliceAddress = await tezos.alice.signer.publicKeyHash();
     const tokenId = new BigNumber(1);
     await bobTransfersNftToDao(tokenId);
