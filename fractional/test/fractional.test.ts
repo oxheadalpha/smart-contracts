@@ -145,7 +145,7 @@ describe('fractional ownership test', () => {
     $log.info('NFT is transferred from DAO to Alice');
   });
 
-  test.only('permit transfer', async () => {
+  test('permit transfer', async () => {
     const aliceAddress = await tezos.alice.signer.publicKeyHash();
     const tokenId = new BigNumber(1);
     await bobTransfersNftToDao(tokenId);
@@ -162,6 +162,37 @@ describe('fractional ownership test', () => {
       tokenId
     );
     $log.info('Alice voted.');
+
+    await assertHasNft(aliceAddress, tokenId);
+    $log.info('NFT is transferred from DAO to Alice');
+  });
+
+  test.only('ownership transfer', async () => {
+    const aliceAddress = await tezos.alice.signer.publicKeyHash();
+    const bobAddress = await tezos.bob.signer.publicKeyHash();
+    const tokenId = new BigNumber(1);
+    await bobTransfersNftToDao(tokenId);
+
+    const ownershipTokenId = await fractionalDao.views
+      .ownership_token(nftFa2.address, tokenId)
+      .read(tezos.lambdaView);
+
+    await transfer(fractionalDao.address, tezos.alice, [
+      {
+        from_: aliceAddress,
+        txs: [
+          {
+            to_: bobAddress,
+            token_id: ownershipTokenId,
+            amount: new BigNumber(30)
+          }
+        ]
+      }
+    ]);
+    $log.info('Alice transferred some ownership tokens to Bob.');
+
+    await voteTransferFromDao(tezos.bob, aliceAddress, nftFa2.address, tokenId);
+    $log.info('Bob voted.');
 
     await assertHasNft(aliceAddress, tokenId);
     $log.info('NFT is transferred from DAO to Alice');

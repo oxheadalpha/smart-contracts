@@ -19,6 +19,13 @@ type global_token_id =
   token_id : token_id;
 }
 
+type ownership_token_param =
+[@layout:comb]
+{
+  nft_token : global_token_id;
+  callback : token_id contract
+}
+
 type transfer_vote =
 [@layout:comb]
 {
@@ -215,12 +222,19 @@ let flush_expired (vote, voting_period, pending_votes
     then Big_map.remove vote pending_votes
     else (failwith "VOTE_NOT_EXPIRED" : pending_votes)
 
+let get_ownership_token (p, owned_nfts : ownership_token_param * ownership) : operation =
+  match Big_map.find_opt p.nft_token owned_nfts with
+  | None -> (failwith "NO_OWNERSHIP" : operation)
+  | Some ownership -> 
+    Tezos.transaction ownership.ownership_token 0mutez p.callback
+
 type dao_entrypoints =
   | Fa2 of fa2_entry_points (* handling ownership FA2 fungible tokens *)
   | Set_ownership of set_ownership_param
   | Vote_transfer of vote_transfer_param
   | Flush_expired of transfer_vote
   | Admin of simple_admin
+  | Ownership_token of ownership_token_param
 
 let dao_main (p, s : dao_entrypoints * dao_storage) : operation list * dao_storage =
   match p with
@@ -233,6 +247,10 @@ let dao_main (p, s : dao_entrypoints * dao_storage) : operation list * dao_stora
     let u = fail_if_not_admin s.admin in
     let new_s = set_ownership(op, s) in
     ([] : operation list), new_s
+
+  | Ownership_token p ->
+    let op = get_ownership_token (p, s.owned_nfts) in
+    [op], s
 
   | Vote_transfer vp ->
     let u = fail_if_paused s.admin in
