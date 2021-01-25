@@ -120,8 +120,14 @@ describe('fractional ownership test', () => {
     const chain_id = await signer.rpc.getChainId();
     const { vote_nonce } = await fractionalDao.storage();
     const targetContractAddress = fractionalDao.address;
-    //pack and sign
-    return '74657a6f732d73746f726167653a636f6e74656e74'; //dummy
+
+    const pack = await signer.rpc.packData({
+      data: { string: chain_id },
+      type: { prim: 'chain_id' }
+    });
+    const sign = await signer.signer.sign(pack.packed);
+
+    return sign.sig;
   }
 
   test('direct transfer', async () => {
@@ -145,7 +151,7 @@ describe('fractional ownership test', () => {
     $log.info('NFT is transferred from DAO to Alice');
   });
 
-  test('permit transfer', async () => {
+  test.only('permit transfer', async () => {
     const aliceAddress = await tezos.alice.signer.publicKeyHash();
     const tokenId = new BigNumber(1);
     await bobTransfersNftToDao(tokenId);
@@ -167,7 +173,7 @@ describe('fractional ownership test', () => {
     $log.info('NFT is transferred from DAO to Alice');
   });
 
-  test.only('ownership transfer', async () => {
+  test('ownership transfer', async () => {
     const aliceAddress = await tezos.alice.signer.publicKeyHash();
     const bobAddress = await tezos.bob.signer.publicKeyHash();
     const tokenId = new BigNumber(1);
