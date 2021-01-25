@@ -53,21 +53,21 @@ describe('fractional ownership test', () => {
     ]);
   }
 
-  test('direct transfer', async () => {
+  async function bobTransfersNftToDao(nftTokenId: nat): Promise<void> {
     const bobAddress = await tezos.bob.signer.publicKeyHash();
     const aliceAddress = await tezos.alice.signer.publicKeyHash();
-    const tokenId = new BigNumber(1);
-    await assertHasNft(bobAddress, tokenId);
+
+    await assertHasNft(bobAddress, nftTokenId);
     $log.info('bob owns the NFT');
 
-    await transferNFT(tezos.bob, tokenId, bobAddress, fractionalDao.address);
-    await assertHasNft(fractionalDao.address, tokenId);
+    await transferNFT(tezos.bob, nftTokenId, bobAddress, fractionalDao.address);
+    await assertHasNft(fractionalDao.address, nftTokenId);
     $log.info('DAO owns the NFT');
 
     const ownershipOp = await fractionalDao.methods
       .set_ownership(
         nftFa2.address,
-        tokenId,
+        nftTokenId,
         [
           { owner: bobAddress, amount: 50 },
           { owner: aliceAddress, amount: 50 }
@@ -78,30 +78,38 @@ describe('fractional ownership test', () => {
       .send({ source: bobAddress });
     await ownershipOp.confirmation();
     $log.info('DAO ownership parameters are set');
+  }
 
-    const bobVoteOp = await fractionalDao.methods
-      .vote_transfer(
-        aliceAddress, //to_
-        nftFa2.address,
-        tokenId
-      )
+  async function voteTransferFromDao(
+    tz: TezosToolkit,
+    to_: address,
+    nftFa2: address,
+    nftTokenId: nat
+  ): Promise<void> {
+    const dao = await tz.contract.at(fractionalDao.address);
+    const voteOp = await dao.methods
+      .vote_transfer(to_, nftFa2, nftTokenId)
       .send();
-    await bobVoteOp.confirmation();
+    await voteOp.confirmation();
+    $log.info(`Vote consumed gas ${voteOp.consumedGas}`);
+  }
+
+  test('direct transfer', async () => {
+    const aliceAddress = await tezos.alice.signer.publicKeyHash();
+    const tokenId = new BigNumber(1);
+    await bobTransfersNftToDao(tokenId);
+
+    await voteTransferFromDao(tezos.bob, aliceAddress, nftFa2.address, tokenId);
     await assertHasNft(fractionalDao.address, tokenId);
-    $log.info(`Bob voted. Consumed gas ${bobVoteOp.consumedGas}`);
+    $log.info('Bob voted.');
 
-    const aliceFractionalDao = await tezos.alice.contract.at(
-      fractionalDao.address
+    await voteTransferFromDao(
+      tezos.alice,
+      aliceAddress,
+      nftFa2.address,
+      tokenId
     );
-    const aliceVoteOp = await aliceFractionalDao.methods
-      .vote_transfer(
-        aliceAddress, //to_
-        nftFa2.address,
-        tokenId
-      )
-      .send();
-    await aliceVoteOp.confirmation();
-    $log.info(`Alice voted. Consumed gas ${aliceVoteOp.consumedGas}`);
+    $log.info('Alice voted.');
 
     await assertHasNft(aliceAddress, tokenId);
     $log.info('NFT is transferred from DAO to Alice');
