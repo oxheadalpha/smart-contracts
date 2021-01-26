@@ -93,10 +93,11 @@ let mint_ownership_token (ownership, token_id, s :
   let meta = { 
     token_id = token_id;
     extras = Map.literal [
-    ("symbol", Bytes.pack "OT");
-    ("name", Bytes.pack "Ownership Token");
-    ("decimals", Bytes.pack "0");
-  ]; } in
+      ("symbol", Bytes.pack "OT");
+      ("name", Bytes.pack "Ownership Token");
+      ("decimals", Bytes.pack "0");
+    ]; 
+  } in
   let new_token_meta = Big_map.add token_id meta s.token_metadata in
   
   let new_ledger, token_supply = List.fold 
