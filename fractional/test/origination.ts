@@ -22,7 +22,7 @@ export async function originateNftCollection(
 
   const meta_uri = char2Bytes('tezos-storage:content');
   const meta = {
-    interfaces: ['TZIP-12'],
+    interfaces: ['TZIP-012'],
     name: 'Rainbow Token',
     description: 'NFT collection of rainbow tokens',
     homepage: 'https://github.com/tqtezos/smart-contracts',
@@ -89,7 +89,7 @@ export async function originateFractionalDao(
 
   const meta_uri = char2Bytes('tezos-storage:content');
   const meta = {
-    interfaces: ['TZIP-12'],
+    interfaces: ['TZIP-012'],
     name: 'NFT Fractional DAO',
     description:
       'DAO that manages fractional ownership of a generic FA2 NFT tokens',

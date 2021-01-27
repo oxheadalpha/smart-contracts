@@ -66,7 +66,7 @@ class TestMacSetUp(TestCase):
 
     def orig_mac(self, ligo_mac):
         meta = {
-            "interfaces": ["TZIP-12"],
+            "interfaces": ["TZIP-012"],
             "name": "Multiple FA2 Pausable Fungible Tokens",
             "homepage": "https://github.com/tqtezos/smart-contracts",
             "license": {"name": "MIT"},

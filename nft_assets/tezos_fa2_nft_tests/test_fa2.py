@@ -64,7 +64,7 @@ class TestFa2SetUp(TestCase):
 
     def orig_fa2(self, ligo_fa2):
         meta = {
-            "interfaces": ["TZIP-12"],
+            "interfaces": ["TZIP-012"],
             "name": "FA2 Non-Fungible Tokens",
             "homepage": "https://github.com/tqtezos/smart-contracts",
             "license": {"name": "MIT"},
