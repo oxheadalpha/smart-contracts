@@ -27,7 +27,7 @@
                                            (unit %owner_no_hook)
                                            (or (unit %optional_owner_hook) (unit %required_owner_hook)))
                                         (option %custom (pair (string %tag) (option %config_api address))))))
-                         (big_map %token_metadata nat (pair (nat %token_id) (map %extras string bytes))))))
+                         (big_map %token_metadata nat (pair (nat %token_id) (map %token_info string bytes))))))
           (big_map %metadata string bytes)) ;
   code { PUSH string "FA2_TOKEN_UNDEFINED" ;
          PUSH string "FA2_INSUFFICIENT_BALANCE" ;

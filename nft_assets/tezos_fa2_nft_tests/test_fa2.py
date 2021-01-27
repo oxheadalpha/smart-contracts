@@ -133,7 +133,7 @@ class TestFa2SetUp(TestCase):
         token_metadata = {
             # because of an issue with pytezos, the keys must be sorted alphabetically
             "token_id": 0,
-            "extras": {
+            "token_info": {
                 "0": "left".encode().hex(),
                 "1": "right".encode().hex(),
                 "decimals": "0".encode().hex(),

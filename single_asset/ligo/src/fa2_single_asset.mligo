@@ -68,7 +68,7 @@ let store : single_asset_storage = {
                   ( 0n,
                     {
                       token_id = 0n;
-                      extras = Map.literal [
+                      token_info = Map.literal [
                         ("symbol", 0x544b31);
                         ("name", 0x5465737420546f6b656e);
                         ("decimals", 0x30);

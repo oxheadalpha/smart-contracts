@@ -24,7 +24,7 @@ export async function originateCollection(
 
   const meta_uri = char2Bytes('tezos-storage:content');
   const meta = {
-    interfaces: ['TZIP-12'],
+    interfaces: ['TZIP-012'],
     name: 'Rainbow Token',
     description: 'NFT collection of rainbow tokens',
     homepage: 'https://github.com/tqtezos/smart-contracts',
@@ -91,7 +91,7 @@ export async function originateMoney(
 
   const meta_uri = char2Bytes('tezos-storage:content');
   const meta = {
-    interfaces: ['TZIP-12'],
+    interfaces: ['TZIP-012'],
     name: 'FA2 Single Fungible (Money) Token',
     homepage: 'https://github.com/tqtezos/smart-contracts',
     license: { name: 'MIT' }

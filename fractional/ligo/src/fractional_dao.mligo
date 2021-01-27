@@ -92,7 +92,7 @@ let mint_ownership_token (ownership, token_id, s :
     ownership_stake list * token_id * multi_token_storage) : multi_token_storage =
   let meta = { 
     token_id = token_id;
-    extras = Map.literal [
+    token_info = Map.literal [
       ("symbol", Bytes.pack "OT");
       ("name", Bytes.pack "Ownership Token");
       ("decimals", Bytes.pack "0");

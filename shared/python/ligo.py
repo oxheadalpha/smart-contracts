@@ -228,7 +228,7 @@ def token_metadata_literal(token_id, symbol, name, decimals):
     bdecimals = str(decimals).encode().hex()
     return """{
         token_id = %sn;
-        extras = Map.literal [
+        token_info = Map.literal [
           ("symbol", 0x%s);
           ("name", 0x%s);
           ("decimals", 0x%s);
@@ -245,7 +245,7 @@ def token_metadata_literal(token_id, symbol, name, decimals):
 def token_metadata_object(token_id, symbol, name, decimals):
     return {
         "token_id": token_id,
-        "extras": {
+        "token_info": {
             # because of an issue with pytezos, the keys must be sorted alphabetically
             "decimals": str(decimals).encode().hex(),
             "name": name.encode().hex(),

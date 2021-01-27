@@ -14,12 +14,12 @@
                          (pair %remove_operator (address %owner) (pair (address %operator) (nat %token_id))))))
                (pair %token_metadata
                   (list %token_ids nat)
-                  (lambda %handler (list (pair (nat %token_id) (map %extras string bytes))) unit))))
+                  (lambda %handler (list (pair (nat %token_id) (map %token_info string bytes))) unit))))
         (or %tokens
            (pair %burn_tokens (nat %from_) (nat %to_))
            (pair %mint_tokens
               (pair %token_def (nat %from_) (nat %to_))
-              (pair (pair %metadata (nat %token_id) (map %extras string bytes))
+              (pair (pair %metadata (nat %token_id) (map %token_info string bytes))
                     (list %owners address))))) ;
   storage
     (pair (pair (pair %admin (pair (address %admin) (bool %paused)) (option %pending_admin address))
@@ -28,7 +28,7 @@
                          (pair %metadata
                             (pair (big_map %metadata
                                      (pair (nat %from_) (nat %to_))
-                                     (pair (nat %token_id) (map %extras string bytes)))
+                                     (pair (nat %token_id) (map %token_info string bytes)))
                                   (nat %next_token_id))
                             (set %token_defs (pair (nat %from_) (nat %to_)))))
                    (big_map %operators (pair address (pair address nat)) unit)))
