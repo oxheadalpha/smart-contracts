@@ -87,3 +87,12 @@ of NFT tokens that share the same token metadata.
 implementation of the fixed collection of NFT tokens (a.k.a. ERC-721). The FA2
 contract is originated with the predefined set of NFT tokens. Tokens cannot be
 minted or burned.
+
+### [fractional](fractional)
+
+[fractional_dao.mligo](fractional/ligo/src/fractional_dao.mligo) implementation
+of DAO that manages fractional ownership of NFT tokens. The DAO is the owner of
+an NFT token in the corresponding FA2 NFT contract and also manages fractional
+ownership fungible token for each owned NFT. Holders of the linked ownership fungible
+tokens can vote (directly or using signed permit) on transfer of the NFT token to
+some other address.
