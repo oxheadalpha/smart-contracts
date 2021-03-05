@@ -42,7 +42,7 @@ a regular FA2 fungible token, fractional owners can transfer it using standard
 FA2 transfer.
 
 **Vote on operation lambda** - any fractional owner can submit a vote consisting
-of a lambda (`unit -> operation`) and a nonce.
+of a lambda (`unit -> operation list`) and a nonce.
 The vote weight is proportional to a balance of the ownership token allocated
 to a fractional owner. Once predefined voting threshold is met, DAO executes the
 lambda and returns produced operation.
@@ -61,7 +61,7 @@ lambda and returns produced operation.
 
 ```ocaml
 %vote {
-  lambda: unit -> operation;
+  lambda: unit -> operation list;
   nonce: nat;
 }
 ```
