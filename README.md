@@ -75,7 +75,7 @@ implementation of the FA2 contract that supports multiple fungible tokens
 of the FA2 contract that supports multiple fungible tokens (a.k.a. ERC-1155) and
 sender/receiver hooks.
 
-### [nft_assets](nft_assets)
+### [nft_asset](nft_assets)
 
 [fa2_nft_asset.mligo](nft_assets/ligo/src/fa2_nft_asset.mligo) implementation
 of the NFT FA2 contract (a.k.a. ERC-721). The contract supports multiple "families"
