@@ -13,7 +13,7 @@ The FA2-related LIGO artifacts are:
   used by the FA2 implementation.
   - [shared/fa2/lib/fa2_operator_lib.mligo](shared/fa2/lib/fa2_operator_lib.mligo) -
     helper functions to manage and validate FA2 operators.
-  - [shared/fa2/lib/fa2_owner_hook_lib.mligo](shared/fa2/lib/fa2_owner_hook_lib.mligo) -
+  - [shared/fa2/lib/fa2_owner_hook_lib.mligo](shared/fa2/lib/fa2_owner_hooks_lib.mligo) -
     helper functions to support sender/receiver hooks.
 - [shared/fa2_modules](shared/fa2_modules) - modules implementing additional contract
   functionality to be mixed into the final FA2 contract.
@@ -75,9 +75,9 @@ implementation of the FA2 contract that supports multiple fungible tokens
 of the FA2 contract that supports multiple fungible tokens (a.k.a. ERC-1155) and
 sender/receiver hooks.
 
-### [nft_asset](nft_asset)
+### [nft_assets](nft_assets)
 
-[fa2_nft_asset.mligo](nft_asset/ligo/src/fa2_nft_asset.mligo) implementation
+[fa2_nft_asset.mligo](nft_assets/ligo/src/fa2_nft_asset.mligo) implementation
 of the NFT FA2 contract (a.k.a. ERC-721). The contract supports multiple "families"
 of NFT tokens that share the same token metadata.
 
