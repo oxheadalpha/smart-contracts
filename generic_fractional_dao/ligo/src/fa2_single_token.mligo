@@ -1,0 +1,1 @@
+../../../single_asset/ligo/src/fa2_single_token.mligo
