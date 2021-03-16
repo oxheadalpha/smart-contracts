@@ -27,8 +27,6 @@ Fraction of ownership is represented by the balance of the linked ownership toke
 allocated to the fractional owner. Fractional owner can vote to transfer
 an NFT to some other address.
 
-**DAO admin** - a special privileged address which can setup initial fractional
-NFT ownership and change some parameters of the ownership DAO.
 
 ## Operations
 

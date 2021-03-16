@@ -10,3 +10,4 @@ node_modules
 **/*.pyc
 **/*.egg-info
 single_asset/lorentz/morley-ledgers/
+**/bisect*.coverage
