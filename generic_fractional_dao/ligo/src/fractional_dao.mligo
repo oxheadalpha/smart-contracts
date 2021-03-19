@@ -4,6 +4,7 @@
 #include "fa2_single_token.mligo"
 
 type permit = 
+[@layout:comb]
 {
   key : key; (* user's key *)
   signature : signature; (*signature of packed vote_param + permit context *)
@@ -16,15 +17,21 @@ type proposal_info = {
   lambda: unit -> operation list
 }
 
-type vote_param =
+type vote =
 [@layout:comb]
 {
   lambda : unit -> operation list;
   permit : permit option;
 }
 
+type vote_param =
+[@layout:comb]
+{
+  vote: vote;
+  permit : permit option;
+}
+
 type set_voting_threshold_param = 
-(* [@layout: comb] *)
 {
   old_threshold: nat;
   new_threshold: nat;
@@ -35,12 +42,13 @@ type dao_storage = {
   voting_threshold : nat;
   voting_period : nat;
   vote_count : nat;
-  pending_proposals: (bytes, vote_param) big_map;
+  pending_proposals: (bytes, vote) big_map;
 }
 
 type dao_entrypoints =
   | Fa2 of fa2_entry_points
   | Set_voting_threshold of set_voting_threshold_param
+  | Vote of vote_param
 
 [@inline]
 let assert_self_call () =
@@ -67,5 +75,8 @@ let main(param, storage : dao_entrypoints * dao_storage)
     let u = assert_self_call () in
     let new_storage = set_voting_threshold (t, storage) in
     ([] : operation list), new_storage
+
+  | Vote v ->
+    ([] : operation list), storage
 
 #endif
