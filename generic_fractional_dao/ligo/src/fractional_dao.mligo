@@ -29,6 +29,12 @@ type set_voting_threshold_param =
   new_threshold: nat;
 }
 
+type set_voting_period_param = 
+{
+  old_period: nat;
+  new_period: nat;
+}
+
 type pending_proposals = (bytes, proposal_info) big_map
 
 type dao_storage = {
@@ -41,8 +47,11 @@ type dao_storage = {
 
 type dao_entrypoints =
   | Fa2 of fa2_entry_points
-  | Set_voting_threshold of set_voting_threshold_param
   | Vote of vote
+  (** self-governance entry point *)
+  | Set_voting_threshold of set_voting_threshold_param
+  (** self-governance entry point *)
+  | Set_voting_period of set_voting_period_param
 
 type return = (operation list) * dao_storage
 
@@ -59,6 +68,12 @@ let set_voting_threshold (t, s : set_voting_threshold_param * dao_storage)
   else if t.new_threshold > s.ownership_token.total_supply
   then (failwith "THRESHOLD_EXCEEDS_TOTAL_SUPPLY" : dao_storage)
   else { s with voting_threshold = t.new_threshold; }
+
+let set_voting_period (p, s : set_voting_period_param * dao_storage)
+    : dao_storage =
+  if p.old_period <> s.voting_period
+  then (failwith "INVALID_OLD_PERIOD" : dao_storage)
+  else { s with voting_period = p.new_period; }
 
 let validate_permit (lambda, permit, vote_count
     : (unit -> operation list) * permit * nat) : address =
@@ -125,11 +140,16 @@ let main(param, storage : dao_entrypoints * dao_storage) : return =
     let ops, new_ownership = fa2_main(fa2, storage.ownership_token) in
     ops, { storage with ownership_token = new_ownership; }
 
+  | Vote v -> vote (v, storage)
+
   | Set_voting_threshold t ->
     let u = assert_self_call () in
     let new_storage = set_voting_threshold (t, storage) in
     ([] : operation list), new_storage
 
-  | Vote v -> vote (v, storage)
+  | Set_voting_period p ->
+    let u = assert_self_call () in
+    let new_storage = set_voting_period (p, storage) in
+    ([] : operation list), new_storage
 
 #endif
