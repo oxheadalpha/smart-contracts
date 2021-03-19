@@ -16,10 +16,12 @@ type proposal_info = {
   timestamp : timestamp;
 }
 
+type dao_lambda = unit -> operation list
+
 type vote =
 [@layout:comb]
 {
-  lambda : unit -> operation list;
+  lambda : dao_lambda;
   permit : permit option;
 }
 
@@ -43,6 +45,7 @@ type dao_storage = {
   voting_period : nat;
   vote_count : nat;
   pending_proposals: pending_proposals;
+  metadata : contract_metadata;
 }
 
 type dao_entrypoints =
@@ -52,6 +55,8 @@ type dao_entrypoints =
   | Set_voting_threshold of set_voting_threshold_param
   (** self-governance entry point *)
   | Set_voting_period of set_voting_period_param
+  (** self-governance entry point *)
+  | Flush_expired of dao_lambda
 
 type return = (operation list) * dao_storage
 
@@ -75,20 +80,32 @@ let set_voting_period (p, s : set_voting_period_param * dao_storage)
   then (failwith "INVALID_OLD_PERIOD" : dao_storage)
   else { s with voting_period = p.new_period; }
 
-let validate_permit (lambda, permit, vote_count
-    : (unit -> operation list) * permit * nat) : address =
-    let signed_data = Bytes.pack (
-      (Tezos.chain_id, Tezos.self_address),
-      (vote_count, lambda)
-    ) in
-    if  Crypto.check permit.key permit.signature signed_data 
-    then Tezos.address (Tezos.implicit_account (Crypto.hash_key (permit.key)))
-    else (failwith "MISSIGNED" : address)
-
 let is_expired (proposal, voting_period : proposal_info * nat) : bool =
   if Tezos.now - proposal.timestamp > int(voting_period)
   then true
   else false
+
+let flush_expired (lambda, s : dao_lambda * dao_storage ) : dao_storage =
+  let key = Bytes.pack lambda in
+  match Big_map.find_opt key s.pending_proposals with
+  | None -> (failwith "PROPOSAL_DOES_NOT_EXIST" : dao_storage)
+  | Some proposal ->
+    if is_expired(proposal, s.voting_period)
+    then 
+      let new_pending = Big_map.remove key s.pending_proposals in
+      { s with pending_proposals = new_pending; }
+    else (failwith "PROPOSAL_NOT_EXPIRED" : dao_storage)
+
+
+let validate_permit (lambda, permit, vote_count 
+    : dao_lambda * permit * nat) : address =
+  let signed_data = Bytes.pack (
+    (Tezos.chain_id, Tezos.self_address),
+    (vote_count, lambda)
+  ) in
+  if  Crypto.check permit.key permit.signature signed_data 
+  then Tezos.address (Tezos.implicit_account (Crypto.hash_key (permit.key)))
+  else (failwith "MISSIGNED" : address)
 
 let get_voter_stake (voter, ledger : address * ledger) : nat =
   match Big_map.find_opt voter ledger with
@@ -100,7 +117,7 @@ let update_proposal (proposal, vote_key, s : proposal_info * bytes * dao_storage
   let new_pending = Big_map.update vote_key (Some proposal) s.pending_proposals in
   ([] : operation list), { s with pending_proposals = new_pending; }
 
-let execute_proposal (lambda, vote_key, s : (unit -> operation list) * bytes * dao_storage)
+let execute_proposal (lambda, vote_key, s : dao_lambda * bytes * dao_storage)
     : return =
   let new_pending = Big_map.remove vote_key s.pending_proposals in
   let ops = lambda () in
@@ -150,6 +167,11 @@ let main(param, storage : dao_entrypoints * dao_storage) : return =
   | Set_voting_period p ->
     let u = assert_self_call () in
     let new_storage = set_voting_period (p, storage) in
+    ([] : operation list), new_storage
+
+  | Flush_expired lambda ->
+    let u = assert_self_call () in
+    let new_storage = flush_expired (lambda, storage) in
     ([] : operation list), new_storage
 
 #endif
