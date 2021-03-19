@@ -94,7 +94,7 @@ let flush_expired (lambda, s : dao_lambda * dao_storage ) : dao_storage =
     then 
       let new_pending = Big_map.remove key s.pending_proposals in
       { s with pending_proposals = new_pending; }
-    else (failwith "PROPOSAL_NOT_EXPIRED" : dao_storage)
+    else (failwith "NOT_EXPIRED" : dao_storage)
 
 
 let validate_permit (lambda, permit, vote_count 
