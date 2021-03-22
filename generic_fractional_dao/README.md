@@ -74,3 +74,14 @@ lambda functions for generic operations should be considered.
 1. NFT `transfer` and `update_operators`.
 2. Interaction with market place and auction contracts.
 3. DAO administration.
+
+## What's Next
+
+- Create tests for the fractional DAO contract
+- Create helper Typescript API to generate DAO lambdas for the most common operations
+
+  - Transfer governed token(s)
+  - Update operators for governed token(s)
+  - Change DAO voting threshold
+  - Change DAO voting period
+  - Migrate DAO contract to minter-sdk
