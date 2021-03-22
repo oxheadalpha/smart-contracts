@@ -174,4 +174,41 @@ let main(param, storage : dao_entrypoints * dao_storage) : return =
     let new_storage = flush_expired (lambda, storage) in
     ([] : operation list), new_storage
 
+
+(* let token : single_token_storage = {
+
+} *)
+
+let sample_storage : dao_storage = {
+  ownership_token = {
+    ledger = Big_map.literal [
+      (("tz1YPSCGWXwBdTncK2aCctSZAXWvGsGwVJqU" : address), 50n);
+      (("KT193LPqieuBfx1hqzXGZhuX2upkkKgfNY9w" : address), 50n);
+    ];
+    operators = (Big_map.empty : operator_storage);
+    token_metadata = Big_map.literal [
+      ( 0n,
+        {
+          token_id = 0n;
+          token_info = Map.literal [
+            ("symbol", 0x544b31);
+            ("name", 0x5465737420546f6b656e);
+            ("decimals", 0x30);
+          ];
+        }
+      ); 
+    ];
+    total_supply = 100n;
+  };
+  voting_threshold = 75n;
+  voting_period = 10000000n;
+  vote_count = 0n;
+  pending_proposals = (Big_map.empty : pending_proposals);
+  metadata = Big_map.literal [
+    ("", Bytes.pack "tezos-storage:content" );
+    ("", 0x00);
+    ("content", 0x00) (* bytes encoded UTF-8 JSON *)
+  ];
+}
+
 #endif
