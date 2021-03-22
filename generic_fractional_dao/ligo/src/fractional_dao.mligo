@@ -78,6 +78,8 @@ let set_voting_period (p, s : set_voting_period_param * dao_storage)
     : dao_storage =
   if p.old_period <> s.voting_period
   then (failwith "INVALID_OLD_PERIOD" : dao_storage)
+  else if p.new_period < 300n
+  then (failwith "PERIOD_TOO_SHORT" : dao_storage)
   else { s with voting_period = p.new_period; }
 
 let is_expired (proposal, voting_period : proposal_info * nat) : bool =
