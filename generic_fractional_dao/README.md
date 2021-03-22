@@ -84,4 +84,5 @@ lambda functions for generic operations should be considered.
   - Update operators for governed token(s)
   - Change DAO voting threshold
   - Change DAO voting period
-  - Migrate DAO contract to minter-sdk
+
+- Migrate DAO contract to minter-sdk
