@@ -170,7 +170,6 @@ let main(param, storage : dao_entrypoints * dao_storage) : return =
     ([] : operation list), new_storage
 
   | Flush_expired lambda ->
-    let u = assert_self_call () in
     let new_storage = flush_expired (lambda, storage) in
     ([] : operation list), new_storage
 
