@@ -8,7 +8,7 @@ import { defaultLigoEnv } from "smart-contracts-common/ligo";
 
 import {
   originateNftCollection,
-  // originateFractionalDao,
+  originateFractionalDao,
 } from "../src/origination";
 
 jest.setTimeout(240000);
@@ -26,7 +26,14 @@ describe("fractional ownership test", () => {
 
   beforeEach(async () => {
     nftFa2 = await originateNftCollection(ligoEnv, tezos.bob);
-    // fractionalDao = await originateFractionalDao(ligoEnv, tezos.bob);
+    const bobAddress = await tezos.bob.signer.publicKeyHash();
+    const aliceAddress = await tezos.alice.signer.publicKeyHash();
+    fractionalDao = await originateFractionalDao(
+      ligoEnv,
+      tezos.bob,
+      bobAddress,
+      aliceAddress
+    );
   });
 
   test("Hello", () => {});
