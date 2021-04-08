@@ -1,0 +1,1 @@
+../../../collectibles/ligo/src/fa2_fixed_collection_asset.mligo

@@ -1,5 +1,5 @@
 {
-  "name": "fractional-test",
+  "name": "generic-fractional-test",
   "version": "1.1.0",
   "scripts": {
     "test": "jest --runInBand"
@@ -15,14 +15,14 @@
     "typescript": "^3.9.7"
   },
   "dependencies": {
-    "@taquito/signer": "8.0.0-beta.2",
-    "@taquito/taquito": "8.0.0-beta.2",
-    "@taquito/tzip16": "8.0.0-beta.2",
+    "@taquito/signer": "8.1.0",
+    "@taquito/taquito": "8.1.0",
+    "@taquito/tzip16": "8.1.0",
     "@tsed/logger": "^5.5.2",
     "bignumber.js": "^9.0.1",
     "child_process": "^1.0.2",
     "fs": "0.0.1-security",
-    "smart-contracts-common": "file:../../shared/typescript",
+    "smart-contracts-common": "file:../shared/typescript",
     "source-map-support": "^0.5.19"
   }
 }
