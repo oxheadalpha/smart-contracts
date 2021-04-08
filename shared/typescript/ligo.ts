@@ -7,7 +7,7 @@ import { TezosToolkit } from '@taquito/taquito';
 import { char2Bytes } from '@taquito/tzip16';
 import { Contract } from './type-aliases';
 
-const ligoVersion = '0.7.1';
+const ligoVersion = '0.12.0';
 const ligoCmd = `docker run --rm -v "$PWD":"$PWD" -w "$PWD" ligolang/ligo:${ligoVersion} "$@"`;
 
 export class LigoEnv {
