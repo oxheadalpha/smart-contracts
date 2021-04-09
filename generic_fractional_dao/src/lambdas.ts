@@ -78,5 +78,5 @@ export const signPermit = async (
     type: typ as MichelsonV1Expression,
   });
   const signature = await signer.signer.sign(pack.packed);
-  return signature;
+  return signature.sig;
 };
