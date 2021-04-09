@@ -15,6 +15,7 @@
     "typescript": "^3.9.7"
   },
   "dependencies": {
+    "@taquito/michel-codec": "8.1.0",
     "@taquito/signer": "8.1.0",
     "@taquito/taquito": "8.1.0",
     "@taquito/tzip16": "8.1.0",

@@ -1,5 +1,6 @@
 import * as _ from "lodash";
 import { TezosToolkit } from "@taquito/taquito";
+import { Parser } from "@taquito/michel-codec";
 import { address, Contract, nat } from "smart-contracts-common/type-aliases";
 import { compileExpression, LigoEnv } from "smart-contracts-common/ligo";
 import { $log } from "@tsed/logger";
@@ -20,5 +21,6 @@ export const setDaoVotingThresholdParam = async (
     "fractional_dao_lambdas.mligo",
     `set_dao_voting_threshold (${oldThreshold}n, ${newThreshold}n)`
   );
-  return lambdaMichelson;
+  const p = new Parser();
+  return p.parseMichelineExpression(lambdaMichelson);
 };

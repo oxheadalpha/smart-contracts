@@ -39,12 +39,19 @@ describe("fractional ownership test", () => {
   });
 
   test("Set DAO voting threshold", async () => {
-    const { voting_threshold } = await fractionalDao.storage<DaoStorage>();
+    const initStorage = await fractionalDao.storage<DaoStorage>();
     const lambda = await setDaoVotingThresholdParam(
       ligoEnv,
-      voting_threshold.toNumber(),
+      initStorage.voting_threshold.toNumber(),
       50
     );
-    $log.info("LAMBDA", lambda);
+    const op = await fractionalDao.methods.vote(lambda).send();
+    await op.confirmation();
+    const updatedStorage = await fractionalDao.storage<DaoStorage>();
+    $log.info(
+      "VOTE COUNT CHANGE",
+      initStorage.vote_count.toNumber(),
+      updatedStorage.vote_count.toNumber()
+    );
   });
 });
