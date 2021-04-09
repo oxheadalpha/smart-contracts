@@ -117,13 +117,21 @@ let get_voter_stake (voter, ledger : address * ledger) : nat =
 let update_proposal (proposal, vote_key, s : proposal_info * bytes * dao_storage)
     : return =
   let new_pending = Big_map.update vote_key (Some proposal) s.pending_proposals in
-  ([] : operation list), { s with pending_proposals = new_pending; }
+  let new_s = { s with
+    pending_proposals = new_pending;
+    vote_count = s.vote_count + 1n;
+  } in
+  ([] : operation list), new_s
 
 let execute_proposal (lambda, vote_key, s : dao_lambda * bytes * dao_storage)
     : return =
   let new_pending = Big_map.remove vote_key s.pending_proposals in
   let ops = lambda () in
-  ops, { s with pending_proposals = new_pending; }
+  let new_s = { s with
+    pending_proposals = new_pending;
+    vote_count = s.vote_count + 1n;
+  } in
+  ops, new_s
 
 let vote (v, s : vote * dao_storage) : return =
   let voter = match v.permit with
