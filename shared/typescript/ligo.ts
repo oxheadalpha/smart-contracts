@@ -60,14 +60,33 @@ async function compileContract(
   dstFilePath: string
 ): Promise<void> {
   const cmd = `${ligoCmd} compile-contract ${srcFilePath} ${main} --output=${dstFilePath}`;
-  return runCmd(cwd, cmd);
+  await runCmd(cwd, cmd);
 }
 
-async function runCmd(cwd: string, cmd: string): Promise<void> {
-  return new Promise<void>((resolve, reject) =>
+export async function compileExpression(
+  env: LigoEnv,
+  srcFile: string,
+  expression: string
+): Promise<string> {
+  const srcFilePath = env.srcFilePath(srcFile);
+  const cmd = `${ligoCmd} compile-expression --init-file=${srcFilePath} 'cameligo' '${expression}'`;
+  return runCmd(env.cwd, cmd);
+}
+
+async function runCmd(cwd: string, cmd: string): Promise<string> {
+  return new Promise<string>((resolve, reject) =>
     child.exec(cmd, { cwd }, (err, stdout, errout) => {
-      if (err) reject(errout);
-      else resolve();
+      if (stdout) {
+        $log.info(stdout);
+      }
+      if (errout) {
+        $log.error(errout);
+      }
+      if (err) {
+        reject(err);
+      } else {
+        resolve(stdout);
+      }
     })
   );
 }

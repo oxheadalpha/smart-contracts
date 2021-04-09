@@ -11,6 +11,8 @@ import {
   originateFractionalDao,
 } from "../src/origination";
 
+import { DaoStorage, setDaoVotingThresholdParam } from "../src/lambdas";
+
 jest.setTimeout(240000);
 
 const ligoEnv = defaultLigoEnv("../../", "ligo");
@@ -36,5 +38,13 @@ describe("fractional ownership test", () => {
     );
   });
 
-  test("Hello", () => {});
+  test("Set DAO voting threshold", async () => {
+    const { voting_threshold } = await fractionalDao.storage<DaoStorage>();
+    const lambda = await setDaoVotingThresholdParam(
+      ligoEnv,
+      voting_threshold.toNumber(),
+      50
+    );
+    $log.info("LAMBDA", lambda);
+  });
 });
