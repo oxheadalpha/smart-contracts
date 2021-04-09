@@ -20,7 +20,27 @@ export interface DaoStorage {
 
 export type DaoLambda = { lambdaMichelson: string; lambdaExp: Expr };
 
-export const setDaoVotingThreshold = async (
+export const voteWithPermit = async (
+  dao: Contract,
+  voter: TezosToolkit,
+  lambda: DaoLambda
+) => {
+  const signature = await signPermit(voter, dao, lambda.lambdaMichelson);
+  const voterKey = await voter.signer.publicKey();
+  const op = await dao.methods
+    .vote(lambda.lambdaExp, voterKey, signature)
+    .send();
+  await op.confirmation();
+  $log.info(`Consumed gas ${op.consumedGas}`);
+};
+
+export const vote = async (dao: Contract, lambda: DaoLambda) => {
+  const op = await dao.methods.vote(lambda.lambdaExp).send();
+  await op.confirmation();
+  $log.info(`Consumed gas ${op.consumedGas}`);
+};
+
+export const setDaoVotingThresholdLambda = async (
   env: LigoEnv,
   oldThreshold: number,
   newThreshold: number
@@ -33,7 +53,7 @@ export const setDaoVotingThreshold = async (
   return michelsonToDaoLambda(lambdaMichelson);
 };
 
-export const setDaoVotingPeriod = async (
+export const setDaoVotingPeriodLambda = async (
   env: LigoEnv,
   oldPeriod: number,
   newPeriod: number
@@ -54,7 +74,7 @@ const michelsonToDaoLambda = (lambdaMichelson: string): DaoLambda => {
   return { lambdaExp, lambdaMichelson };
 };
 
-export const signPermit = async (
+const signPermit = async (
   signer: TezosToolkit,
   dao: Contract,
   lambda: string

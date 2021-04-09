@@ -1,23 +1,20 @@
 import { $log } from "@tsed/logger";
-import { BigNumber } from "bignumber.js";
-import { TezosToolkit } from "@taquito/taquito";
-
 import { bootstrap, TestTz } from "smart-contracts-common/bootstrap-sandbox";
 import { Contract, address, nat } from "smart-contracts-common/type-aliases";
 import { defaultLigoEnv } from "smart-contracts-common/ligo";
 
-import {
-  originateNftCollection,
-  originateFractionalDao,
-} from "../src/origination";
+import { originateFractionalDao } from "../src/origination";
 
 import {
-  DaoLambda,
   DaoStorage,
-  setDaoVotingPeriod,
-  setDaoVotingThreshold,
-  signPermit,
-} from "../src/lambdas";
+  setDaoVotingPeriodLambda,
+  setDaoVotingThresholdLambda,
+  vote,
+  voteWithPermit,
+} from "../src/dao";
+
+import { transfer } from "smart-contracts-common/fa2-interface";
+import BigNumber from "bignumber.js";
 
 jest.setTimeout(240000);
 
@@ -44,31 +41,16 @@ describe("fractional ownership test", () => {
     );
   });
 
-  const voteWithPermit = async (voter: TezosToolkit, lambda: DaoLambda) => {
-    const signature = await signPermit(
-      voter,
-      fractionalDao,
-      lambda.lambdaMichelson
-    );
-    const voterKey = await voter.signer.publicKey();
-    const op = await fractionalDao.methods
-      .vote(lambda.lambdaExp, voterKey, signature)
-      .send();
-    await op.confirmation();
-    $log.info(`Consumed gas ${op.consumedGas}`);
-  };
-
   test("Set DAO voting threshold", async () => {
     const storage0 = await fractionalDao.storage<DaoStorage>();
-    const lambda = await setDaoVotingThreshold(
+    const lambda = await setDaoVotingThresholdLambda(
       ligoEnv,
       storage0.voting_threshold.toNumber(),
       50
     );
 
     $log.info("Bob votes...");
-    const op1 = await fractionalDao.methods.vote(lambda.lambdaExp).send();
-    await op1.confirmation();
+    await vote(fractionalDao, lambda);
     $log.info("Bob voted");
 
     const storage1 = await fractionalDao.storage<DaoStorage>();
@@ -80,7 +62,7 @@ describe("fractional ownership test", () => {
     );
 
     $log.info("Alice votes with permit...");
-    await voteWithPermit(tezos.alice, lambda);
+    await voteWithPermit(fractionalDao, tezos.alice, lambda);
     $log.info("Alice voted");
 
     const storage2 = await fractionalDao.storage<DaoStorage>();
@@ -89,15 +71,14 @@ describe("fractional ownership test", () => {
 
   test("Set DAO voting period", async () => {
     const storage0 = await fractionalDao.storage<DaoStorage>();
-    const lambda = await setDaoVotingPeriod(
+    const lambda = await setDaoVotingPeriodLambda(
       ligoEnv,
       storage0.voting_period.toNumber(),
       600
     );
 
     $log.info("Bob votes...");
-    const op1 = await fractionalDao.methods.vote(lambda.lambdaExp).send();
-    await op1.confirmation();
+    await vote(fractionalDao, lambda);
     $log.info("Bob voted");
 
     const storage1 = await fractionalDao.storage<DaoStorage>();
@@ -109,10 +90,42 @@ describe("fractional ownership test", () => {
     );
 
     $log.info("Alice votes with permit...");
-    await voteWithPermit(tezos.alice, lambda);
+    await voteWithPermit(fractionalDao, tezos.alice, lambda);
     $log.info("Alice voted");
 
     const storage2 = await fractionalDao.storage<DaoStorage>();
     expect(storage2.voting_period.toNumber()).toBe(600);
+  });
+
+  test("DAO transfer ownership tokens", async () => {
+    $log.info("Bob transfers ownership tokens to Alice");
+    const bobAddress = await tezos.bob.signer.publicKeyHash();
+    const aliceAddress = await tezos.alice.signer.publicKeyHash();
+    await transfer(fractionalDao.address, tezos.bob, [
+      {
+        from_: bobAddress,
+        txs: [
+          {
+            to_: aliceAddress,
+            token_id: new BigNumber(0),
+            amount: new BigNumber(25),
+          },
+        ],
+      },
+    ]);
+    $log.info("Transferred Bob's ownership tokens");
+
+    const storage0 = await fractionalDao.storage<DaoStorage>();
+    const lambda = await setDaoVotingThresholdLambda(
+      ligoEnv,
+      storage0.voting_threshold.toNumber(),
+      50
+    );
+    $log.info("Alice voting");
+    await voteWithPermit(fractionalDao, tezos.alice, lambda);
+    $log.info("Alice voted");
+
+    const storage1 = await fractionalDao.storage<DaoStorage>();
+    expect(storage1.voting_threshold.toNumber()).toBe(50);
   });
 });
