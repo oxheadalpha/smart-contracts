@@ -11,6 +11,10 @@ import {
 import { address, Contract, nat } from "smart-contracts-common/type-aliases";
 import { compileExpression, LigoEnv } from "smart-contracts-common/ligo";
 import { $log } from "@tsed/logger";
+import {
+  Fa2Transfer,
+  Fa2TransferDestination,
+} from "smart-contracts-common/fa2-interface";
 
 export interface DaoStorage {
   voting_threshold: nat;
@@ -62,6 +66,36 @@ export const setDaoVotingPeriodLambda = async (
     env,
     "fractional_dao_lambdas.mligo",
     `set_dao_voting_period (${oldPeriod}n, ${newPeriod}n)`
+  );
+  return michelsonToDaoLambda(lambdaMichelson);
+};
+
+export const transferFA2TokensLambda = async (
+  env: LigoEnv,
+  fa2: address,
+  txs: Fa2Transfer[]
+): Promise<DaoLambda> => {
+  const destinations = (txs: Fa2TransferDestination[]): string =>
+    _.chain(txs)
+      .map(
+        (t) =>
+          `{ to_ = ("${
+            t.to_
+          }" : address); token_id=${t.token_id.toNumber()}n; amount=${t.amount.toNumber()}n; }`
+      )
+      .join(", ")
+      .value();
+  const txsArg = _.chain(txs)
+    .map(
+      (t) =>
+        `{from_ = ("${t.from_}" : address); txs=[${destinations(t.txs)}];}\n`
+    )
+    .join(", ")
+    .value();
+  const lambdaMichelson = await compileExpression(
+    env,
+    "fractional_dao_lambdas.mligo",
+    `dao_transfer_fa2_tokens (("${fa2}": address), [${txsArg}])`
   );
   return michelsonToDaoLambda(lambdaMichelson);
 };
