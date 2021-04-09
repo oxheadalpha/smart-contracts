@@ -11,7 +11,11 @@ import {
   originateFractionalDao,
 } from "../src/origination";
 
-import { DaoStorage, setDaoVotingThresholdParam } from "../src/lambdas";
+import {
+  DaoStorage,
+  setDaoVotingThresholdParam,
+  signPermit,
+} from "../src/lambdas";
 
 jest.setTimeout(240000);
 
@@ -27,7 +31,7 @@ describe("fractional ownership test", () => {
   });
 
   beforeEach(async () => {
-    nftFa2 = await originateNftCollection(ligoEnv, tezos.bob);
+    // nftFa2 = await originateNftCollection(ligoEnv, tezos.bob);
     const bobAddress = await tezos.bob.signer.publicKeyHash();
     const aliceAddress = await tezos.alice.signer.publicKeyHash();
     fractionalDao = await originateFractionalDao(
@@ -39,19 +43,39 @@ describe("fractional ownership test", () => {
   });
 
   test("Set DAO voting threshold", async () => {
-    const initStorage = await fractionalDao.storage<DaoStorage>();
+    const storage0 = await fractionalDao.storage<DaoStorage>();
     const lambda = await setDaoVotingThresholdParam(
       ligoEnv,
-      initStorage.voting_threshold.toNumber(),
+      storage0.voting_threshold.toNumber(),
       50
     );
-    const op = await fractionalDao.methods.vote(lambda).send();
-    await op.confirmation();
-    const updatedStorage = await fractionalDao.storage<DaoStorage>();
-    $log.info(
-      "VOTE COUNT CHANGE",
-      initStorage.vote_count.toNumber(),
-      updatedStorage.vote_count.toNumber()
+
+    $log.info("Bob votes...");
+    const op1 = await fractionalDao.methods.vote(lambda.lambdaExp).send();
+    await op1.confirmation();
+    $log.info("Bob voted");
+
+    const storage1 = await fractionalDao.storage<DaoStorage>();
+    expect(storage1.vote_count.toNumber()).toBe(
+      storage0.vote_count.toNumber() + 1
     );
+    expect(storage1.voting_threshold.toNumber()).toBe(
+      storage0.voting_threshold.toNumber()
+    );
+
+    const signature = await signPermit(
+      tezos.alice,
+      fractionalDao,
+      lambda.lambdaMichelson
+    );
+    const aliceKey = await tezos.alice.signer.publicKeyHash();
+    $log.info("Alice votes with permit...");
+    const op2 = await fractionalDao.methods
+      .vote(lambda.lambdaExp, aliceKey, signature)
+      .send();
+    await op2.confirmation();
+    $log.info("Alice voted");
+    const storage2 = await fractionalDao.storage<DaoStorage>();
+    expect(storage2.voting_threshold.toNumber()).toBe(50);
   });
 });

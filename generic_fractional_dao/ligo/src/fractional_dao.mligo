@@ -183,11 +183,6 @@ let main(param, storage : dao_entrypoints * dao_storage) : return =
     let new_storage = flush_expired (lambda, storage) in
     ([] : operation list), new_storage
 
-
-(* let token : single_token_storage = {
-
-} *)
-
 let sample_storage : dao_storage = {
   ownership_token = {
     ledger = Big_map.literal [
@@ -218,6 +213,11 @@ let sample_storage : dao_storage = {
     ("", 0x00);
     ("content", 0x00) (* bytes encoded UTF-8 JSON *)
   ];
+}
+
+let sample_param : vote = {
+  lambda = fun (u:unit) -> ([] : operation list);
+  permit = (None : permit option);
 }
 
 #endif
