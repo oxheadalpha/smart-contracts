@@ -68,13 +68,14 @@ describe("fractional ownership test", () => {
       fractionalDao,
       lambda.lambdaMichelson
     );
-    const aliceKey = await tezos.alice.signer.publicKeyHash();
+    const aliceKey = await tezos.alice.signer.publicKey();
     $log.info("Alice votes with permit...");
     const op2 = await fractionalDao.methods
       .vote(lambda.lambdaExp, aliceKey, signature)
       .send();
     await op2.confirmation();
     $log.info("Alice voted");
+
     const storage2 = await fractionalDao.storage<DaoStorage>();
     expect(storage2.voting_threshold.toNumber()).toBe(50);
   });
