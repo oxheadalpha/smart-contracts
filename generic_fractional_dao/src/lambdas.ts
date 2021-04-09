@@ -18,16 +18,35 @@ export interface DaoStorage {
   vote_count: nat;
 }
 
-export const setDaoVotingThresholdParam = async (
+export type DaoLambda = { lambdaMichelson: string; lambdaExp: Expr };
+
+export const setDaoVotingThreshold = async (
   env: LigoEnv,
   oldThreshold: number,
   newThreshold: number
-) => {
+): Promise<DaoLambda> => {
   const lambdaMichelson = await compileExpression(
     env,
     "fractional_dao_lambdas.mligo",
     `set_dao_voting_threshold (${oldThreshold}n, ${newThreshold}n)`
   );
+  return michelsonToDaoLambda(lambdaMichelson);
+};
+
+export const setDaoVotingPeriod = async (
+  env: LigoEnv,
+  oldPeriod: number,
+  newPeriod: number
+): Promise<DaoLambda> => {
+  const lambdaMichelson = await compileExpression(
+    env,
+    "fractional_dao_lambdas.mligo",
+    `set_dao_voting_period (${oldPeriod}n, ${newPeriod}n)`
+  );
+  return michelsonToDaoLambda(lambdaMichelson);
+};
+
+const michelsonToDaoLambda = (lambdaMichelson: string): DaoLambda => {
   const p = new Parser();
   const lambdaExp = p.parseMichelineExpression(lambdaMichelson);
   if (!lambdaExp)
