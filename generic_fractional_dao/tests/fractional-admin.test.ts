@@ -20,9 +20,8 @@ jest.setTimeout(240000);
 
 const ligoEnv = defaultLigoEnv("../../", "ligo");
 
-describe("fractional ownership test", () => {
+describe("fractional ownership admin entry points test", () => {
   let tezos: TestTz;
-  let nftFa2: Contract;
   let fractionalDao: Contract;
 
   beforeAll(async () => {
