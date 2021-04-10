@@ -107,4 +107,19 @@ describe("fractional ownership FA2 NFT tests", () => {
     await assertHasNft(aliceAddress, new BigNumber(5));
     $log.info("NFT transferred from DAO to Alice");
   });
+
+  test("FA2 update operators from DAO", async () => {
+    const bobAddress = await tezos.bob.signer.publicKeyHash();
+    const aliceAddress = await tezos.alice.signer.publicKeyHash();
+
+    $log.info("Transferring NFT from Bob to DAO");
+    await transferNFT(
+      tezos.bob,
+      new BigNumber(5),
+      bobAddress,
+      fractionalDao.address
+    );
+    await assertHasNft(fractionalDao.address, new BigNumber(5));
+    $log.info("Transferred NFT to DAO");
+  });
 });
