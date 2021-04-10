@@ -1,11 +1,12 @@
 import * as _ from "lodash";
 import { TezosToolkit } from "@taquito/taquito";
-import { MichelsonV1Expression } from "@taquito/rpc";
 import {
   Expr,
+  isMichelsonData,
+  isMichelsonType,
   MichelsonData,
   MichelsonType,
-  packData,
+  packDataBytes,
   Parser,
 } from "@taquito/michel-codec";
 import { address, Contract, nat } from "smart-contracts-common/type-aliases";
@@ -29,6 +30,7 @@ export const voteWithPermit = async (
   voter: TezosToolkit,
   lambda: DaoLambda
 ) => {
+  // const signature = await signPermitV2(voter, dao, lambda.lambdaExp);
   const signature = await signPermit(voter, dao, lambda.lambdaMichelson);
   const voterKey = await voter.signer.publicKey();
   const op = await dao.methods
@@ -75,20 +77,19 @@ export const transferFA2TokensLambda = async (
   fa2: address,
   txs: Fa2Transfer[]
 ): Promise<DaoLambda> => {
+  // prettier-ignore
   const destinations = (txs: Fa2TransferDestination[]): string =>
     _.chain(txs)
-      .map(
-        (t) =>
-          `{ to_ = ("${
-            t.to_
-          }" : address); token_id=${t.token_id.toNumber()}n; amount=${t.amount.toNumber()}n; }`
-      )
-      .join(", ")
-      .value();
-  const txsArg = _.chain(txs)
-    .map(
-      (t) =>
-        `{from_ = ("${t.from_}" : address); txs=[${destinations(t.txs)}];}\n`
+    .map((t) =>
+      `{ to_ = ("${t.to_}" : address); token_id=${t.token_id.toNumber()}n; amount=${t.amount.toNumber()}n; }`
+    )
+    .join(", ")
+    .value();
+  //prettier-ignore
+  const txsArg = 
+    _.chain(txs)
+    .map((t) =>
+      `{from_ = ("${t.from_}" : address); txs=[${destinations(t.txs)}];}\n`
     )
     .join(", ")
     .value();
@@ -145,11 +146,64 @@ const signPermit = async (
   const p = new Parser();
   const dat = p.parseMichelineExpression(michData);
   const typ = p.parseMichelineExpression(michType);
-  // const pack = packData(dat as MichelsonData, typ as MichelsonType);
-  const pack = await signer.rpc.packData({
-    data: dat as MichelsonV1Expression,
-    type: typ as MichelsonV1Expression,
-  });
-  const signature = await signer.signer.sign(pack.packed);
+  if (dat === null || !isMichelsonData(dat))
+    throw new Error("Invalid parsed Michelson data");
+  if (typ === null || !isMichelsonType(typ))
+    throw new Error("Invalid Michelson type");
+  const pack = packDataBytes(dat as MichelsonData, typ as MichelsonType);
+  const signature = await signer.signer.sign(pack.bytes);
+  return signature.sig;
+};
+
+const signPermitV2 = async (
+  signer: TezosToolkit,
+  dao: Contract,
+  lambda: Expr
+) => {
+  const chainId = await signer.rpc.getChainId();
+  const { vote_count } = await dao.storage<DaoStorage>();
+  /*
+  Bytes.pack (
+    (Tezos.chain_id, Tezos.self_address),
+    (vote_count, lambda)
+  )
+  */
+  const lambdaType: MichelsonType = {
+    prim: "lambda",
+    args: [{ prim: "unit" }, { prim: "list", args: [{ prim: "operation" }] }],
+  };
+  if (!isMichelsonData(lambda)) throw new Error("Malformed lambda data");
+
+  const countLambdaType: MichelsonType = {
+    prim: "pair",
+    args: [{ prim: "nat" }, lambdaType],
+  };
+  const countLambdaData: MichelsonData = {
+    prim: "Pair",
+    args: [{ int: vote_count.toString() }, lambda],
+  };
+
+  const chainAddressType: MichelsonType = {
+    prim: "pair",
+    args: [{ prim: "chain_id" }, { prim: "address" }],
+  };
+
+  const chainAddressData: MichelsonData = {
+    prim: "Pair",
+    args: [{ string: chainId }, { string: dao.address }],
+  };
+
+  const data: MichelsonData = {
+    prim: "Pair",
+    args: [chainAddressData, countLambdaData],
+  };
+
+  const dataType: MichelsonType = {
+    prim: "pair",
+    args: [chainAddressType, countLambdaType],
+  };
+
+  const pack = packDataBytes(data, dataType);
+  const signature = await signer.signer.sign(pack.bytes);
   return signature.sig;
 };

@@ -76,7 +76,7 @@ export async function compileExpression(
 async function runCmd(cwd: string, cmd: string): Promise<string> {
   return new Promise<string>((resolve, reject) =>
     child.exec(cmd, { cwd }, (err, stdout, errout) => {
-      if (stdout) {
+      if (stdout && (errout || err)) {
         $log.info(stdout);
       }
       if (errout) {

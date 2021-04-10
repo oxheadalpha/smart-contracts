@@ -504,7 +504,7 @@
   dependencies:
     xhr2-cookies "^1.1.0"
 
-"@taquito/michel-codec@^8.1.0":
+"@taquito/michel-codec@8.1.0", "@taquito/michel-codec@^8.1.0":
   version "8.1.0"
   resolved "https://registry.yarnpkg.com/@taquito/michel-codec/-/michel-codec-8.1.0.tgz#2893271d1499b7a7f4abcb2e38bc7a059a60ea19"
   integrity sha512-FUye4GQxpkqsuK2Dyjs3yHa1AJdveXuUlM0DtbdBOodcf/b4bpNTD2fsuPzBm0u95Vd4KcPoAKb0GrOVro8V1w==
