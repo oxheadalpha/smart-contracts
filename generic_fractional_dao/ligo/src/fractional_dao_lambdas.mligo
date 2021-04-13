@@ -44,13 +44,13 @@ let dao_transfer_fa2_tokens (fa2, txs: address * transfer list) : dao_lambda =
       [op]
   )
 
-let dao_update_fa2_operators (fa2, txs: address * update_operator list) : dao_lambda =
+let dao_update_fa2_operators (fa2, ops: address * update_operator list) : dao_lambda =
   fun (u : unit) -> (
     let fa2_entry : update_operator list contract option =
       Tezos.get_entrypoint_opt "%update_operators" fa2 in
     match fa2_entry with
     | None -> (failwith "NO_FA2_UPDATE_OPERATORS" : operation list)
     | Some fa2 ->
-      let op = Tezos.transaction txs 0mutez fa2 in
+      let op = Tezos.transaction ops 0mutez fa2 in
       [op]
   )
