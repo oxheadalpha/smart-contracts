@@ -144,13 +144,13 @@ const signPermit = async (
   `;
 
   const p = new Parser();
-  const dat = p.parseMichelineExpression(michData);
-  const typ = p.parseMichelineExpression(michType);
-  if (dat === null || !isMichelsonData(dat))
+  const data = p.parseMichelineExpression(michData);
+  const dataType = p.parseMichelineExpression(michType);
+  if (data === null || !isMichelsonData(data))
     throw new Error("Invalid parsed Michelson data");
-  if (typ === null || !isMichelsonType(typ))
-    throw new Error("Invalid Michelson type");
-  const pack = packDataBytes(dat as MichelsonData, typ as MichelsonType);
+  if (dataType === null || !isMichelsonType(dataType))
+    throw new Error("Invalid parsed Michelson type");
+  const pack = packDataBytes(data, dataType);
   const signature = await signer.signer.sign(pack.bytes);
   return signature.sig;
 };
