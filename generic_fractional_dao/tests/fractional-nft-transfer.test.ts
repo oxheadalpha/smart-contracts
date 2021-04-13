@@ -109,7 +109,7 @@ describe("fractional ownership FA2 NFT tests", () => {
     $log.info("NFT transferred from DAO to Alice");
   });
 
-  test.only("FA2 update operators from DAO", async () => {
+  test("FA2 update operators from DAO", async () => {
     const bobAddress = await tezos.bob.signer.publicKeyHash();
     const aliceAddress = await tezos.alice.signer.publicKeyHash();
     const nftTokenId = new BigNumber(5);
@@ -136,5 +136,15 @@ describe("fractional ownership FA2 NFT tests", () => {
     $log.info("Alice voting to make Alice an NFT operator");
     await voteWithPermit(fractionalDao, tezos.alice, lambda);
     $log.info("Alice voted");
+
+    $log.info("Alice transferring NFT token from DAO as an operator");
+    await transferNFT(
+      tezos.alice,
+      nftTokenId,
+      fractionalDao.address,
+      aliceAddress
+    );
+    const aliceOwnNft = await hasNft(aliceAddress, nftTokenId);
+    $log.info("Alice transferred NFT token");
   });
 });
