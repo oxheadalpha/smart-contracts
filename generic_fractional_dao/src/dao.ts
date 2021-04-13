@@ -15,6 +15,10 @@ import { $log } from "@tsed/logger";
 import {
   Fa2Transfer,
   Fa2TransferDestination,
+  isAddOperator,
+  isRemoveOperator,
+  OperatorParam,
+  UpdateOperator,
 } from "smart-contracts-common/fa2-interface";
 
 export interface DaoStorage {
@@ -97,6 +101,33 @@ export const transferFA2TokensLambda = async (
     env,
     "fractional_dao_lambdas.mligo",
     `dao_transfer_fa2_tokens (("${fa2}": address), [${txsArg}])`
+  );
+  return michelsonToDaoLambda(lambdaMichelson);
+};
+
+export const updateOperatorsLambda = async (
+  env: LigoEnv,
+  fa2: address,
+  operators: UpdateOperator[]
+) => {
+  //prettier-ignore
+  const formatOperatorParam = (op: OperatorParam): string =>
+    `{ owner = ("${op.owner}" : address); operator = ("${op.operator}" : address); token_id = ${op.token_id.toNumber()}n; }`
+
+  const ops = _.chain(operators)
+    .map((o) => {
+      if (isAddOperator(o))
+        return `Add_operator ${formatOperatorParam(o.add_operator)}`;
+      if (isRemoveOperator(o))
+        return `Remove_operator ${formatOperatorParam(o.remove_operator)}`;
+      throw new Error("Unknown UpdateOperator variant");
+    })
+    .join(" ; ");
+
+  const lambdaMichelson = await compileExpression(
+    env,
+    "fractional_dao_lambdas.mligo",
+    `dao_update_fa2_operators (("${fa2}": address), [${ops}])`
   );
   return michelsonToDaoLambda(lambdaMichelson);
 };
