@@ -20,15 +20,15 @@ let wrapper_main
     : (operation list) * wrapper_storage =
   match param with
   | Admin p ->
-      let ops, admin = simple_admin (p, s.admin) in
-      let new_s = { s with admin = admin; } in
+      let ops, admin : (operation_list * address) = simple_admin (p, s.admin) in
+      let new_s : wrapper_storage = { s with admin = admin; } in
       (ops, new_s)
 
   | Fail_if_not_admin p ->
-      let u = fail_if_not_admin s.admin in
+      let u : unit = fail_if_not_admin s.admin in
       (([]: operation list), s)
 
   | Fail_if_paused p ->
-      let u = fail_if_paused s.admin in
+      let u : unit = fail_if_paused s.admin in
       (([]: operation list), s)
 
