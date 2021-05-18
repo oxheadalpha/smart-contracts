@@ -96,3 +96,13 @@ an NFT token in the corresponding FA2 NFT contract and also manages fractional
 ownership fungible token for each owned NFT. Holders of the linked ownership fungible
 tokens can vote (directly or using signed permit) on transfer of the NFT token to
 some other address.
+
+### [generic_fractional_dao](generic_fractional_dao)
+
+[fractional_dao.mligo](generic_fractional_dao/ligo/src/fractional_dao.mligo)
+implementation of a generic fractional DAO user fractional voting to control any
+generic operation represented by a lambda function. Such lambda can transfer tokens,
+buy/sell tokens on market place or auction or perform any other generic operation.
+Fractional ownership is controlled by allocation of the ownership fungible token
+managed by the DAO. The DAO itself is a FA2 contracts that supports standard FA2
+API to manage the ownership token.
