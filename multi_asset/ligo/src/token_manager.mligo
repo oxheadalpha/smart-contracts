@@ -30,7 +30,7 @@ type mint_burn_tokens_param = mint_burn_tx list
 type token_manager =
   | Create_token of token_metadata
   | Mint_tokens of mint_burn_tokens_param
-  | Burn_tokens of mint_burn_tokens_param
+//  | Burn_tokens of mint_burn_tokens_param
 
 
 let create_token (metadata, storage
@@ -121,8 +121,8 @@ let token_manager (param, s : token_manager * multi_token_storage)
     let new_s = mint_tokens (param, s) in
     ([] : operation list), new_s
 
-  | Burn_tokens param -> 
-    let new_s = burn_tokens (param, s) in
-    ([] : operation list), new_s
+//  | Burn_tokens param ->
+//    let new_s = burn_tokens (param, s) in
+//    ([] : operation list), new_s
 
 #endif

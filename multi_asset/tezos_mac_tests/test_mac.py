@@ -156,13 +156,13 @@ class TestMintBurn(TestMacSetUp):
         self.util.wait_for_ops(mint_op)
         self.assertBalance(owner_address, 1, 10, "invalid mint balance")
 
-        print("burning")
-        burn_op = self.fa2.burn_tokens(
-            [{"owner": owner_address, "amount": 3, "token_id": 1}]
-        ).inject()
-        self.util.wait_for_ops(burn_op)
+        # print("burning")
+        # burn_op = self.fa2.burn_tokens(
+        #     [{"owner": owner_address, "amount": 3, "token_id": 1}]
+        # ).inject()
+        # self.util.wait_for_ops(burn_op)
 
-        self.assertBalance(owner_address, 1, 7, "invalid balance after burn")
+        # self.assertBalance(owner_address, 1, 7, "invalid balance after burn")
 
 
 class TestOperator(TestMacSetUp):
