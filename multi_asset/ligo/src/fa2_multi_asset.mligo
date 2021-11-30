@@ -56,7 +56,7 @@ let store : multi_asset_storage = {
   admin = {
     admin = ("tz1YPSCGWXwBdTncK2aCctSZAXWvGsGwVJqU" : address);
     pending_admin = (None : address option);
-    paused = true;
+    paused = false;
   };
   assets = {
     ledger = (Big_map.empty : ledger);
