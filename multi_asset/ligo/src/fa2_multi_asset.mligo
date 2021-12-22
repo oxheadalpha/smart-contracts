@@ -5,7 +5,7 @@
   `multi_asset` contract is a union of `multi_token` and `simple_admin` parameter
   types.
   Depending on the input, `multi_asset` dispatches call to either
-  `multi_token` or `simple_admin`  or `token_manager` entry points. 
+  `multi_token` or `simple_admin`  or `token_manager` entry points.
   If contract is paused, `multi_token` entry points cannot be invoked.
   Only current admin can access `simple_admin` and `token_manager` entry points.
 *)
@@ -24,26 +24,26 @@ type multi_asset_param =
   | Admin of simple_admin
   | Tokens of token_manager
 
-let multi_asset_main 
+let multi_asset_main
     (param, s : multi_asset_param * multi_asset_storage)
     : (operation list) * multi_asset_storage =
   match param with
-  | Admin p ->  
+  | Admin p ->
       let ops, admin = simple_admin (p, s.admin) in
       let new_s = { s with admin = admin; } in
       (ops, new_s)
 
   | Tokens p ->
-      let u1 = fail_if_not_admin s.admin in
-      let ops, assets = token_manager (p, s.assets) in 
+      let _u1 = fail_if_not_admin s.admin in
+      let ops, assets = token_manager (p, s.assets) in
       let new_s = { s with
         assets = assets
-      } in 
+      } in
       (ops, new_s)
 
-  | Assets p -> 
-      let u2 = fail_if_paused s.admin in
-        
+  | Assets p ->
+      let _u2 = fail_if_paused s.admin in
+
       let ops, assets = fa2_main (p, s.assets) in
       let new_s = { s with assets = assets } in
       (ops, new_s)

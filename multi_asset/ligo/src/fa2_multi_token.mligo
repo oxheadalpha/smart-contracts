@@ -31,7 +31,7 @@ let inc_balance (owner, token_id, amt, ledger
   let updated_bal = bal + amt in
   if updated_bal = 0n
   then Big_map.remove key ledger
-  else Big_map.update key (Some updated_bal) ledger 
+  else Big_map.update key (Some updated_bal) ledger
 
 let dec_balance (owner, token_id, amt, ledger
     : address * token_id * nat * ledger) : ledger =
@@ -48,24 +48,24 @@ let dec_balance (owner, token_id, amt, ledger
 Update leger balances according to the specified transfers. Fails if any of the
 permissions or constraints are violated.
 @param txs transfers to be applied to the ledger
-@param validate_op function that validates of the tokens from the particular owner can be transferred. 
+@param validate_op function that validates of the tokens from the particular owner can be transferred.
  *)
 let transfer (txs, validate_op, storage
     : (transfer list) * operator_validator * multi_token_storage)
     : ledger =
   let make_transfer = fun (l, tx : ledger * transfer) ->
-    List.fold 
+    List.fold
       (fun (ll, dst : ledger * transfer_destination) ->
         if not Big_map.mem dst.token_id storage.token_metadata
         then (failwith fa2_token_undefined : ledger)
         else
-          let u = validate_op (tx.from_, Tezos.sender, dst.token_id, storage.operators) in
+          let _u = validate_op (tx.from_, Tezos.sender, dst.token_id, storage.operators) in
           let lll = dec_balance (tx.from_, dst.token_id, dst.amount, ll) in
           inc_balance(dst.to_, dst.token_id, dst.amount, lll)
       ) tx.txs l
   in
   List.fold make_transfer txs storage.ledger
- 
+
 let get_balance (p, ledger, tokens
     : balance_of_param * ledger * token_metadata_storage) : operation =
   let to_balance = fun (r : balance_of_request) ->
@@ -84,8 +84,8 @@ let get_balance (p, ledger, tokens
 let fa2_main (param, storage : fa2_entry_points * multi_token_storage)
     : (operation  list) * multi_token_storage =
   match param with
-  | Transfer txs -> 
-    (* 
+  | Transfer txs ->
+    (*
     will validate that a sender is either `from_` parameter of each transfer
     or a permitted operator for the owner `from_` address.
     *)
@@ -93,7 +93,7 @@ let fa2_main (param, storage : fa2_entry_points * multi_token_storage)
     let new_storage = { storage with ledger = new_ledger; }
     in ([] : operation list), new_storage
 
-  | Balance_of p -> 
+  | Balance_of p ->
     let op = get_balance (p, storage.ledger, storage.token_metadata) in
     [op], storage
 

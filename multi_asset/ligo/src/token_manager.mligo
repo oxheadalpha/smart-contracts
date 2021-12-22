@@ -1,7 +1,7 @@
 (*
   One of the possible implementations of token management API which can create
   new fungible tokens, mint and burn them.
-  
+
   Token manager API allows to:
 
   1. Create new toke types,
@@ -39,7 +39,7 @@ let create_token (metadata, storage
   let new_token_id = metadata.token_id in
   let existing_meta = Big_map.find_opt new_token_id storage.token_metadata in
   match existing_meta with
-  | Some m -> (failwith "FA2_DUP_TOKEN_ID" : multi_token_storage)
+  | Some _m -> (failwith "FA2_DUP_TOKEN_ID" : multi_token_storage)
   | None ->
     let meta = Big_map.add new_token_id metadata storage.token_metadata in
     let supply = Big_map.add new_token_id 0n storage.token_total_supply in
@@ -67,7 +67,7 @@ let mint_update_total_supply (txs, total_supplies
 
   List.fold update txs total_supplies
 
-let mint_tokens (param, storage : mint_burn_tokens_param * multi_token_storage) 
+let mint_tokens (param, storage : mint_burn_tokens_param * multi_token_storage)
     : multi_token_storage =
     let new_ledger = mint_update_balances (param, storage.ledger) in
     let new_supply = mint_update_total_supply (param, storage.token_total_supply) in
@@ -98,7 +98,7 @@ let burn_update_total_supply (txs, total_supplies
 
   List.fold update txs total_supplies
 
-let burn_tokens (param, storage : mint_burn_tokens_param * multi_token_storage) 
+let burn_tokens (param, storage : mint_burn_tokens_param * multi_token_storage)
     : multi_token_storage =
 
     let new_ledger = burn_update_balances (param, storage.ledger) in
@@ -117,7 +117,7 @@ let token_manager (param, s : token_manager * multi_token_storage)
     let new_s = create_token (token_metadata, s) in
     (([]: operation list), new_s)
 
-  | Mint_tokens param -> 
+  | Mint_tokens param ->
     let new_s = mint_tokens (param, s) in
     ([] : operation list), new_s
 
