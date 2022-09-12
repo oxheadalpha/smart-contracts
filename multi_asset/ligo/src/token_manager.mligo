@@ -90,7 +90,7 @@ let burn_update_total_supply (txs, total_supplies
     match supply_opt with
     | None -> (failwith fa2_token_undefined : token_total_supply)
     | Some ts ->
-      let new_s = match Michelson.is_nat (ts - tx.amount) with
+      let new_s = match is_nat (ts - tx.amount) with
       | None -> (failwith fa2_insufficient_balance : nat)
       | Some s -> s
       in

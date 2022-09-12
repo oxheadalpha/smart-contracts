@@ -34,12 +34,14 @@ let multi_asset_main
       (ops, new_s)
 
   | Tokens p ->
-      let _u1 = fail_if_not_admin s.admin in
-      let ops, assets = token_manager (p, s.assets) in
-      let new_s = { s with
-        assets = assets
-      } in
-      (ops, new_s)
+     let _u1 = match p with
+       | Mint_tokens _param -> unit
+       | Create_token _param -> fail_if_not_admin s.admin in
+     let ops, assets = token_manager (p, s.assets) in
+     let new_s = { s with
+                   assets = assets
+                 } in
+     (ops, new_s)
 
   | Assets p ->
       let _u2 = fail_if_paused s.admin in
