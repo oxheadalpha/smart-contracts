@@ -30,10 +30,10 @@ let confirm_new_admin (s : simple_admin_storage) : simple_admin_storage =
   match s.pending_admin with
   | None -> (failwith "NO_PENDING_ADMIN" : simple_admin_storage)
   | Some pending ->
-    if Tezos.sender = pending
+    if Tezos.get_sender () = pending
     then {s with
       pending_admin = (None : address option);
-      admin = Tezos.sender;
+      admin = Tezos.get_sender ();
     }
     else (failwith "NOT_A_PENDING_ADMIN" : simple_admin_storage)
 
@@ -42,7 +42,7 @@ let pause (paused, s: bool * simple_admin_storage) : simple_admin_storage =
   { s with paused = paused; }
 
 let fail_if_not_admin (a : simple_admin_storage) : unit =
-  if Tezos.sender <> a.admin
+  if Tezos.get_sender () <> a.admin
   then failwith "NOT_AN_ADMIN"
   else unit
 

@@ -59,7 +59,7 @@ let transfer (txs, validate_op, storage
         if not Big_map.mem dst.token_id storage.token_metadata
         then (failwith fa2_token_undefined : ledger)
         else
-          let _u = validate_op (tx.from_, Tezos.sender, dst.token_id, storage.operators) in
+          let _u = validate_op (tx.from_, Tezos.get_sender (), dst.token_id, storage.operators) in
           let lll = dec_balance (tx.from_, dst.token_id, dst.amount, ll) in
           inc_balance(dst.to_, dst.token_id, dst.amount, lll)
       ) tx.txs l
