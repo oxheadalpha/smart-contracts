@@ -1,0 +1,7 @@
+(Pair (Pair (Pair (Pair "tz1YPSCGWXwBdTncK2aCctSZAXWvGsGwVJqU" False) None)
+            (Pair {} {})
+            {}
+            {})
+      { Elt "" 0x05010000001574657a6f732d73746f726167653a636f6e74656e74 ;
+        Elt "content" 0x00 })
+
