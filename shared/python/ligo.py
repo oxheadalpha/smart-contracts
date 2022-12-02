@@ -56,7 +56,7 @@ class LigoContract:
         command = f"{ligo_cmd} compile-contract {self.ligo_file} {self.main_func}"
         michelson = self._ligo_to_michelson(command)
         self.tz_file.write_text(michelson)
-        self.contract_interface = ContractInterface.create_from(michelson)
+        self.contract_interface = ContractInterface.from_michelson(michelson)
         return self.contract_interface
 
     def get_contract(self):
@@ -78,7 +78,7 @@ class LigoContract:
         command = f"{ligo_cmd} compile-storage {self.ligo_file} {self.main_func} '{ligo_storage}'"
         michelson = self._ligo_to_michelson_sanitized(command)
         c = self.get_contract()
-        return c.contract.storage.decode(michelson)
+        return c.storage.decode(michelson)
 
     def compile_parameter(self, ligo_parameter):
         """
@@ -121,7 +121,7 @@ class LigoContract:
         """
 
         c = self.get_contract()
-        script = c.contract.script(storage=storage)
+        script = c.script(initial_storage=storage)
         op = (
             util.client.origination(script=script, balance=balance)
             .autofill()

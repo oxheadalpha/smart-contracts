@@ -1,5 +1,3 @@
 #!/bin/bash
 
-docker run --rm --name flextesa-sandbox -e block_time=5 --detach -p 20000:20000 tqtezos/flextesa:20210216 edobox start
-
-
+docker run --rm --name flextesa-sandbox -e block_time=5  -e flextesa_node_cors_origin="*" --detach -p 20000:20000 oxheadalpha/flextesa:20220715 kathmandubox start
