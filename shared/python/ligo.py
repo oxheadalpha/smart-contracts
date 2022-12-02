@@ -136,8 +136,8 @@ class LigoContract:
 
 
 def get_consumed_gas(op_res):
-    gs = (r["consumed_gas"] for r in OperationResult.iter_results(op_res))
-    return [int(g) for g in gs]
+   gs = (r["consumed_milligas"] for r in OperationResult.iter_results(op_res))
+   return [int(g) for g in gs]
 
 
 def pformat_consumed_gas(op_res):
