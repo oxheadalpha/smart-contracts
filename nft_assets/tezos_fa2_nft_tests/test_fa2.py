@@ -4,7 +4,7 @@ from unittest import TestCase
 import json
 
 from pytezos import Key, pytezos
-from pytezos.rpc.errors import MichelsonRuntimeError
+from pytezos.rpc.errors import MichelsonError
 
 from tezos_fa2_nft_tests.ligo import (
     LigoEnv,
@@ -183,7 +183,7 @@ class TestMintBurn(TestFa2SetUp):
         burn_op = self.fa2.burn_tokens(from_=0, to_=2).inject()
         self.util.wait_for_ops(burn_op)
 
-        with self.assertRaises(MichelsonRuntimeError) as cm:
+        with self.assertRaises(MichelsonError) as cm:
             op = self.inspector.query(
                 fa2=self.fa2.address,
                 requests=[{"owner": owner1_address, "token_id": 0}],
