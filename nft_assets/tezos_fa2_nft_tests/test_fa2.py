@@ -176,7 +176,7 @@ class TestMintBurn(TestFa2SetUp):
                 callback=None
             ).view()
 
-        failed_with = PtzUtils.extract_failwith(cm.exception) #cm.exception.args[-1]
+        failed_with = PtzUtils.extract_runtime_failwith(cm.exception)
         self.assertEqual("FA2_TOKEN_UNDEFINED", failed_with)
 
 
