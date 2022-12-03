@@ -22,7 +22,6 @@ class TestTokenSorter(TestMacSetUp):
         ligo_sorter = ligo_env.contract_from_file(
             "token_sorter.mligo", "token_sorter_main"
         )
-        ligo_inspector = ligo_client_env.contract_from_file("inspector.mligo", "main")
 
         print("originating contracts...")
         self.fa2 = self.orig_mac(ligo_fa2)
@@ -40,8 +39,6 @@ class TestTokenSorter(TestMacSetUp):
 
         self.sorter = self.orig_sorter(ligo_sorter)
         print(f"sorter address {self.sorter.address}")
-
-        self.inspector = self.orig_inspector(ligo_inspector)
 
     def orig_sorter(self, ligo_sorter):
         storage_entry = (
