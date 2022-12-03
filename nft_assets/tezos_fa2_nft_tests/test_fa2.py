@@ -111,7 +111,7 @@ class TestFa2SetUp(TestCase):
     def assertBalances(self, expectedResponses, msg=None):
         requests = [response["request"] for response in expectedResponses]
         responses = self.fa2.balance_of(requests=requests, callback=None).view()
-        print('BALANCES')
+        print('balances:')
         print(responses)
         self.assertListEqual(expectedResponses, responses, msg)
 
