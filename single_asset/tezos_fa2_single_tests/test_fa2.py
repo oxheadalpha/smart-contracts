@@ -121,14 +121,12 @@ class TestFa2SetUp(TestCase):
         self.util.transfer(self.kyle_key.public_key_hash(), 100000000)
 
     def pause_fa2(self, paused: bool):
-        op = self.fa2.pause(paused).send(min_confirmations=1)
-        self.util.wait_for_ops(op)
+        self.fa2.pause(paused).send(min_confirmations=1)
 
     def assertBalances(self, expectedResponses, msg=None):
         requests = [response["request"] for response in expectedResponses]
-        op = self.inspector.query(fa2=self.fa2.address, requests=requests
+        self.inspector.query(fa2=self.fa2.address, requests=requests
         ).send(min_confirmations=1)
-        self.util.wait_for_ops(op)
         b = self.inspector.storage()["state"]
         print(b)
         self.assertListEqual(expectedResponses, b, msg)
@@ -151,17 +149,15 @@ class TestMintBurn(TestFa2SetUp):
 
     def mint_burn(self, owner_address):
         print("minting")
-        mint_op = self.fa2.mint_tokens(
+        self.fa2.mint_tokens(
             [{"amount": 10, "owner": owner_address}]
         ).send(min_confirmations=1)
-        self.util.wait_for_ops(mint_op)
         self.assertBalance(owner_address, 10, "invalid mint balance")
 
         print("burning")
-        burn_op = self.fa2.burn_tokens(
+        self.fa2.burn_tokens(
             [{"amount": 3, "owner": owner_address}]
         ).send(min_confirmations=1)
-        self.util.wait_for_ops(burn_op)
 
         self.assertBalance(owner_address, 7, "invalid balance after burn")
 
@@ -173,10 +169,9 @@ class TestOperator(TestFa2SetUp):
 
     def test_add_operator_to_receiver(self):
 
-        op_add = self.alice_receiver.owner_add_operator(
+        self.alice_receiver.owner_add_operator(
             fa2=self.fa2.address, operator=self.admin_key.public_key_hash(), token_id=0
         ).send(min_confirmations=1)
-        self.util.wait_for_ops(op_add)
 
 
 class TestTransfer(TestFa2SetUp):
@@ -184,10 +179,9 @@ class TestTransfer(TestFa2SetUp):
         super().setUp()
         self.pause_fa2(False)
 
-        op_op = self.alice_receiver.owner_add_operator(
+        self.alice_receiver.owner_add_operator(
             fa2=self.fa2.address, operator=self.admin_key.public_key_hash(), token_id=0
         ).send(min_confirmations=1)
-        self.util.wait_for_ops(op_op)
         print("transfer test setup completed")
 
     def test_transfer_to_receiver(self):
@@ -198,13 +192,12 @@ class TestTransfer(TestFa2SetUp):
 
     def transfer(self, from_address, to_address):
 
-        mint_op = self.fa2.mint_tokens(
+        self.fa2.mint_tokens(
             [{"amount": 10, "owner": from_address}]
         ).send(min_confirmations=1)
-        self.util.wait_for_ops(mint_op)
 
-        print("transfering")
-        op_tx = self.fa2.transfer(
+        print("transferring")
+        self.fa2.transfer(
             [
                 {
                     "from_": from_address,
@@ -212,7 +205,6 @@ class TestTransfer(TestFa2SetUp):
                 },
             ]
         ).send(min_confirmations=1)
-        self.util.wait_for_ops(op_tx)
 
         self.assertBalances(
             [
