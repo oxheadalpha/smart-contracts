@@ -31,10 +31,9 @@ class TestHooks(TestMacSetUp):
         super().setUp()
         self.pause_fa2(False)
 
-        op_op = self.alice_receiver.owner_add_operator(
+        self.alice_receiver.owner_add_operator(
             fa2=self.fa2.address, operator=self.admin_key.public_key_hash(), token_id=1
-        ).inject()
-        self.util.wait_for_ops(op_op)
+        ).send(min_confirmations=1)
         print("transfer test setup completed")
 
     def test_transfer(self):
@@ -44,20 +43,18 @@ class TestHooks(TestMacSetUp):
         print(f"alice storage after: {self.alice_receiver.storage()}")
 
     def transfer(self, token_id, from_address, to_address):
-        mint_op = self.fa2.mint_tokens(
+        self.fa2.mint_tokens(
             [{"owner": from_address, "amount": 10, "token_id": token_id}]
-        ).inject()
-        self.util.wait_for_ops(mint_op)
+        ).send(min_confirmations=1)
 
-        op_tx = self.fa2.transfer(
+        self.fa2.transfer(
             [
                 {
                     "from_": from_address,
                     "txs": [{"to_": to_address, "token_id": token_id, "amount": 3}],
                 }
             ]
-        ).inject()
-        self.util.wait_for_ops(op_tx)
+        ).send(min_confirmations=1)
         print("transferred")
 
         self.assertBalances(

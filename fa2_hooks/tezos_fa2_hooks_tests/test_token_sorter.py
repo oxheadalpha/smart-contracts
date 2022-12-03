@@ -69,24 +69,21 @@ class TestTokenSorter(TestMacSetUp):
         self.create_tokens()
         self.pause_fa2(False)
 
-        op_op = self.alice_receiver.owner_add_operator(
+        self.alice_receiver.owner_add_operator(
             fa2=self.fa2.address,
             operator=self.admin_key.public_key_hash(),
             token_id=RED,
-        ).inject()
-        self.util.wait_for_ops(op_op)
-        op_op = self.alice_receiver.owner_add_operator(
+        ).send(min_confirmations=1)
+        self.alice_receiver.owner_add_operator(
             fa2=self.fa2.address,
             operator=self.admin_key.public_key_hash(),
             token_id=GREEN,
-        ).inject()
-        self.util.wait_for_ops(op_op)
-        op_op = self.alice_receiver.owner_add_operator(
+        ).send(min_confirmations=1)
+        self.alice_receiver.owner_add_operator(
             fa2=self.fa2.address,
             operator=self.admin_key.public_key_hash(),
             token_id=YELLOW,
-        ).inject()
-        self.util.wait_for_ops(op_op)
+        ).send(min_confirmations=1)
         print("sorter test setup completed")
 
     def create_tokens(self):
@@ -97,18 +94,17 @@ class TestTokenSorter(TestMacSetUp):
 
     def test_sort(self):
         alice_a = self.alice_receiver.address
-        mint_op = self.fa2.mint_tokens(
+        self.fa2.mint_tokens(
             [
                 {"owner": alice_a, "amount": 10, "token_id": GREEN},
                 {"owner": alice_a, "amount": 10, "token_id": YELLOW,},
                 {"owner": alice_a, "amount": 10, "token_id": RED},
             ]
-        ).inject()
-        self.util.wait_for_ops(mint_op)
+        ).send(min_confirmations=1)
         print("minted")
 
         sorter_a = self.sorter.address
-        op_tx = self.fa2.transfer(
+        self.fa2.transfer(
             [
                 {
                     "from_": alice_a,
@@ -119,14 +115,12 @@ class TestTokenSorter(TestMacSetUp):
                     ],
                 }
             ]
-        ).inject()
-        self.util.wait_for_ops(op_tx)
+        ).send(min_confirmations=1)
         print("transferred")
 
-        op_forward = self.sorter.forward(
+        self.sorter.forward(
             fa2=self.fa2.address, tokens=[GREEN, YELLOW, RED]
-        ).inject()
-        self.util.wait_for_ops(op_forward)
+        ).send(min_confirmations=1)
         print("forwarded")
 
         # assert alice reminders
