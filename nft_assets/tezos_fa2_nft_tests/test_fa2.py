@@ -115,13 +115,12 @@ class TestFa2SetUp(TestCase):
         self.util.transfer(self.kyle_key.public_key_hash(), 100000000)
 
     def pause_fa2(self, paused: bool):
-        op = self.fa2.pause(paused).inject()
-        self.util.wait_for_ops(op)
+        self.fa2.pause(paused).send(min_confirmations=1)
 
     def assertBalances(self, expectedResponses, msg=None):
         requests = [response["request"] for response in expectedResponses]
-        op = self.inspector.query(fa2=self.fa2.address, requests=requests).inject()
-        self.util.wait_for_ops(op)
+        self.inspector.query(fa2=self.fa2.address, requests=requests
+            ).send(min_confirmations=1)
         b = self.inspector.storage()["state"]
         print(b)
         self.assertListEqual(expectedResponses, b, msg)
@@ -129,7 +128,7 @@ class TestFa2SetUp(TestCase):
     def assertBalance(self, owner, token_id, expected_balance, msg=None):
         self.assertBalances([balance_response(owner, token_id, expected_balance)])
 
-    def mint_tokens_op(self, owner1_address, owner2_address):
+    def mint_tokens(self, owner1_address, owner2_address):
         token_metadata = {
             # because of an issue with pytezos, the keys must be sorted alphabetically
             "token_id": 0,
@@ -141,7 +140,7 @@ class TestFa2SetUp(TestCase):
                 "symbol": "SOCK".encode().hex(),
             },
         }
-        return self.fa2.mint_tokens(
+        self.fa2.mint_tokens(
             {
                 "metadata": token_metadata,
                 "token_def": {
@@ -150,7 +149,7 @@ class TestFa2SetUp(TestCase):
                 },
                 "owners": [owner1_address, owner2_address],
             }
-        ).inject()
+        ).send(min_confirmations=1)
 
 
 class TestMintBurn(TestFa2SetUp):
@@ -167,8 +166,7 @@ class TestMintBurn(TestFa2SetUp):
 
     def mint_burn(self, owner1_address, owner2_address):
         print("minting")
-        mint_op = self.mint_tokens_op(owner1_address, owner2_address)
-        self.util.wait_for_ops(mint_op)
+        self.mint_tokens(owner1_address, owner2_address)
 
         self.assertBalances(
             [
@@ -180,15 +178,13 @@ class TestMintBurn(TestFa2SetUp):
         )
 
         print("burning")
-        burn_op = self.fa2.burn_tokens(from_=0, to_=2).inject()
-        self.util.wait_for_ops(burn_op)
+        self.fa2.burn_tokens(from_=0, to_=2).send(min_confirmations=1)
 
         with self.assertRaises(MichelsonError) as cm:
-            op = self.inspector.query(
+            self.inspector.query(
                 fa2=self.fa2.address,
                 requests=[{"owner": owner1_address, "token_id": 0}],
-            ).inject()
-            self.util.wait_for_ops(op)
+            ).send(min_confirmations=1)
 
         failedwith = cm.exception.args[0]["with"]["string"]
         self.assertEqual("FA2_TOKEN_UNDEFINED", failedwith)
@@ -202,26 +198,22 @@ class TestOperator(TestFa2SetUp):
     def test_add_operator_to_receiver(self):
 
         print("adding operator")
-        op_add = self.alice_receiver.owner_add_operator(
+        self.alice_receiver.owner_add_operator(
             fa2=self.fa2.address, operator=self.admin_key.public_key_hash(), token_id=0
-        ).inject()
-        self.util.wait_for_ops(op_add)
-
+        ).send(min_confirmations=1)
 
 class TestTransfer(TestFa2SetUp):
     def setUp(self):
         super().setUp()
         self.pause_fa2(False)
 
-        op_op = self.alice_receiver.owner_add_operator(
+        self.alice_receiver.owner_add_operator(
             fa2=self.fa2.address, operator=self.admin_key.public_key_hash(), token_id=0
-        ).inject()
-        self.util.wait_for_ops(op_op)
+        ).send(min_confirmations=1)
 
-        op_op2 = self.bob_receiver.owner_add_operator(
+        self.bob_receiver.owner_add_operator(
             fa2=self.fa2.address, operator=self.admin_key.public_key_hash(), token_id=1
-        ).inject()
-        self.util.wait_for_ops(op_op2)
+        ).send(min_confirmations=1)
         print("transfer test setup completed")
 
     def test_transfer(self):
@@ -232,8 +224,7 @@ class TestTransfer(TestFa2SetUp):
         left_sock = 0
         right_sock = 1
 
-        mint_op = self.mint_tokens_op(alice_a, bob_a)
-        self.util.wait_for_ops(mint_op)
+        self.mint_tokens(alice_a, bob_a)
 
         self.assertBalances(
             [
@@ -245,8 +236,8 @@ class TestTransfer(TestFa2SetUp):
             "invalid mint balance",
         )
 
-        print("transfering")
-        op_tx = self.fa2.transfer(
+        print("transferring")
+        self.fa2.transfer(
             [
                 {
                     "from_": alice_a,
@@ -257,8 +248,7 @@ class TestTransfer(TestFa2SetUp):
                     "txs": [{"to_": mike_a, "token_id": right_sock, "amount": 1}],
                 },
             ]
-        ).inject()
-        self.util.wait_for_ops(op_tx)
+        ).send(min_confirmations=1)
 
         self.assertBalances(
             [
