@@ -3,7 +3,7 @@ from unittest import TestCase
 import json
 
 from pytezos import Key, pytezos
-from pytezos.rpc.errors import MichelsonRuntimeError
+from pytezos.rpc.errors import MichelsonError
 
 from tezos_mac_tests.ligo import (
     LigoEnv,
@@ -120,13 +120,12 @@ class TestMacSetUp(TestCase):
         self.util.transfer(self.kyle_key.public_key_hash(), 100000000)
 
     # def pause_fa2(self, paused: bool):
-    #     op = self.fa2.pause(paused).inject()
-    #     self.util.wait_for_ops(op)
+    #     op = self.fa2.pause(paused).send(min_confirmations=1)
 
     def assertBalances(self, expectedResponses, msg=None):
         requests = [response["request"] for response in expectedResponses]
-        op = self.inspector.query(fa2=self.fa2.address, requests=requests).inject()
-        self.util.wait_for_ops(op)
+        self.inspector.query(fa2=self.fa2.address, requests=requests
+            ).send(min_confirmations=1)
         b = self.inspector.storage()["state"]
         print(b)
         self.assertListEqual(expectedResponses, b, msg)
@@ -137,22 +136,19 @@ class TestMacSetUp(TestCase):
     def create_token(self, id, symbol):
         param = token_metadata_object(id, symbol, symbol, 0)
         print(param)
-        op = self.fa2.create_token(param).inject()
-        self.util.wait_for_ops(op)
-
+        self.fa2.create_token(param).send(min_confirmations=1)
 
 class TestTransfer(TestMacSetUp):
     def setUp(self):
         super().setUp()
 
-        op_op = self.alice_receiver.owner_add_operator(
+        self.alice_receiver.owner_add_operator(
             fa2=self.fa2.address, operator=self.admin_key.public_key_hash(), token_id=1
-        ).inject()
-        self.util.wait_for_ops(op_op)
-        op_op = self.alice_receiver.owner_add_operator(
+        ).send(min_confirmations=1)
+
+        self.alice_receiver.owner_add_operator(
             fa2=self.fa2.address, operator=self.admin_key.public_key_hash(), token_id=2
-        ).inject()
-        self.util.wait_for_ops(op_op)
+        ).send(min_confirmations=1)
 
         print("creating tokens...")
         self.create_token(1, "TK1")
@@ -160,13 +156,12 @@ class TestTransfer(TestMacSetUp):
 
         print("minting tokens...")
         alice_address = self.alice_receiver.address
-        mint_op = self.fa2.mint_tokens(
+        self.fa2.mint_tokens(
             [
                 {"owner": alice_address, "amount": 10, "token_id": 1},
                 {"owner": alice_address, "amount": 10, "token_id": 2},
             ]
-        ).inject()
-        self.util.wait_for_ops(mint_op)
+        ).send(min_confirmations=1)
 
         print("transfer test setup completed")
 
@@ -175,11 +170,10 @@ class TestTransfer(TestMacSetUp):
 
     def test_paused_transfer(self):
         print("pausing...")
-        op = self.fa2.pause([{"token_id": 2, "paused": True}]).inject()
-        self.util.wait_for_ops(op)
+        self.fa2.pause([{"token_id": 2, "paused": True}]).send(min_confirmations=1)
         print("paused token")
 
-        with self.assertRaises(MichelsonRuntimeError) as cm:
+        with self.assertRaises(MichelsonError) as cm:
             self.transfer_batch()
 
         failedwith = cm.exception.args[0]["with"]["string"]
@@ -191,7 +185,7 @@ class TestTransfer(TestMacSetUp):
         mike_address = self.mike_key.public_key_hash()
 
         print("transferring...")
-        op_tx = self.fa2.transfer(
+        self.fa2.transfer(
             [
                 {
                     "from_": alice_address,
@@ -201,8 +195,7 @@ class TestTransfer(TestMacSetUp):
                     ],
                 }
             ]
-        ).inject()
-        self.util.wait_for_ops(op_tx)
+        ).send(min_confirmations=1)
         print("batch transferred")
 
         self.assertBalances(
