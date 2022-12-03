@@ -15,7 +15,6 @@ class TestHooks(TestMacSetUp):
         ligo_receiver = ligo_env.contract_from_file(
             "token_owner_with_hooks.mligo", "token_owner_with_hooks_main"
         )
-        ligo_inspector = ligo_client_env.contract_from_file("inspector.mligo", "main")
 
         print("originating contracts...")
         self.fa2 = self.orig_mac(ligo_fa2)
@@ -25,7 +24,6 @@ class TestHooks(TestMacSetUp):
         print(f"Alice address {self.alice_receiver.address}")
         self.bob_receiver = self.orig_receiver(ligo_receiver)
         print(f"Bob address {self.bob_receiver.address}")
-        self.inspector = self.orig_inspector(ligo_inspector)
 
     def setUp(self):
         super().setUp()
