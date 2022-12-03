@@ -53,46 +53,10 @@ class PtzUtils:
             num_blocks_wait=self.num_blocks_wait,
         )
 
-    def wait_for_ops(self, opg: OperationGroup):
-        """
-        Waits for specified operations to be completed successfully.
-        If any of the operations fails, raises exception.
-        :param opg: operation group returned by send()
-        """
-
-        for _ in range(self.num_blocks_wait):
-            res = self._check_op(opg)
-            if res is not None:
-                return res
-            try:
-                self.client.shell.wait_next_block()
-            except AssertionError:
-                print("block waiting timed out")
-
-        raise TimeoutError("waiting for operations")
-
     def transfer(self, to_address, amount):
-        op = self.client.transaction(to_address, amount).autofill().sign().send()
-        self.wait_for_ops(op)
-
-    def _check_op(self, opg: OperationGroup):
-        """
-        Returns None if operation is not completed
-        Raises error if operation failed
-        Return operation result if operation is completed
-        """
-        
-        op_hash = opg.hash()
-        blocks = self.client.shell.blocks[-self.block_depth :]
-        try:
-            res = blocks.find_operation(op_hash)
-            if not OperationResult.is_applied(res):
-                raise RpcError.from_errors(OperationResult.errors(res))
-            print(pformat_consumed_gas(res))
-            return res
-        except StopIteration:
-            # not found
-            return None
+        op = self.client.transaction(
+            to_address, amount
+        ).autofill().sign().send(min_confirmations=1)
 
 class LigoContract:
     def __init__(self, ligo_file, tz_file, main_func):
@@ -184,16 +148,14 @@ class LigoContract:
 
         c = self.get_contract()
         script = c.script(initial_storage=storage)
-        op = (
+        op: OperationGroup = (
             util.client.origination(script=script, balance=balance)
             .autofill()
             .sign()
-            .send()
+            .send(min_confirmations=1)
         )
-        op_r = util.wait_for_ops(op)
-        contract_id = op_r["contents"][0]["metadata"]["operation_result"][
-            "originated_contracts"
-        ][0]
+        contract_id = op.opg_result["contents"][0]["metadata"][
+            "operation_result"]["originated_contracts"][0]
         return util.client.contract(contract_id)
 
 
