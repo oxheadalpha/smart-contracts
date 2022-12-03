@@ -4,8 +4,9 @@ from subprocess import Popen, PIPE
 from io import TextIOWrapper
 from time import sleep
 
-from pytezos import pytezos, ContractInterface, Key
+from pytezos import pytezos, ContractInterface, Key, PyTezosClient
 from pytezos.operation.result import OperationResult
+from pytezos.operation.group import OperationGroup
 from pytezos.rpc.errors import RpcError
 from pytezos.operation import fees
 
@@ -31,6 +32,67 @@ class LigoEnv:
             self.src_dir / file_name, self.out_dir / tz_file_name, main_func
         )
 
+class PtzUtils:
+    def __init__(self, client: PyTezosClient, block_depth=5, num_blocks_wait=3):
+        """
+        :param client: PyTezosClient
+        :param block_depth number of recent blocks to test when checking for operation status
+        :param num_blocks_wait number of backed blocks to retry wait until failing with timeout
+        """
+        self.client = client
+        self.block_depth = block_depth
+        self.num_blocks_wait = num_blocks_wait
+
+    def using(self, shell=None, key=None):
+        new_client = self.client.using(
+            shell=shell or self.client.shell, key=key or self.client.key
+        )
+        return PtzUtils(
+            new_client,
+            block_depth=self.block_depth,
+            num_blocks_wait=self.num_blocks_wait,
+        )
+
+    def wait_for_ops(self, opg: OperationGroup):
+        """
+        Waits for specified operations to be completed successfully.
+        If any of the operations fails, raises exception.
+        :param opg: operation group returned by send()
+        """
+
+        for _ in range(self.num_blocks_wait):
+            res = self._check_op(opg)
+            if res is not None:
+                return res
+            try:
+                self.client.shell.wait_next_block()
+            except AssertionError:
+                print("block waiting timed out")
+
+        raise TimeoutError("waiting for operations")
+
+    def transfer(self, to_address, amount):
+        op = self.client.transaction(to_address, amount).autofill().sign().send()
+        self.wait_for_ops(op)
+
+    def _check_op(self, opg: OperationGroup):
+        """
+        Returns None if operation is not completed
+        Raises error if operation failed
+        Return operation result if operation is completed
+        """
+        
+        op_hash = opg.hash()
+        blocks = self.client.shell.blocks[-self.block_depth :]
+        try:
+            res = blocks.find_operation(op_hash)
+            if not OperationResult.is_applied(res):
+                raise RpcError.from_errors(OperationResult.errors(res))
+            print(pformat_consumed_gas(res))
+            return res
+        except StopIteration:
+            # not found
+            return None
 
 class LigoContract:
     def __init__(self, ligo_file, tz_file, main_func):
@@ -112,7 +174,7 @@ class LigoContract:
         else:
             return stripped
 
-    def originate(self, util, storage=None, balance=0):
+    def originate(self, util: PtzUtils, storage=None, balance=0):
         """
         Originates contract on blockchain.
         :param util: PtzUtils wrapping pytezos client connected to Tezos RPC
@@ -126,9 +188,9 @@ class LigoContract:
             util.client.origination(script=script, balance=balance)
             .autofill()
             .sign()
-            .inject()
+            .send()
         )
-        op_r = util.wait_for_ops(op)[0]
+        op_r = util.wait_for_ops(op)
         contract_id = op_r["contents"][0]["metadata"]["operation_result"][
             "originated_contracts"
         ][0]
@@ -148,72 +210,6 @@ def pformat_consumed_gas(op_res):
         total = sum(gs)
         internal_ops_gas = [f"{g:,}" for g in gs]
         return f"operation consumed gas: {total:,} {internal_ops_gas}"
-
-
-class PtzUtils:
-    def __init__(self, client, block_depth=5, num_blocks_wait=3):
-        """
-        :param client: PyTezosClient
-        :param block_depth number of recent blocks to test when checking for operation status
-        :param num_blocks_wait number of backed blocks to retry wait until failing with timeout
-        """
-        self.client = client
-        self.block_depth = block_depth
-        self.num_blocks_wait = num_blocks_wait
-
-    def using(self, shell=None, key=None):
-        new_client = self.client.using(
-            shell=shell or self.client.shell, key=key or self.client.key
-        )
-        return PtzUtils(
-            new_client,
-            block_depth=self.block_depth,
-            num_blocks_wait=self.num_blocks_wait,
-        )
-
-    def wait_for_ops(self, *ops):
-        """
-        Waits for specified operations to be completed successfully.
-        If any of the operations fails, raises exception.
-        :param *ops: list of operation descriptors returned by inject()
-        """
-
-        for _ in range(self.num_blocks_wait):
-            chr = (self._check_op(op) for op in ops)
-            res = [op_res for op_res in chr if op_res]
-            if len(ops) == len(res):
-                return res
-            try:
-                self.client.shell.wait_next_block()
-            except AssertionError:
-                print("block waiting timed out")
-
-        raise TimeoutError("waiting for operations")
-
-    def transfer(self, to_address, amount):
-        op = self.client.transaction(to_address, amount).autofill().sign().inject()
-        self.wait_for_ops(op)
-
-    def _check_op(self, op):
-        """
-        Returns None if operation is not completed
-        Raises error if operation failed
-        Return operation result if operation is completed
-        """
-
-        op_data = op[0] if isinstance(op, tuple) else op
-        op_hash = op_data["hash"]
-
-        blocks = self.client.shell.blocks[-self.block_depth :]
-        try:
-            res = blocks.find_operation(op_hash)
-            if not OperationResult.is_applied(res):
-                raise RpcError.from_errors(OperationResult.errors(res)) from op_hash
-            print(pformat_consumed_gas(res))
-            return res
-        except StopIteration:
-            # not found
-            return None
 
 
 flextesa_sandbox = pytezos.using(
