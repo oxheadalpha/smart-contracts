@@ -4,7 +4,7 @@ from subprocess import Popen, PIPE
 from io import TextIOWrapper
 from time import sleep
 
-from pytezos import pytezos, ContractInterface, Key, PyTezosClient
+from pytezos import pytezos, ContractInterface, Key, PyTezosClient, MichelsonRuntimeError
 from pytezos.operation.result import OperationResult
 from pytezos.operation.group import OperationGroup
 from pytezos.rpc.errors import RpcError
@@ -57,6 +57,10 @@ class PtzUtils:
         op = self.client.transaction(
             to_address, amount
         ).autofill().sign().send(min_confirmations=1)
+
+    @classmethod
+    def extract_failwith(cls, e: MichelsonRuntimeError):
+        return e.args[-1].strip("'")
 
 class LigoContract:
     def __init__(self, ligo_file, tz_file, main_func):

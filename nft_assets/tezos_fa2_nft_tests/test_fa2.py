@@ -3,12 +3,10 @@ from decimal import *
 from unittest import TestCase
 import json
 
-from pytezos import Key, pytezos
-from pytezos.rpc.errors import MichelsonError
+from pytezos import Key, MichelsonRuntimeError, pytezos
 
 from tezos_fa2_nft_tests.ligo import (
     LigoEnv,
-    LigoContract,
     PtzUtils,
     flextesa_sandbox,
 )
@@ -50,7 +48,6 @@ class TestFa2SetUp(TestCase):
         ligo_receiver = ligo_client_env.contract_from_file(
             "token_owner.mligo", "token_owner_main"
         )
-        ligo_inspector = ligo_client_env.contract_from_file("inspector.mligo", "main")
 
         print("originating contracts...")
         self.fa2 = self.orig_fa2(ligo_fa2)
@@ -60,7 +57,6 @@ class TestFa2SetUp(TestCase):
         print(f"Alice address {self.alice_receiver.address}")
         self.bob_receiver = self.orig_receiver(ligo_receiver)
         print(f"Bob address {self.bob_receiver.address}")
-        self.inspector = self.orig_inspector(ligo_inspector)
 
     def orig_fa2(self, ligo_fa2):
         meta = {
@@ -102,11 +98,6 @@ class TestFa2SetUp(TestCase):
         ptz_storage = ligo_fa2.compile_storage(ligo_storage)
         return ligo_fa2.originate(self.util, ptz_storage)
 
-    def orig_inspector(self, ligo_inspector):
-        ligo_storage = "Empty unit"
-        ptz_storage = ligo_inspector.compile_storage(ligo_storage)
-        return ligo_inspector.originate(self.util, ptz_storage)
-
     def orig_receiver(self, ligo_receiver):
         return ligo_receiver.originate(self.util, balance=100000000)
 
@@ -119,11 +110,10 @@ class TestFa2SetUp(TestCase):
 
     def assertBalances(self, expectedResponses, msg=None):
         requests = [response["request"] for response in expectedResponses]
-        self.inspector.query(fa2=self.fa2.address, requests=requests
-            ).send(min_confirmations=1)
-        b = self.inspector.storage()["state"]
-        print(b)
-        self.assertListEqual(expectedResponses, b, msg)
+        responses = self.fa2.balance_of(requests=requests, callback=None).view()
+        print('BALANCES')
+        print(responses)
+        self.assertListEqual(expectedResponses, responses, msg)
 
     def assertBalance(self, owner, token_id, expected_balance, msg=None):
         self.assertBalances([balance_response(owner, token_id, expected_balance)])
@@ -180,14 +170,14 @@ class TestMintBurn(TestFa2SetUp):
         print("burning")
         self.fa2.burn_tokens(from_=0, to_=2).send(min_confirmations=1)
 
-        with self.assertRaises(MichelsonError) as cm:
-            self.inspector.query(
-                fa2=self.fa2.address,
+        with self.assertRaises(MichelsonRuntimeError) as cm:
+            self.fa2.balance_of(
                 requests=[{"owner": owner1_address, "token_id": 0}],
-            ).send(min_confirmations=1)
+                callback=None
+            ).view()
 
-        failedwith = cm.exception.args[0]["with"]["string"]
-        self.assertEqual("FA2_TOKEN_UNDEFINED", failedwith)
+        failed_with = PtzUtils.extract_failwith(cm.exception) #cm.exception.args[-1]
+        self.assertEqual("FA2_TOKEN_UNDEFINED", failed_with)
 
 
 class TestOperator(TestFa2SetUp):
