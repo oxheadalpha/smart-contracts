@@ -120,6 +120,10 @@ class TestMacSetUp(TestCase):
         self.inspector.query(fa2=self.fa2.address, requests=requests
         ).send(min_confirmations=1)
         b = self.inspector.storage()["state"]
+        print('COMPARING')
+        print('EXPECTED')
+        print(expectedResponses)
+        print('ACTUAL')
         print(b)
         self.assertListEqual(expectedResponses, b, msg)
 
@@ -176,20 +180,21 @@ class TestTransfer(TestMacSetUp):
         super().setUp()
         self.pause_fa2(False)
 
+    def test_transfer_to_receiver(self):
+        self.create_token(1, "TK1")
         self.alice_receiver.owner_add_operator(
             fa2=self.fa2.address, operator=self.admin_key.public_key_hash(), token_id=1
         ).send(min_confirmations=1)
+
+        self.transfer(1, self.alice_receiver.address, self.bob_receiver.address)
+
+    def test_transfer_to_implicit(self):
+        self.create_token(2, "TK2")
         self.alice_receiver.owner_add_operator(
             fa2=self.fa2.address, operator=self.admin_key.public_key_hash(), token_id=2
         ).send(min_confirmations=1)
         print("transfer test setup completed")
 
-    def test_transfer_to_receiver(self):
-        self.create_token(1, "TK1")
-        self.transfer(1, self.alice_receiver.address, self.bob_receiver.address)
-
-    def test_transfer_to_implicit(self):
-        self.create_token(2, "TK2")
         self.transfer(2, self.alice_receiver.address, self.mike_key.public_key_hash())
 
     def transfer(self, token_id, from_address, to_address):
@@ -205,7 +210,7 @@ class TestTransfer(TestMacSetUp):
                     "txs": [{"to_": to_address, "token_id": token_id, "amount": 3}],
                 }
             ]
-        )
+        ).send(min_confirmations=1)
         print("transferred")
 
         self.assertBalances(
@@ -218,6 +223,12 @@ class TestTransfer(TestMacSetUp):
     def test_batch_transfer(self):
         self.create_token(1, "TK1")
         self.create_token(2, "TK2")
+        self.alice_receiver.owner_add_operator(
+            fa2=self.fa2.address, operator=self.admin_key.public_key_hash(), token_id=1
+        ).send(min_confirmations=1)
+        self.alice_receiver.owner_add_operator(
+            fa2=self.fa2.address, operator=self.admin_key.public_key_hash(), token_id=2
+        ).send(min_confirmations=1)
 
         alice_address = self.alice_receiver.address
         bob_address = self.bob_receiver.address
