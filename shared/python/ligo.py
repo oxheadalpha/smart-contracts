@@ -5,6 +5,7 @@ from io import TextIOWrapper
 from time import sleep
 
 from pytezos import pytezos, ContractInterface, Key, PyTezosClient, MichelsonRuntimeError
+from pytezos.rpc.errors import MichelsonError
 from pytezos.operation.result import OperationResult
 from pytezos.operation.group import OperationGroup
 from pytezos.rpc.errors import RpcError
@@ -59,8 +60,13 @@ class PtzUtils:
         ).autofill().sign().send(min_confirmations=1)
 
     @classmethod
-    def extract_failwith(cls, e: MichelsonRuntimeError):
+    def extract_runtime_failwith(cls, e: MichelsonRuntimeError):
         return e.args[-1].strip("'")
+    
+    @classmethod
+    def extract_failwith(cls, e: MichelsonError):
+        return e.args[0]["with"]["string"]
+
 
 class LigoContract:
     def __init__(self, ligo_file, tz_file, main_func):
