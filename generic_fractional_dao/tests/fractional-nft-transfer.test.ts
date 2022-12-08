@@ -50,8 +50,7 @@ describe("fractional ownership FA2 NFT tests", () => {
   async function hasNft(owner: address, token_id: nat): Promise<boolean> {
     const [hasIt] = await hasNftTokens(
       nftFa2,
-      [{ owner, token_id }],
-      tezos.lambdaView
+      [{ owner, token_id }]
     );
     return hasIt;
   }

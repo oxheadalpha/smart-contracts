@@ -111,7 +111,7 @@ take a few seconds until sandbox is bootstrapped.
 
 ### Run the Tests
 
-Switch to `collectibles/test` directory and run the following commands:
+Switch to `fractional/test` directory and run the following commands:
 
 ```sh
 $ yarn install
