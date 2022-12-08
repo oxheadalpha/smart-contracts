@@ -97,8 +97,7 @@ describe('collectibles test', () => {
         { owner: owner, token_id: new BigNumber(4) },
         { owner: owner, token_id: new BigNumber(5) },
         { owner: owner, token_id: new BigNumber(6) }
-      ],
-      tezos.lambdaView
+      ]
     );
     return responses
       .filter(r => r.balance.eq(1))
@@ -123,8 +122,7 @@ describe('collectibles test', () => {
 
     const balances = await queryBalances(
       money,
-      expectedResponses.map(r => r.request),
-      tezos.lambdaView
+      expectedResponses.map(r => r.request)
     );
     expect(balances).toEqual(expectedResponses);
   }

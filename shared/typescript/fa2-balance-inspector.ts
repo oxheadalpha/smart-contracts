@@ -1,22 +1,17 @@
-import * as path from 'path';
-import { $log } from '@tsed/logger';
-
-import { address, Contract } from './type-aliases';
+import { Contract } from './type-aliases';
 import { BalanceOfRequest, BalanceOfResponse } from './fa2-interface';
 
 export const queryBalances = async (
   fa2: Contract,
-  requests: BalanceOfRequest[],
-  lambdaView?: address
+  requests: BalanceOfRequest[]
 ): Promise<BalanceOfResponse[]> =>
-  fa2.views.balance_of(requests).read(lambdaView);
+  fa2.views.balance_of(requests).read();
 
 export async function hasNftTokens(
   nft: Contract,
-  requests: BalanceOfRequest[],
-  lambdaView?: address
+  requests: BalanceOfRequest[]
 ): Promise<boolean[]> {
-  const responses = await queryBalances(nft, requests, lambdaView);
+  const responses = await queryBalances(nft, requests);
   const results = responses.map(r => {
     if (r.balance.eq(1)) return true;
     else if (r.balance.eq(0)) return false;
