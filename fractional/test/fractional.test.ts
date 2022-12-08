@@ -33,8 +33,7 @@ describe('fractional ownership test', () => {
   async function assertHasNft(owner: address, token_id: nat): Promise<void> {
     const [hasIt] = await hasNftTokens(
       nftFa2,
-      [{ owner, token_id }],
-      tezos.lambdaView
+      [{ owner, token_id }]
     );
     expect(hasIt).toBe(true);
   }
@@ -118,7 +117,7 @@ describe('fractional ownership test', () => {
     nftTokenId: nat
   ): Promise<string> {
     const chain_id = await signer.rpc.getChainId();
-    const { vote_nonce } = await fractionalDao.storage();
+    const { vote_nonce } = await fractionalDao.storage<{ vote_nonce: number }>();
     const targetContractAddress = fractionalDao.address;
 
     const voteD = {
@@ -226,7 +225,7 @@ describe('fractional ownership test', () => {
 
     const ownershipTokenId = await fractionalDao.views
       .ownership_token(nftFa2.address, tokenId)
-      .read(tezos.lambdaView);
+      .read();
 
     await transfer(fractionalDao.address, tezos.alice, [
       {
