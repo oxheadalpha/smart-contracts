@@ -1,1 +1,0 @@
-../../shared/typescript/ligo.ts

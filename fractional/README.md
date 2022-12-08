@@ -81,3 +81,40 @@ other destination address.
 `balance_of`
 
 `update_operators`
+
+## Setup and Running The Tests
+
+### Build `smart-contracts-common` TypeScript Package
+
+Switch to `shared/typescript` directory.
+Install dependencies and build the package:
+
+```sh
+$ yarn install
+$ yarn build
+```
+
+Symlink built package:
+
+```sh
+$ yarn link
+```
+
+### Start Tezos Sandbox
+
+```sh
+$ flextesa/start-sandbox.sh
+```
+
+When running for the first time, it will download sandbox docker image. It may
+take a few seconds until sandbox is bootstrapped.
+
+### Run the Tests
+
+Switch to `collectibles/test` directory and run the following commands:
+
+```sh
+$ yarn install
+$ yarn test
+```
+
