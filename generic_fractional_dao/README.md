@@ -75,6 +75,43 @@ lambda functions for generic operations should be considered.
 2. Interaction with market place and auction contracts.
 3. DAO administration.
 
+## Setup and Running The Tests
+
+### Build `smart-contracts-common` TypeScript Package
+
+Switch to `shared/typescript` directory.
+Install dependencies and build the package:
+
+```sh
+$ yarn install
+$ yarn build
+```
+
+Symlink built package:
+
+```sh
+$ yarn link
+```
+
+### Start Tezos Sandbox
+
+```sh
+$ flextesa/start-sandbox.sh
+```
+
+When running for the first time, it will download sandbox docker image. It may
+take a few seconds until sandbox is bootstrapped.
+
+### Run the Tests
+
+Switch to `generic_fractional_dao` directory and run the following commands:
+
+```sh
+$ yarn install
+$ yarn test
+```
+
+
 ## What's Next
 
 - Create tests for the fractional DAO contract
@@ -86,3 +123,4 @@ lambda functions for generic operations should be considered.
   - Change DAO voting period
 
 - Migrate DAO contract to minter-sdk
+
