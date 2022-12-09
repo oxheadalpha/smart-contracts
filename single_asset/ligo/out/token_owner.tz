@@ -8,65 +8,56 @@
   code { CAR ;
          IF_LEFT
            { IF_LEFT
-               { DROP ; UNIT ; NIL operation ; PAIR }
+               { DROP ; UNIT ; NIL operation }
                { DUP ;
                  CDR ;
-                 SWAP ;
-                 DUP ;
-                 DUG 2 ;
+                 DUP 2 ;
                  CAR ;
                  CDR ;
-                 PAIR ;
-                 SELF ;
-                 ADDRESS ;
-                 PAIR ;
+                 SELF_ADDRESS ;
+                 PAIR 3 ;
                  SWAP ;
                  CAR ;
                  CAR ;
                  CONTRACT %update_operators
-                   (list (or (pair %add_operator (address %owner) (pair (address %operator) (nat %token_id)))
-                             (pair %remove_operator (address %owner) (pair (address %operator) (nat %token_id))))) ;
+                   (list (or (pair %add_operator (address %owner) (address %operator) (nat %token_id))
+                             (pair %remove_operator (address %owner) (address %operator) (nat %token_id)))) ;
                  IF_NONE
                    { DROP ; PUSH string "NO_UPDATE_OPERATORS" ; FAILWITH }
                    { PUSH mutez 0 ;
-                     NIL (or (pair address (pair address nat)) (pair address (pair address nat))) ;
+                     NIL (or (pair address address nat) (pair address address nat)) ;
                      DIG 3 ;
-                     LEFT (pair address (pair address nat)) ;
+                     LEFT (pair address address nat) ;
                      CONS ;
                      TRANSFER_TOKENS } ;
                  UNIT ;
                  NIL operation ;
                  DIG 2 ;
-                 CONS ;
-                 PAIR } }
+                 CONS } }
            { DUP ;
              CDR ;
-             SWAP ;
-             DUP ;
-             DUG 2 ;
+             DUP 2 ;
              CAR ;
              CDR ;
-             PAIR ;
-             SELF ;
-             ADDRESS ;
-             PAIR ;
+             SELF_ADDRESS ;
+             PAIR 3 ;
              SWAP ;
              CAR ;
              CAR ;
              CONTRACT %update_operators
-               (list (or (pair %add_operator (address %owner) (pair (address %operator) (nat %token_id)))
-                         (pair %remove_operator (address %owner) (pair (address %operator) (nat %token_id))))) ;
+               (list (or (pair %add_operator (address %owner) (address %operator) (nat %token_id))
+                         (pair %remove_operator (address %owner) (address %operator) (nat %token_id)))) ;
              IF_NONE
                { DROP ; PUSH string "NO_UPDATE_OPERATORS" ; FAILWITH }
                { PUSH mutez 0 ;
-                 NIL (or (pair address (pair address nat)) (pair address (pair address nat))) ;
+                 NIL (or (pair address address nat) (pair address address nat)) ;
                  DIG 3 ;
-                 RIGHT (pair address (pair address nat)) ;
+                 RIGHT (pair address address nat) ;
                  CONS ;
                  TRANSFER_TOKENS } ;
              UNIT ;
              NIL operation ;
              DIG 2 ;
-             CONS ;
-             PAIR } } }
+             CONS } ;
+         PAIR } }
 

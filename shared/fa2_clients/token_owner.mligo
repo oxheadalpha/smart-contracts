@@ -24,7 +24,7 @@ let token_owner_main (param, s : token_owner * unit)
     (* calls specified FA2 contract to add operator *)
     let param : operator_param = {
       operator = p.operator;
-      owner = Current.self_address;
+      owner = Tezos.get_self_address ();
       token_id = p.token_id;
     } in
     let fa2_update : update_operator list contract option =
@@ -38,7 +38,7 @@ let token_owner_main (param, s : token_owner * unit)
     (* calls specified FA2 contract to remove operator *)
     let param : operator_param = {
       operator = p.operator;
-      owner = Current.self_address;
+      owner = Tezos.get_self_address ();
       token_id = p.token_id;
     } in
     let fa2_update : update_operator list contract option =
