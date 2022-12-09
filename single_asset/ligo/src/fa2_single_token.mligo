@@ -53,7 +53,7 @@ let inc_balance (owner, amt, ledger
 let dec_balance (owner, amt, ledger
     : address * nat * ledger) : ledger =
   let bal = get_balance_amt (owner, ledger) in
-  match Michelson.is_nat (bal - amt) with
+  match is_nat (bal - amt) with
   | None -> (failwith fa2_insufficient_balance : ledger)
   | Some new_bal ->
     if new_bal = 0n
@@ -70,6 +70,7 @@ let transfer (txs, validate_op, ops_storage, ledger
     : (transfer_descriptor list) * operator_validator * operator_storage * ledger)
     : ledger =
   let make_transfer = fun (l, tx : ledger * transfer_descriptor) ->
+    let sender = Tezos.get_sender() in
     List.fold 
       (fun (ll, dst : ledger * transfer_destination_descriptor) ->
         if dst.token_id <> 0n
@@ -78,7 +79,7 @@ let transfer (txs, validate_op, ops_storage, ledger
           let lll = match tx.from_ with
           | None -> ll (* this is a mint transfer. do not need to update `from_` balance *)
           | Some from_ -> 
-            let u = validate_op (from_, Tezos.sender, dst.token_id, ops_storage) in
+            let _ = validate_op (from_, sender, dst.token_id, ops_storage) in
             dec_balance (from_, dst.amount, ll)
           in 
           match dst.to_ with
@@ -113,7 +114,7 @@ let validate_token_ids (tokens : token_id list) : unit =
 
 #if !OWNER_HOOKS
 
-let get_owner_hook_ops (tx_descriptors, storage
+let get_owner_hook_ops (_tx_descriptors, _storage
     : (transfer_descriptor list) * single_token_storage) : operation list =
   ([] : operation list)
 
@@ -123,7 +124,7 @@ let get_owner_hook_ops (tx_descriptors, storage
     : (transfer_descriptor list) * single_token_storage) : operation list =
   let tx_descriptor_param : transfer_descriptor_param = {
     batch = tx_descriptors;
-    operator = Tezos.sender;
+    operator = Tezos.get_sender();
   } in
   get_owner_hook_ops_for (tx_descriptor_param, storage.permissions)
 

@@ -29,7 +29,7 @@ let update_operators (update, storage : update_operator * operator_storage)
 
 (**
 Validate if operator update is performed by the token owner.
-@param updater an address that initiated the operation; usually `Tezos.sender`.
+@param updater an address that initiated the operation; usually `Tezos.get_sender()`.
 *)
 let validate_update_operators_by_owner (update, updater : update_operator * address)
     : unit =
@@ -37,7 +37,7 @@ let validate_update_operators_by_owner (update, updater : update_operator * addr
   | Add_operator op -> op
   | Remove_operator op -> op
   in
-  if op.owner = updater then unit else failwith fa2_not_owner
+  if op.owner = updater then () else failwith fa2_not_owner
 
 (**
   Generic implementation of the FA2 `%update_operators` entrypoint.
@@ -45,9 +45,9 @@ let validate_update_operators_by_owner (update, updater : update_operator * addr
  *)
 let fa2_update_operators (updates, storage
     : (update_operator list) * operator_storage) : operator_storage =
-  let updater = Tezos.sender in
+  let updater = Tezos.get_sender () in
   let process_update = (fun (ops, update : operator_storage * update_operator) ->
-    let u = validate_update_operators_by_owner (update, updater) in
+    let _ = validate_update_operators_by_owner (update, updater) in
     update_operators (update, ops)
   ) in
   List.fold process_update updates storage
@@ -102,7 +102,7 @@ let validate_operator (tx_policy, txs, ops_storage
   let validator = make_operator_validator tx_policy in
   List.iter (fun (tx : transfer) -> 
     List.iter (fun (dst: transfer_destination) ->
-      validator (tx.from_, Tezos.sender, dst.token_id ,ops_storage)
+      validator (tx.from_, (Tezos.get_sender()), dst.token_id ,ops_storage)
     ) tx.txs
   ) txs
 

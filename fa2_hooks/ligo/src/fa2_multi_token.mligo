@@ -40,7 +40,7 @@ let dec_balance (owner, token_id, amt, ledger
     : address * token_id * nat * ledger) : ledger =
   let key = owner, token_id in
   let bal = get_balance_amt (key, ledger) in
-  match Michelson.is_nat (bal - amt) with
+  match is_nat (bal - amt) with
   | None -> (failwith fa2_insufficient_balance : ledger)
   | Some new_bal ->
     if new_bal = 0n
@@ -62,7 +62,8 @@ let transfer (txs, validate_op, storage
         if not Big_map.mem dst.token_id storage.token_metadata
         then (failwith fa2_token_undefined : ledger)
         else
-          let u = validate_op (tx.from_, Tezos.sender, dst.token_id, storage.operators) in
+          let sender = Tezos.get_sender() in
+          let _ = validate_op (tx.from_, sender, dst.token_id, storage.operators) in
           let lll = dec_balance (tx.from_, dst.token_id, dst.amount, ll) in
           inc_balance(dst.to_, dst.token_id, dst.amount, lll)
       ) tx.txs l
@@ -86,7 +87,8 @@ let get_balance (p, ledger, tokens
 
 
 let get_owner_hook_ops (txs, p_descriptor : (transfer list) * permissions_descriptor) : operation list =
-  let tx_descriptor = transfers_to_transfer_descriptor_param (txs, Tezos.sender) in
+  let sender = Tezos.get_sender() in
+  let tx_descriptor = transfers_to_transfer_descriptor_param (txs, sender) in
   get_owner_hook_ops_for (tx_descriptor, p_descriptor)
 
 let fa2_main (param, storage : fa2_entry_points * multi_token_storage)

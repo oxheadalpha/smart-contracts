@@ -21,7 +21,7 @@ type tokens_to_transfer = (nat, nat) map
 
 let inc_pending_balance (s, tx : dispatch_table * transfer_destination_descriptor)
     : dispatch_table =
-  let key = (Tezos.sender, tx.token_id) in
+  let key = ((Tezos.get_sender()), tx.token_id) in
   let info_opt = Big_map.find_opt key s in
   match info_opt with
   | None -> (failwith "UNKNOWN TOKEN" : dispatch_table)

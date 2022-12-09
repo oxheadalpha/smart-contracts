@@ -172,7 +172,7 @@ let clean_after_transfer (vote, ownership_token, s
 let vote_transfer (p, s : vote_transfer_param * dao_storage)
     : operation list * dao_storage =
   let voter = match p.permit with
-  | None -> Tezos.sender
+  | None -> Tezos.get_sender()
   | Some permit -> validate_permit (p.vote, permit, s.vote_nonce)
   in
   let ownership = match Big_map.find_opt p.vote.nft_token s.owned_nfts with
@@ -240,12 +240,12 @@ type dao_entrypoints =
 let dao_main (p, s : dao_entrypoints * dao_storage) : operation list * dao_storage =
   match p with
   | Fa2 fa2 -> 
-    let u = fail_if_paused s.admin in
+    let _ = fail_if_paused s.admin in
     let ops, new_ownership = fa2_main(fa2, s.ownership_tokens) in
     ops, { s with ownership_tokens = new_ownership; }
 
   | Set_ownership op ->
-    let u = fail_if_not_admin s.admin in
+    let _ = fail_if_not_admin s.admin in
     let new_s = set_ownership(op, s) in
     ([] : operation list), new_s
 
@@ -254,12 +254,12 @@ let dao_main (p, s : dao_entrypoints * dao_storage) : operation list * dao_stora
     [op], s
 
   | Vote_transfer vp ->
-    let u = fail_if_paused s.admin in
+    let _ = fail_if_paused s.admin in
     let ops, new_s = vote_transfer(vp, s) in
     ops, new_s
 
   | Flush_expired vp ->
-    let u = fail_if_paused s.admin in
+    let _ = fail_if_paused s.admin in
     let ownership = match Big_map.find_opt vp.nft_token s.owned_nfts with
     | None -> (failwith "NO_OWNERSHIP" : nft_ownership)
     | Some o -> o

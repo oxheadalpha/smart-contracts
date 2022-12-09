@@ -42,7 +42,7 @@ let multi_asset_main
       (ops, new_s)
 
   | Assets p -> 
-      let u2 = fail_if_paused s.admin in
+      let _ = fail_if_paused s.admin in
         
       let ops, assets = fa2_main (p, s.assets) in
       let new_s = { s with assets = assets } in

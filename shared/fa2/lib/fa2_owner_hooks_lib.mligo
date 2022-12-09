@@ -158,7 +158,7 @@ let get_owner_hook_ops_for (tx_descriptor, pd
   let hook_calls = get_owner_transfer_hooks (tx_descriptor, pd) in
   match hook_calls with
   | [] -> ([] : operation list)
-  | h :: t -> 
+  | _ -> 
     List.map (fun(call: hook_entry_point) -> 
       Tezos.transaction tx_descriptor 0mutez call) 
       hook_calls

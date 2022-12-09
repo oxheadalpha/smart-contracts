@@ -48,8 +48,9 @@ let transfer (txs, validate_op, ops_storage, ledger
           | Some o -> 
             if o <> tx.from_
             then (failwith fa2_insufficient_balance : ledger)
-            else 
-              let u = validate_op (tx.from_, Tezos.sender, dst.token_id, ops_storage) in
+            else
+              let sender = Tezos.get_sender() in
+              let _ = validate_op (tx.from_, sender, dst.token_id, ops_storage) in
               Big_map.update dst.token_id (Some dst.to_) ll
       ) tx.txs l
   )
@@ -58,7 +59,7 @@ let transfer (txs, validate_op, ops_storage, ledger
   List.fold make_transfer txs ledger
 
 let get_owner_hook_ops (txs, p_descriptor : (transfer list) * permissions_descriptor) : operation list =
-  let tx_descriptor = transfers_to_transfer_descriptor_param (txs, Tezos.sender) in
+  let tx_descriptor = transfers_to_transfer_descriptor_param (txs, (Tezos.get_sender())) in
   get_owner_hook_ops_for (tx_descriptor, p_descriptor)
 
 (** 
