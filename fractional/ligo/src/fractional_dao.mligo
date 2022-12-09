@@ -189,7 +189,7 @@ let vote_transfer (p, s : vote_transfer_param * dao_storage)
   | Some v ->
     if Set.mem voter v.voters
     then (failwith "DUP_VOTE" : transfer_vote_info)
-    else if Tezos.now - v.timestamp > int(ownership.voting_period)
+    else if ((Tezos.get_now ()) - v.timestamp) > int(ownership.voting_period)
     then (failwith "EXPIRED" : transfer_vote_info)
     else { v with
       vote_amount = v.vote_amount + voter_stake; 
@@ -198,7 +198,7 @@ let vote_transfer (p, s : vote_transfer_param * dao_storage)
   | None -> { 
       vote_amount = voter_stake; 
       voters = Set.literal [voter];
-      timestamp = Tezos.now;
+      timestamp = Tezos.get_now ();
     }
   in
   if updated_votes.vote_amount < ownership.voting_threshold
@@ -212,14 +212,14 @@ let vote_transfer (p, s : vote_transfer_param * dao_storage)
   else
     let tx_op = make_transfer p.vote in
     let new_s = clean_after_transfer (p.vote, ownership.ownership_token, s) in
-    [tx_op], s
+    [tx_op], new_s
   
 let flush_expired (vote, voting_period, pending_votes
     : transfer_vote * nat * pending_votes) : pending_votes =
   match Big_map.find_opt vote pending_votes with
   | None -> (failwith "VOTE_DOES_NOT_EXIST" : pending_votes)
   | Some info ->
-    if Tezos.now - info.timestamp > int(voting_period)
+    if (Tezos.get_now ()) - info.timestamp > int(voting_period)
     then Big_map.remove vote pending_votes
     else (failwith "VOTE_NOT_EXPIRED" : pending_votes)
 
