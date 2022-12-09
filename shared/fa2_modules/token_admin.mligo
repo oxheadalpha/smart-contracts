@@ -43,7 +43,7 @@ let confirm_new_admin (s : token_admin_storage) : token_admin_storage =
   match s.pending_admin with
   | None -> (failwith "NO_PENDING_ADMIN" : token_admin_storage)
   | Some pending ->
-    let sender = Tezos.get_sender() in
+    let sender = Tezos.get_sender () in
     if sender = pending
     then { s with 
       pending_admin = (None : address option);
@@ -63,9 +63,9 @@ let pause (tokens, s: (pause_param list) * token_admin_storage) : token_admin_st
   { s with paused = new_paused; }
 
 let fail_if_not_admin (a : token_admin_storage) : unit =
-  if sender <> a.admin
+  if (Tezos.get_sender ()) <> a.admin
   then failwith "NOT_AN_ADMIN"
-  else unit
+  else ()
 
 let fail_if_paused_tokens (transfers, paused : transfer list * paused_tokens_set) : unit =
   List.iter 
@@ -73,14 +73,14 @@ let fail_if_paused_tokens (transfers, paused : transfer list * paused_tokens_set
       List.iter (fun (txd : transfer_destination) -> 
         if Big_map.mem txd.token_id paused
         then failwith "TOKEN_PAUSED"
-        else unit
+        else ()
       ) tx.txs
     ) transfers
 
 let fail_if_paused (a, param : token_admin_storage * fa2_entry_points) : unit =
   match param with
-  | Balance_of p -> unit
-  | Update_operators p -> unit
+  | Balance_of _ -> ()
+  | Update_operators _ -> ()
   | Transfer transfers -> fail_if_paused_tokens(transfers, a.paused)
   
 
