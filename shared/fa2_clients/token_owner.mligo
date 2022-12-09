@@ -16,7 +16,7 @@ type token_owner =
   | Owner_remove_operator of owner_operator_param
   | Default of unit
 
-let token_owner_main (param, s : token_owner * unit) 
+let token_owner_main (param, _ : token_owner * unit) 
     : (operation list) * unit =
   match param with
 
@@ -32,7 +32,7 @@ let token_owner_main (param, s : token_owner * unit)
     let update_op = match fa2_update with
     | None -> (failwith "NO_UPDATE_OPERATORS" : operation)
     | Some entry -> Tezos.transaction [Add_operator param] 0mutez entry in
-    [update_op], unit
+    [update_op], ()
 
   | Owner_remove_operator p ->
     (* calls specified FA2 contract to remove operator *)
@@ -46,7 +46,7 @@ let token_owner_main (param, s : token_owner * unit)
     let update_op = match fa2_update with
     | None -> (failwith "NO_UPDATE_OPERATORS" : operation)
     | Some entry -> Tezos.transaction [Remove_operator param] 0mutez entry in
-    [update_op], unit
+    [update_op], ()
 
-  | Default u -> ([] : operation list), unit
+  | Default _ -> ([] : operation list), ()
   

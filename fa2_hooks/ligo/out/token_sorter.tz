@@ -3,134 +3,93 @@
         (pair %tokens_received
            (list %batch
               (pair (option %from_ address)
-                    (list %txs (pair (option %to_ address) (pair (nat %token_id) (nat %amount))))))
+                    (list %txs (pair (option %to_ address) (nat %token_id) (nat %amount)))))
            (address %operator))) ;
   storage
     (big_map (pair address nat) (pair (address %destination) (nat %pending_balance))) ;
-  code { DUP ;
-         CDR ;
-         SWAP ;
-         CAR ;
+  code { UNPAIR ;
          IF_LEFT
-           { DUP ;
-             DUG 2 ;
-             SWAP ;
-             NIL (pair address (pair nat nat)) ;
+           { SWAP ;
+             NIL (pair address nat nat) ;
              PAIR ;
-             SWAP ;
-             DUP ;
-             DUG 2 ;
+             DUP 2 ;
              CDR ;
              ITER { SWAP ;
-                    DUP ;
-                    CDR ;
-                    SWAP ;
-                    CAR ;
-                    DIG 2 ;
-                    DUP ;
-                    DUG 3 ;
-                    DIG 4 ;
-                    DUP ;
-                    DUG 5 ;
+                    UNPAIR ;
+                    DUP 3 ;
+                    DUP 5 ;
                     CAR ;
                     PAIR ;
-                    DIG 2 ;
-                    DUP ;
-                    DUG 3 ;
-                    SWAP ;
-                    DUP ;
-                    DUG 2 ;
+                    DUP 3 ;
+                    DUP 2 ;
                     GET ;
                     IF_NONE
                       { DROP 4 ; PUSH string "UNKNOWN TOKEN" ; FAILWITH }
                       { DIG 3 ;
                         PUSH nat 0 ;
-                        DIG 2 ;
-                        DUP ;
-                        DUG 3 ;
+                        DUP 3 ;
                         CAR ;
                         PAIR ;
                         SOME ;
                         DIG 3 ;
                         UPDATE ;
-                        DUG 2 ;
-                        DUP ;
-                        DUG 3 ;
+                        DIG 2 ;
+                        DUP 3 ;
                         CDR ;
                         DIG 4 ;
-                        PAIR ;
-                        DIG 3 ;
+                        DIG 4 ;
                         CAR ;
-                        PAIR ;
+                        PAIR 3 ;
                         CONS ;
                         PAIR } } ;
-             SWAP ;
-             DROP ;
-             DUP ;
-             CDR ;
-             SWAP ;
-             CAR ;
+             UNPAIR ;
              PUSH nat 0 ;
-             SWAP ;
-             DUP ;
-             DUG 2 ;
+             DUP 2 ;
              SIZE ;
              COMPARE ;
              EQ ;
-             IF { DROP ; SWAP ; DROP ; NIL operation ; PAIR }
-                { SELF ;
-                  ADDRESS ;
+             IF { DIG 2 ; DROP 2 ; NIL operation }
+                { SELF_ADDRESS ;
                   PAIR ;
                   DIG 2 ;
                   CAR ;
                   CONTRACT %transfer
-                    (list (pair (address %from_)
-                                (list %txs (pair (address %to_) (pair (nat %token_id) (nat %amount)))))) ;
+                    (list (pair (address %from_) (list %txs (pair (address %to_) (nat %token_id) (nat %amount))))) ;
                   IF_NONE
                     { DROP ; PUSH string "CANNOT CALLBACK FA2" ; FAILWITH }
                     { PUSH mutez 0 ;
-                      NIL (pair address (list (pair address (pair nat nat)))) ;
+                      NIL (pair address (list (pair address nat nat))) ;
                       DIG 3 ;
                       CONS ;
                       TRANSFER_TOKENS } ;
                   SWAP ;
                   NIL operation ;
                   DIG 2 ;
-                  CONS ;
-                  PAIR } }
+                  CONS } }
            { CAR ;
              ITER { CDR ;
-                    ITER { DUP ;
+                    ITER { SWAP ;
+                           DUP 2 ;
                            CAR ;
                            IF_NONE
-                             { DROP }
-                             { SELF ;
-                               ADDRESS ;
+                             { SWAP ; DROP }
+                             { SELF_ADDRESS ;
                                SWAP ;
                                COMPARE ;
                                NEQ ;
-                               IF { DROP }
-                                  { DUP ;
-                                    DUG 2 ;
-                                    CDR ;
-                                    CAR ;
+                               IF { SWAP ; DROP }
+                                  { DUP 2 ;
+                                    GET 3 ;
                                     SENDER ;
                                     PAIR ;
-                                    SWAP ;
-                                    DUP ;
-                                    DUG 2 ;
-                                    SWAP ;
-                                    DUP ;
-                                    DUG 2 ;
+                                    DUP 2 ;
+                                    DUP 2 ;
                                     GET ;
                                     IF_NONE
                                       { DROP 3 ; PUSH string "UNKNOWN TOKEN" ; FAILWITH }
                                       { DIG 3 ;
-                                        CDR ;
-                                        CDR ;
-                                        SWAP ;
-                                        DUP ;
-                                        DUG 2 ;
+                                        GET 4 ;
+                                        DUP 2 ;
                                         CDR ;
                                         ADD ;
                                         SWAP ;
@@ -141,6 +100,6 @@
                                         SOME ;
                                         DIG 2 ;
                                         UPDATE } } } } } ;
-             NIL operation ;
-             PAIR } } }
+             NIL operation } ;
+         PAIR } }
 
