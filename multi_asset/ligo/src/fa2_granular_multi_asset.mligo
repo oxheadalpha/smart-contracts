@@ -75,5 +75,8 @@ let descriptor: permissions_descriptor = {
   operator = Owner_or_operator_transfer;
   receiver = Owner_no_hook;
   sender = Owner_no_hook;
-  custom = Some {tag = "PAUSABLE_TOKENS"; config_api = Some Current.self_address; };
+  custom = Some {
+    tag = "PAUSABLE_TOKENS";
+    config_api = Some (Tezos.get_self_address ());
+  };
 }
