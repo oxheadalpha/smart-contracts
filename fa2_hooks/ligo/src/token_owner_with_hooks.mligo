@@ -14,7 +14,7 @@ let inc_balance (s, tx_dest
    match tx_dest.to_ with
   | None -> s
   | Some to_ ->
-    if to_ <> Tezos.self_address
+    if to_ <> (Tezos.get_self_address ())
     then s
     else
       let key = (Tezos.get_sender()), tx_dest.token_id in
@@ -55,7 +55,7 @@ let update_balance_on_sent (p, storage
       match tx.from_ with
       | None -> s
       | Some from_ ->
-        if from_ <> Tezos.self_address
+        if from_ <> (Tezos.get_self_address ())
         then s
         else
           List.fold (fun (s, tx_dest : balance_storage * transfer_destination_descriptor) ->

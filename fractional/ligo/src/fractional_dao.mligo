@@ -136,7 +136,7 @@ let set_ownership (p, s : set_ownership_param * dao_storage) : dao_storage =
 
 let validate_permit (vote, permit, nonce : transfer_vote * permit * nat) : address =
   let signed_data = Bytes.pack (
-    (Tezos.chain_id, Tezos.self_address),
+    ((Tezos.get_chain_id ()), (Tezos.get_self_address ())),
     (nonce, vote)
   ) in
   if Crypto.check permit.key permit.signature signed_data
@@ -145,7 +145,7 @@ let validate_permit (vote, permit, nonce : transfer_vote * permit * nat) : addre
 
 let make_transfer (vote : transfer_vote): operation  =
   let tx : transfer = {
-      from_ = Tezos.self_address;
+      from_ = Tezos.get_self_address ();
       txs = [{to_ = vote.to_; token_id = vote.nft_token.token_id ; amount = 1n; }];
     } in
   let fa2_entry : ((transfer list) contract) option = 
