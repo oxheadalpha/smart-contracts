@@ -13,7 +13,6 @@ import { hasNftTokens } from "smart-contracts-common/fa2-balance-inspector";
 import { transfer } from "smart-contracts-common/fa2-interface";
 
 import {
-  DaoStorage,
   transferFA2TokensLambda,
   updateOperatorsLambda,
   vote,
@@ -24,7 +23,7 @@ import BigNumber from "bignumber.js";
 
 jest.setTimeout(240000);
 
-const ligoEnv = defaultLigoEnv("../../", "ligo");
+const ligoEnv = defaultLigoEnv("../", "ligo");
 
 describe("fractional ownership FA2 NFT tests", () => {
   let tezos: TestTz;

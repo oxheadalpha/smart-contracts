@@ -1,6 +1,6 @@
 import { $log } from "@tsed/logger";
 import { bootstrap, TestTz } from "smart-contracts-common/bootstrap-sandbox";
-import { Contract, address, nat } from "smart-contracts-common/type-aliases";
+import { Contract } from "smart-contracts-common/type-aliases";
 import { defaultLigoEnv } from "smart-contracts-common/ligo";
 
 import { originateFractionalDao } from "../src/origination";
@@ -18,7 +18,7 @@ import BigNumber from "bignumber.js";
 
 jest.setTimeout(240000);
 
-const ligoEnv = defaultLigoEnv("../../", "ligo");
+const ligoEnv = defaultLigoEnv("../", "ligo");
 
 describe("fractional ownership admin entry points test", () => {
   let tezos: TestTz;
