@@ -17,7 +17,7 @@ let inc_balance (s, tx_dest
     if to_ <> Tezos.self_address
     then s
     else
-      let key = Tezos.sender, tx_dest.token_id in
+      let key = (Tezos.get_sender()), tx_dest.token_id in
       let old_bal = Big_map.find_opt key s in
       let new_bal = match old_bal with
       | None -> tx_dest.amount
@@ -36,7 +36,7 @@ let update_balance_on_receive (p, storage
 
 let dec_balance (s, tx_dest
     : balance_storage * transfer_destination_descriptor) : balance_storage =
-  let key = Tezos.sender, tx_dest.token_id in
+  let key = (Tezos.get_sender()), tx_dest.token_id in
   let old_bal_opt = Big_map.find_opt key s in
   let old_bal = match old_bal_opt with
   | None -> 0n

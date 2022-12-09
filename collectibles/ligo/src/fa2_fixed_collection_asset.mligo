@@ -16,7 +16,7 @@ let collection_asset_main (param, storage
     : (operation list) * collection_asset_storage =
   match param with
   | Assets p -> 
-    let u2 = fail_if_paused storage.admin in
+    let _ = fail_if_paused storage.admin in
     let ops, new_assets = fa2_collection_main (p, storage.assets) in
     let new_s = { storage with assets = new_assets; } in
     (ops, new_s)

@@ -72,8 +72,9 @@ let transfer (txs, validate_op, ops_storage, ledger
           | Some o -> 
             if o <> tx.from_
             then (failwith fa2_insufficient_balance : ledger)
-            else 
-              let u = validate_op (o, Tezos.sender, dst.token_id, ops_storage) in
+            else
+              let sender = Tezos.get_sender() in
+              let _ = validate_op (o, sender, dst.token_id, ops_storage) in
               Big_map.update dst.token_id (Some dst.to_) ll
       ) tx.txs l
   )

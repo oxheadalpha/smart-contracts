@@ -25,10 +25,10 @@ let wrapper_main
       (ops, new_s)
 
   | Fail_if_not_admin p ->
-      let u : unit = fail_if_not_admin s.admin in
+      let _ = fail_if_not_admin s.admin in
       (([]: operation list), s)
 
   | Fail_if_paused p ->
-      let u : unit = fail_if_paused s.admin in
+      let _ = fail_if_paused s.admin in
       (([]: operation list), s)
 

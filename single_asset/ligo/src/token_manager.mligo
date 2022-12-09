@@ -31,11 +31,12 @@ let get_total_supply_change (txs : mint_burn_tx list) : nat =
 
 let mint_params_to_descriptors(txs : mint_burn_tokens_param)
     : transfer_descriptor list = 
-  let param_to_destination = fun (p : mint_burn_tx) -> {
-        to_ = Some p.owner;
-        token_id = 0n;
-        amount = p.amount;
-      }
+  let param_to_destination = fun (p : mint_burn_tx)
+        : transfer_destination_descriptor -> {
+      to_ = Some p.owner;
+      token_id = 0n;
+      amount = p.amount;
+    }
   in
   let destinations : transfer_destination_descriptor list = 
     List.map param_to_destination txs in
@@ -46,13 +47,15 @@ let mint_params_to_descriptors(txs : mint_burn_tokens_param)
 
 let burn_params_to_descriptors(txs : mint_burn_tokens_param)
     : transfer_descriptor list =
-  let param_to_descriptor = fun (p : mint_burn_tx) -> {
+  let param_to_descriptor = fun (p : mint_burn_tx) : transfer_descriptor -> 
+    let dst : transfer_destination_descriptor = {
+      to_ = (None : address option);
+      token_id = 0n;
+      amount = p.amount;
+    } in
+    {
       from_ = Some p.owner;
-      txs = [{
-        to_ = (None : address option);
-        token_id = 0n;
-        amount = p.amount;
-      }]
+      txs = [dst]
     } in
   List.map param_to_descriptor txs
 
@@ -60,7 +63,7 @@ let mint_tokens (txs, storage : mint_burn_tokens_param * single_token_storage)
     : (operation list) * single_token_storage =
   let tx_descriptors = mint_params_to_descriptors txs in
   let nop_operator_validator = 
-    fun (p : address * address * token_id * operator_storage) -> unit in
+    fun (_ : address * address * token_id * operator_storage) -> () in
   let ops, new_s1 = fa2_transfer (tx_descriptors, nop_operator_validator, storage) in 
 
   let supply_change = get_total_supply_change txs in
@@ -74,11 +77,11 @@ let burn_tokens (txs, storage : mint_burn_tokens_param * single_token_storage)
     : (operation list) * single_token_storage =
   let tx_descriptors = burn_params_to_descriptors txs in
   let nop_operator_validator = 
-    fun (p : address * address * token_id * operator_storage) -> unit in
+    fun (_ : address * address * token_id * operator_storage) -> () in
   let ops, new_s1 = fa2_transfer (tx_descriptors, nop_operator_validator, storage) in 
 
   let supply_change = get_total_supply_change txs in
-  let new_supply_opt = Michelson.is_nat (storage.total_supply - supply_change) in
+  let new_supply_opt = is_nat (storage.total_supply - supply_change) in
   let new_supply = match new_supply_opt with
   | None -> (failwith fa2_insufficient_balance : nat)
   | Some s -> s
