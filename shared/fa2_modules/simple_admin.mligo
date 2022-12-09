@@ -60,7 +60,7 @@ let simple_admin (param, s : simple_admin * simple_admin_storage)
     let new_s = set_admin (new_admin, s) in
     (([]: operation list), new_s)
 
-  | Confirm_admin u ->
+  | Confirm_admin _ ->
     let new_s = confirm_new_admin s in
     (([]: operation list), new_s)
 

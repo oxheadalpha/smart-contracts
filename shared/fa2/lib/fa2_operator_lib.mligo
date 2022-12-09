@@ -85,11 +85,11 @@ The default implicit `operator_transfer_policy` value is `Owner_or_operator_tran
  *)
 let default_operator_validator : operator_validator =
   (fun (owner, operator, token_id, ops_storage 
-      : address * address * token_id * operator_storage) ->
+      : address * address * token_id * operator_storage) : unit ->
     if owner = operator
-    then unit (* transfer by the owner *)
+    then () (* transfer by the owner *)
     else if Big_map.mem (owner, (operator, token_id)) ops_storage
-    then unit (* the operator is permitted for the token_id *)
+    then () (* the operator is permitted for the token_id *)
     else failwith fa2_not_operator (* the operator is not permitted for the token_id *)
   )
 
