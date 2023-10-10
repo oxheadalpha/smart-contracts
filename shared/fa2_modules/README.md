@@ -37,8 +37,7 @@ ligo compile-contract --syntax cameligo \
 Or, using `docker`:
 
 ```bash
-docker run --rm -v "$PWD":"$PWD" -w "$PWD" ligolang/ligo:0.13.0 compile-contract \
+docker run --rm -v "$PWD":"$PWD" -w "$PWD" ligolang/ligo:1.0.0 compile-contract \
   --syntax cameligo --output-file=test/out/simple_admin_wrapper.tz \
   test/simple_admin_wrapper.mligo wrapper_main
 ```
-

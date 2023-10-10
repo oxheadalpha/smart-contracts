@@ -6,29 +6,20 @@
 
 #include "../simple_admin.mligo"
 
-type wrapper_storage = {
-  admin : simple_admin_storage;
-}
+module SimpleAdminWrapper = struct
 
-type wrapper_param =
-  | Admin of simple_admin
-  | Fail_if_not_admin of unit
-  | Fail_if_paused of unit
+  type wrapper_storage =  Admin.storage
+  type return = operation list * wrapper_storage
 
-let wrapper_main
-    (param, s : wrapper_param * wrapper_storage)
-    : (operation list) * wrapper_storage =
-  match param with
-  | Admin p ->
-      let ops, admin : (operation_list * address) = simple_admin (p, s.admin) in
-      let new_s : wrapper_storage = { s with admin = admin; } in
-      (ops, new_s)
+  [@entry] let admin (p : Admin.entrypoints) (s : wrapper_storage) : return =
+    Admin.main (p, s)
 
-  | Fail_if_not_admin p ->
-      let _ = fail_if_not_admin s.admin in
-      (([]: operation list), s)
+  [@entry] let fail_if_not_admin (_ : unit) (s : wrapper_storage) : return =
+    let _ = Admin.fail_if_not_admin s in
+    (([]: operation list), s)
 
-  | Fail_if_paused p ->
-      let _ = fail_if_paused s.admin in
-      (([]: operation list), s)
+  [@entry] let fail_if_paused  (_ : unit) (s : wrapper_storage) : return =
+    let _ = Admin.fail_if_paused s in
+    (([]: operation list), s)
 
+end
