@@ -9,12 +9,11 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@taquito/signer": "15.0.0",
-    "@taquito/taquito": "15.0.0",
-    "@taquito/tzip16": "15.0.0",
+    "@taquito/signer": "17.3.0",
+    "@taquito/taquito": "17.3.0",
+    "@taquito/tzip16": "17.3.0",
     "@tsed/logger": "^6.3.3",
     "bignumber.js": "9.1.1",
-    "child_process": "^1.0.2",
     "source-map-support": "^0.5.19"
   },
   "devDependencies": {
