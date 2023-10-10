@@ -14,48 +14,45 @@
 #include "token_manager.mligo"
 #include "../fa2_modules/simple_admin.mligo"
 
-type single_asset_storage = {
-  admin : simple_admin_storage;
-  assets : single_token_storage;
-  metadata : contract_metadata;
-}
 
-type single_asset_param =
-  | Assets of fa2_entry_points
-  | Admin of simple_admin
-  | Tokens of token_manager
+module SingleAsset = struct
 
-let single_asset_main 
-    (param, s : single_asset_param * single_asset_storage)
-  : (operation list) * single_asset_storage =
-  match param with
-  | Admin p ->
+  type storage = {
+    admin : Admin.storage;
+    assets : Token.storage;
+    metadata : contract_metadata;
+  }
 
+  type return = operation list * storage
+
+
+  [@entry] let assets (p : fa2_entry_points) (s : storage) : return =
+    let _ = Admin.fail_if_paused s.admin in
+
+    let ops, assets = Token.fa2_main (p, s.assets) in
+    let new_s = { s with assets = assets; } in
+    (ops, new_s)
+
+  [@entry] let admin (p : Admin.main) (s : storage) : return =
     let ops, admin = simple_admin (p, s.admin) in
     let new_s = { s with admin = admin; } in
     (ops, new_s)
 
-  | Tokens p ->
-    let _ = fail_if_not_admin s.admin in
+  [@entry] let tokens (p : token_manager) (s : storage) : return =
+    let _ = Admin.fail_if_not_admin s.admin in
 
     let ops, assets = token_manager (p, s.assets) in 
     let new_s = { s with assets = assets; } in 
     (ops, new_s)
 
-  | Assets p -> 
-    let _ = fail_if_paused s.admin in
-
-    let ops, assets = fa2_main (p, s.assets) in
-    let new_s = { s with assets = assets; } in
-    (ops, new_s)
-
+end
 
 (**
 This is a sample initial fa2_single_asset storage.
  *)
 #if !OWNER_HOOKS
 
-let store : single_asset_storage = {
+let store : SingleAsset.storage = {
             admin = {
               admin = ("tz1YPSCGWXwBdTncK2aCctSZAXWvGsGwVJqU" : address);
               pending_admin = (None : address option);

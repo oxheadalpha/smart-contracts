@@ -11,13 +11,24 @@ Implementation of the FA2 interface for the single token contract.
 #include "../fa2/fa2_errors.mligo"
 #include "../fa2/lib/fa2_operator_lib.mligo"
 #include "../fa2/lib/fa2_owner_hooks_lib.mligo"
+#include "../fa2_modules/token_sig.mligo"
 
+
+module type SingleTokenSig = sig
+  type ledger
+  type storage
+
+  val fa2_transfer : transfer_descriptor list * operator_validator * storage ->
+      operation list * storage
+end 
+
+module TokenImpl = struct
 
 type ledger = (address, nat) big_map
 
 #if !OWNER_HOOKS
 
-type single_token_storage = {
+type storage = {
   ledger : ledger;
   operators : operator_storage;
   token_metadata : (nat, token_metadata) big_map;
@@ -26,7 +37,7 @@ type single_token_storage = {
 
 #else
 
-type single_token_storage = {
+type storage = {
   ledger : ledger;
   operators : operator_storage;
   token_metadata : (nat, token_metadata) big_map;
@@ -115,13 +126,13 @@ let validate_token_ids (tokens : token_id list) : unit =
 #if !OWNER_HOOKS
 
 let get_owner_hook_ops (_tx_descriptors, _storage
-    : (transfer_descriptor list) * single_token_storage) : operation list =
+    : (transfer_descriptor list) * storage) : operation list =
   ([] : operation list)
 
 #else 
 
 let get_owner_hook_ops (tx_descriptors, storage
-    : (transfer_descriptor list) * single_token_storage) : operation list =
+    : (transfer_descriptor list) * storage) : operation list =
   let tx_descriptor_param : transfer_descriptor_param = {
     batch = tx_descriptors;
     operator = Tezos.get_sender();
@@ -131,16 +142,16 @@ let get_owner_hook_ops (tx_descriptors, storage
 #endif
 
 let fa2_transfer (tx_descriptors, validate_op, storage
-    : (transfer_descriptor list) * operator_validator * single_token_storage)
-    : (operation list) * single_token_storage =
+    : (transfer_descriptor list) * operator_validator * storage)
+    : (operation list) * storage =
   
   let new_ledger = transfer (tx_descriptors, validate_op, storage.operators, storage.ledger) in
   let new_storage = { storage with ledger = new_ledger; } in
   let ops = get_owner_hook_ops (tx_descriptors, storage) in
   ops, new_storage
 
-let fa2_main (param, storage : fa2_entry_points * single_token_storage)
-    : (operation  list) * single_token_storage =
+let fa2_main (param, storage : fa2_entry_points * storage)
+    : (operation  list) * storage =
   match param with
   | Transfer txs -> 
     (* convert transfer batch into `transfer_descriptor` batch *)
@@ -160,6 +171,9 @@ let fa2_main (param, storage : fa2_entry_points * single_token_storage)
     let new_storage = { storage with operators = new_ops; } in
     ([] : operation list), new_storage
 
+end
 
+module Token : TokenSig = TokenImpl
+module SingleToken : SingleTokenSig = TokenImpl
 
 #endif

@@ -59,12 +59,13 @@ let burn_params_to_descriptors(txs : mint_burn_tokens_param)
     } in
   List.map param_to_descriptor txs
 
-let mint_tokens (txs, storage : mint_burn_tokens_param * single_token_storage) 
-    : (operation list) * single_token_storage =
+let mint_tokens (txs, storage : mint_burn_tokens_param * SingleToken.storage) 
+    : (operation list) * SingleToken.storage =
   let tx_descriptors = mint_params_to_descriptors txs in
   let nop_operator_validator = 
     fun (_ : address * address * token_id * operator_storage) -> () in
-  let ops, new_s1 = fa2_transfer (tx_descriptors, nop_operator_validator, storage) in 
+  let ops, new_s1 = SingleToken.fa2_transfer
+    (tx_descriptors, nop_operator_validator, storage) in 
 
   let supply_change = get_total_supply_change txs in
   let new_s2 = { new_s1 with
@@ -73,12 +74,13 @@ let mint_tokens (txs, storage : mint_burn_tokens_param * single_token_storage)
 
   ops, new_s2
   
-let burn_tokens (txs, storage : mint_burn_tokens_param * single_token_storage) 
-    : (operation list) * single_token_storage =
+let burn_tokens (txs, storage : mint_burn_tokens_param * SingleToken.storage) 
+    : (operation list) * SingleToken.storage =
   let tx_descriptors = burn_params_to_descriptors txs in
   let nop_operator_validator = 
     fun (_ : address * address * token_id * operator_storage) -> () in
-  let ops, new_s1 = fa2_transfer (tx_descriptors, nop_operator_validator, storage) in 
+  let ops, new_s1 = SingleToken.fa2_transfer
+    (tx_descriptors, nop_operator_validator, storage) in 
 
   let supply_change = get_total_supply_change txs in
   let new_supply_opt = is_nat (storage.total_supply - supply_change) in
@@ -91,8 +93,8 @@ let burn_tokens (txs, storage : mint_burn_tokens_param * single_token_storage)
   } in
   ops, new_s2
 
-let token_manager (param, s : token_manager * single_token_storage)
-    : (operation list) * single_token_storage =
+let token_manager (param, s : token_manager * SingleToken.storage)
+    : (operation list) * SingleToken.storage =
   match param with
   | Mint_tokens txs -> mint_tokens (txs, s)
   | Burn_tokens txs -> burn_tokens (txs, s)
