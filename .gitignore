@@ -1,6 +1,7 @@
 *.pp.mligo
 *.pp.ligo
 .ligo-work
+.ligo
 node_modules
 __build__
 .DS_Store

@@ -1,13 +1,12 @@
 { parameter
-    (or (or (or %admin (or (unit %confirm_admin) (bool %pause)) (address %set_admin))
-            (unit %fail_if_not_admin))
-        (unit %fail_if_paused)) ;
-  storage (pair (pair (address %admin) (bool %paused)) (option %pending_admin address)) ;
+    (or (unit %fail_if_paused)
+        (or (unit %fail_if_not_admin)
+            (or %admin (address %set_admin) (or (unit %confirm_admin) (bool %pause))))) ;
+  storage (pair (address %admin) (option %pending_admin address) (bool %paused)) ;
   code { LAMBDA
-           (pair (pair address bool) (option address))
+           (pair address (option address) bool)
            unit
            { CAR ;
-             CAR ;
              SENDER ;
              COMPARE ;
              NEQ ;
@@ -15,63 +14,30 @@
          SWAP ;
          UNPAIR ;
          IF_LEFT
+           { DIG 2 ;
+             DROP 2 ;
+             DUP ;
+             GET 4 ;
+             IF { PUSH string "PAUSED" ; FAILWITH } {} }
            { IF_LEFT
+               { DROP ; DUP ; DIG 2 ; SWAP ; EXEC ; DROP }
                { IF_LEFT
+                   { DUP 2 ; DIG 3 ; SWAP ; EXEC ; DROP ; SOME ; UPDATE 3 }
                    { IF_LEFT
-                       { DROP ;
-                         SWAP ;
-                         DROP ;
+                       { DIG 2 ;
+                         DROP 2 ;
                          DUP ;
-                         CDR ;
+                         GET 3 ;
                          IF_NONE
                            { DROP ; PUSH string "NO_PENDING_ADMIN" ; FAILWITH }
                            { SENDER ;
+                             SWAP ;
+                             DUP 2 ;
                              COMPARE ;
                              EQ ;
-                             IF { NONE address ; SWAP ; CAR ; CDR ; SENDER ; PAIR ; PAIR }
-                                { DROP ; PUSH string "NOT_A_PENDING_ADMIN" ; FAILWITH } } ;
-                         NIL operation ;
-                         PAIR }
-                       { SWAP ;
-                         DUP ;
-                         DUG 2 ;
-                         DIG 3 ;
-                         SWAP ;
-                         EXEC ;
-                         DROP ;
-                         SWAP ;
-                         DUP ;
-                         DUG 2 ;
-                         CDR ;
-                         SWAP ;
-                         DIG 2 ;
-                         CAR ;
-                         CAR ;
-                         PAIR ;
-                         PAIR ;
-                         NIL operation ;
-                         PAIR } }
-                   { SWAP ;
-                     DUP ;
-                     DUG 2 ;
-                     DIG 3 ;
-                     SWAP ;
-                     EXEC ;
-                     DROP ;
-                     SOME ;
-                     SWAP ;
-                     CAR ;
-                     PAIR ;
-                     NIL operation ;
-                     PAIR } }
-               { DROP ; DUP ; DIG 2 ; SWAP ; EXEC ; DROP ; NIL operation ; PAIR } }
-           { DROP ;
-             SWAP ;
-             DROP ;
-             DUP ;
-             CAR ;
-             CDR ;
-             IF { PUSH string "PAUSED" ; FAILWITH } {} ;
-             NIL operation ;
-             PAIR } } }
+                             IF { SWAP ; NONE address ; UPDATE 3 ; SWAP ; UPDATE 1 }
+                                { DROP 2 ; PUSH string "NOT_A_PENDING_ADMIN" ; FAILWITH } } }
+                       { DUP 2 ; DIG 3 ; SWAP ; EXEC ; DROP ; UPDATE 4 } } } } ;
+         NIL operation ;
+         PAIR } }
 
