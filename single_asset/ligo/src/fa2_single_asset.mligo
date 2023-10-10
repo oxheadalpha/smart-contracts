@@ -33,8 +33,8 @@ module SingleAsset = struct
     let new_s = { s with assets = assets; } in
     (ops, new_s)
 
-  [@entry] let admin (p : Admin.main) (s : storage) : return =
-    let ops, admin = simple_admin (p, s.admin) in
+  [@entry] let admin (p : Admin.entrypoints) (s : storage) : return =
+    let ops, admin = Admin.main (p, s.admin) in
     let new_s = { s with admin = admin; } in
     (ops, new_s)
 
