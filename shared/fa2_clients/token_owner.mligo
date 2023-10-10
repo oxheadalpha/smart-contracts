@@ -11,17 +11,12 @@ type owner_operator_param = {
   token_id : token_id;
 }
 
-type token_owner =
-  | Owner_add_operator of owner_operator_param
-  | Owner_remove_operator of owner_operator_param
-  | Default of unit
+module TokenOwner = struct
 
-let token_owner_main (param, _ : token_owner * unit) 
-    : (operation list) * unit =
-  match param with
+  type return = operation list * unit
 
-  | Owner_add_operator p ->
-    (* calls specified FA2 contract to add operator *)
+  (** calls specified FA2 contract to add operator *)
+  [@entry] let owner_add_operator (p : owner_operator_param) (_ : unit) : return =
     let param : operator_param = {
       operator = p.operator;
       owner = Tezos.get_self_address ();
@@ -34,8 +29,8 @@ let token_owner_main (param, _ : token_owner * unit)
     | Some entry -> Tezos.transaction [Add_operator param] 0mutez entry in
     [update_op], ()
 
-  | Owner_remove_operator p ->
-    (* calls specified FA2 contract to remove operator *)
+  (** calls specified FA2 contract to remove operator *)
+  [@entry] let owner_remove_operator (p : owner_operator_param) (_ : unit) : return =
     let param : operator_param = {
       operator = p.operator;
       owner = Tezos.get_self_address ();
@@ -48,5 +43,6 @@ let token_owner_main (param, _ : token_owner * unit)
     | Some entry -> Tezos.transaction [Remove_operator param] 0mutez entry in
     [update_op], ()
 
-  | Default _ -> ([] : operation list), ()
-  
+  [@entry] let default (_ : unit) (_ : unit) : return = ([] : operation list), ()
+
+end
