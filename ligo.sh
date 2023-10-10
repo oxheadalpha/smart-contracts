@@ -3,12 +3,12 @@
 # useage: `source ligo.sh` and then call defined commands directly from CLI
 
 ligo() {
-  docker run --rm -v $PWD:$PWD -w $PWD ligolang/ligo:0.50.0 $@
+  docker run --rm -v $PWD:$PWD -w $PWD ligolang/ligo:1.0.0 $@
 }
 
 compile() {
   echo "compiling $1 -> $3"
-  ligo compile contract $1 -e $2 -o $3 -p kathmandu
+  ligo compile contract $1 -m $2 -o $3
 }
 
 compile-expression() {
