@@ -17,7 +17,7 @@ class TestTokenSorter(TestMacSetUp):
             "fa2_multi_asset.mligo", "multi_asset_main"
         )
         ligo_receiver = ligo_client_env.contract_from_file(
-            "token_owner.mligo", "token_owner_main"
+            "token_owner.mligo", "TokenOwner"
         )
         ligo_sorter = ligo_env.contract_from_file(
             "token_sorter.mligo", "token_sorter_main"

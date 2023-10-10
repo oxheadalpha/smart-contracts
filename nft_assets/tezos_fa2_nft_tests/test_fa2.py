@@ -46,7 +46,7 @@ class TestFa2SetUp(TestCase):
         print("loading ligo contracts...")
         ligo_fa2 = ligo_env.contract_from_file("fa2_nft_asset.mligo", "nft_asset_main")
         ligo_receiver = ligo_client_env.contract_from_file(
-            "token_owner.mligo", "token_owner_main"
+            "token_owner.mligo", "TokenOwner"
         )
 
         print("originating contracts...")
