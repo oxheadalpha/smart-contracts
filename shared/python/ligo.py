@@ -11,7 +11,7 @@ from pytezos.operation.group import OperationGroup
 from pytezos.rpc.errors import RpcError
 from pytezos.operation import fees
 
-ligo_version = "0.50.0"
+ligo_version = "1.0.0"
 ligo_cmd = (
     f'docker run --rm -v "$PWD":"$PWD" -w "$PWD" ligolang/ligo:{ligo_version} "$@"'
 )
@@ -22,7 +22,7 @@ class LigoEnv:
         self.src_dir = Path(src_dir)
         self.out_dir = Path(out_dir)
 
-    def contract_from_file(self, file_name, main_func, tz_file_name=None):
+    def contract_from_file(self, file_name, main_module, tz_file_name=None):
         if tz_file_name:
             tz_file_name = Path(tz_file_name)
             if tz_file_name.suffix != ".tz":
@@ -30,7 +30,7 @@ class LigoEnv:
         else:
             tz_file_name = Path(file_name).with_suffix(".tz")
         return LigoContract(
-            self.src_dir / file_name, self.out_dir / tz_file_name, main_func
+            self.src_dir / file_name, self.out_dir / tz_file_name, main_module
         )
 
 class PtzUtils:
@@ -69,15 +69,15 @@ class PtzUtils:
 
 
 class LigoContract:
-    def __init__(self, ligo_file, tz_file, main_func):
+    def __init__(self, ligo_file, tz_file, main_module):
         """
         :param ligo_file: path to the contract LIGO source file.
         :param tz_file: path to the contract Michelson file to be compiled.
-        :param main_func: name of the contract entry point function
+        :param main_module: name of the Ligo module with the contract entry points
         """
         self.ligo_file = ligo_file
         self.tz_file = tz_file
-        self.main_func = main_func
+        self.main_module = main_module
         self.contract_interface = None
 
     def __call__(self):
@@ -89,7 +89,7 @@ class LigoContract:
         pytezos.
         :return: pytezos.ContractInterface
         """
-        command = f"{ligo_cmd} compile contract {self.ligo_file} -e {self.main_func}"
+        command = f"{ligo_cmd} compile contract {self.ligo_file} -m {self.main_module}"
         michelson = self._ligo_to_michelson(command)
         self.tz_file.write_text(michelson)
         self.contract_interface = ContractInterface.from_michelson(michelson)
@@ -111,18 +111,18 @@ class LigoContract:
         Compiles LIGO encoded storage to Python object to be used with pytezos.
         :return:  object
         """
-        command = f"{ligo_cmd} compile storage {self.ligo_file} -e {self.main_func} '{ligo_storage}'"
+        command = f"{ligo_cmd} compile storage {self.ligo_file} -m {self.main_module} '{ligo_storage}'"
         michelson = self._ligo_to_michelson_sanitized(command)
         c = self.get_contract()
         return c.storage.decode(michelson)
 
     def compile_parameter(self, ligo_parameter):
         """
-        Compiles LIGO encoded storage to Python object to be used with pytezos.
+        Compiles LIGO encoded parameter to Python object to be used with pytezos.
         :param ligo_parameter: LIGO string encoding entry point and parameter
         :return: object:
         """
-        command = f"{ligo_cmd} compile parameter {self.ligo_file} -e {self.main_func} '{ligo_parameter}'"
+        command = f"{ligo_cmd} compile parameter {self.ligo_file} -m {self.main_module} '{ligo_parameter}'"
         michelson = self._ligo_to_michelson_sanitized(command)
         c = self.get_contract()
         return c.contract.parameter.decode(michelson)
