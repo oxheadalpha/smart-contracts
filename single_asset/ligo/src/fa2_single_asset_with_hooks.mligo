@@ -14,8 +14,7 @@ This is a sample initial fa2_single_asset storage.
  *)
 
 
-
-let store : single_asset_storage = {
+let store : SingleAsset.storage = {
       admin = {
         admin = ("tz1YPSCGWXwBdTncK2aCctSZAXWvGsGwVJqU" : address);
         pending_admin = (None : address option);
