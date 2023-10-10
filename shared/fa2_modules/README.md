@@ -15,29 +15,30 @@ The `simple_admin_wrapper` contract includes the `simple_admin` module,
 exposing the functions `fail_if_not_admin` and  `fail_if_paused` as entrypoints:
 
 ```ocaml
-type wrapper_storage = {
-  admin : simple_admin_storage;
-}
+type wrapper_storage = Admin.storage
 
-type wrapper_param =
-  | Admin of simple_admin
-  | Fail_if_not_admin of unit
-  | Fail_if_paused of unit
+[@entry] let admin (p : Admin.entrypoints) (s : wrapper_storage) = ...
+
+[@entry] let fail_if_not_admin (_ : unit) (s : wrapper_storage) = ...
+
+[@entry] let fail_if_paused  (_ : unit) (s : wrapper_storage) = ...
 ```
 
 The contract is located in [`test/`](test/simple_admin_wrapper.mligo)
-and it can be compiled to Michelson using the following command:
+and it can be compiled to Michelson using the following command from `shared`
+directory:
 
 ```bash
-ligo compile-contract --syntax cameligo \
-  --output-file=test/out/simple_admin_wrapper.tz \
-  test/simple_admin_wrapper.mligo wrapper_main
+ligo compile contract fa2-modules/test/simple_admin_wrapper.mligo \
+  --module SimpleAdminWrapper \
+  --output-file fa2-modules/test/out/simple_admin_wrapper.tz
 ```
 
 Or, using `docker`:
 
 ```bash
-docker run --rm -v "$PWD":"$PWD" -w "$PWD" ligolang/ligo:1.0.0 compile-contract \
-  --syntax cameligo --output-file=test/out/simple_admin_wrapper.tz \
-  test/simple_admin_wrapper.mligo wrapper_main
+docker run --rm -v "$PWD":"$PWD" -w "$PWD" ligolang/ligo:1.0.0 compile contract \
+  fa2-modules/test/simple_admin_wrapper.mligo \
+  --module SimpleAdminWrapper \
+  --output-file fa2-modules/test/out/simple_admin_wrapper.tz
 ```
