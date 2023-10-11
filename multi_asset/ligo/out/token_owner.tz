@@ -1,23 +1,38 @@
 { parameter
-    (or (or (unit %default)
-            (pair %owner_add_operator (pair (address %fa2) (address %operator)) (nat %token_id)))
-        (pair %owner_remove_operator
-           (pair (address %fa2) (address %operator))
-           (nat %token_id))) ;
+    (or (unit %default)
+        (or (pair %owner_remove_operator (address %fa2) (address %operator) (nat %token_id))
+            (pair %owner_add_operator (address %fa2) (address %operator) (nat %token_id)))) ;
   storage unit ;
   code { CAR ;
          IF_LEFT
+           { DROP ; UNIT ; NIL operation }
            { IF_LEFT
-               { DROP ; UNIT ; NIL operation }
                { DUP ;
-                 CDR ;
+                 GET 4 ;
                  DUP 2 ;
-                 CAR ;
-                 CDR ;
+                 GET 3 ;
                  SELF_ADDRESS ;
                  PAIR 3 ;
                  SWAP ;
                  CAR ;
+                 CONTRACT %update_operators
+                   (list (or (pair %add_operator (address %owner) (address %operator) (nat %token_id))
+                             (pair %remove_operator (address %owner) (address %operator) (nat %token_id)))) ;
+                 IF_NONE
+                   { DROP ; PUSH string "NO_UPDATE_OPERATORS" ; FAILWITH }
+                   { PUSH mutez 0 ;
+                     NIL (or (pair address address nat) (pair address address nat)) ;
+                     DIG 3 ;
+                     RIGHT (pair address address nat) ;
+                     CONS ;
+                     TRANSFER_TOKENS } }
+               { DUP ;
+                 GET 4 ;
+                 DUP 2 ;
+                 GET 3 ;
+                 SELF_ADDRESS ;
+                 PAIR 3 ;
+                 SWAP ;
                  CAR ;
                  CONTRACT %update_operators
                    (list (or (pair %add_operator (address %owner) (address %operator) (nat %token_id))
@@ -29,32 +44,7 @@
                      DIG 3 ;
                      LEFT (pair address address nat) ;
                      CONS ;
-                     TRANSFER_TOKENS } ;
-                 UNIT ;
-                 NIL operation ;
-                 DIG 2 ;
-                 CONS } }
-           { DUP ;
-             CDR ;
-             DUP 2 ;
-             CAR ;
-             CDR ;
-             SELF_ADDRESS ;
-             PAIR 3 ;
-             SWAP ;
-             CAR ;
-             CAR ;
-             CONTRACT %update_operators
-               (list (or (pair %add_operator (address %owner) (address %operator) (nat %token_id))
-                         (pair %remove_operator (address %owner) (address %operator) (nat %token_id)))) ;
-             IF_NONE
-               { DROP ; PUSH string "NO_UPDATE_OPERATORS" ; FAILWITH }
-               { PUSH mutez 0 ;
-                 NIL (or (pair address address nat) (pair address address nat)) ;
-                 DIG 3 ;
-                 RIGHT (pair address address nat) ;
-                 CONS ;
-                 TRANSFER_TOKENS } ;
+                     TRANSFER_TOKENS } } ;
              UNIT ;
              NIL operation ;
              DIG 2 ;

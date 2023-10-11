@@ -70,9 +70,10 @@ There are two helper scripts in `tezos_mac_tests` module:
 
 ### Install dependencies
 
-#### LIGO
+#### Install LIGO
 
-`curl https://gitlab.com/ligolang/ligo/raw/dev/scripts/installer.sh | bash -s "next"`
+Follow the instructions at
+[ligolang.org](https://ligolang.org/docs/intro/installation) for your platform.
 
 #### Cryptographic libraries
 
