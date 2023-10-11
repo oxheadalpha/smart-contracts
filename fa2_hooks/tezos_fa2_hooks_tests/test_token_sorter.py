@@ -20,7 +20,7 @@ class TestTokenSorter(TestMacSetUp):
             "token_owner.mligo", "TokenOwner"
         )
         ligo_sorter = ligo_env.contract_from_file(
-            "token_sorter.mligo", "token_sorter_main"
+            "token_sorter.mligo", "TokenSorter"
         )
 
         print("originating contracts...")
