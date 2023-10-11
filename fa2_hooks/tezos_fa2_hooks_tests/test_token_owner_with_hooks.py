@@ -10,10 +10,10 @@ class TestHooks(TestMacSetUp):
     def orig_contracts(self):
         print("loading ligo contracts...")
         ligo_fa2 = ligo_env.contract_from_file(
-            "fa2_multi_asset.mligo", "multi_asset_main"
+            "fa2_multi_asset.mligo", "MultiAsset"
         )
         ligo_receiver = ligo_env.contract_from_file(
-            "token_owner_with_hooks.mligo", "token_owner_with_hooks_main"
+            "token_owner_with_hooks.mligo", "TokenOwnerWithHooks"
         )
 
         print("originating contracts...")
