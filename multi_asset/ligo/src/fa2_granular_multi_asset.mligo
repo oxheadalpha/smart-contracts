@@ -12,56 +12,52 @@
 #include "../fa2_modules/token_admin.mligo"
 #include "../fa2/fa2_permissions_descriptor.mligo"
 
-type multi_asset_storage = {
-  admin : token_admin_storage;
-  assets : multi_token_storage;
-  metadata : contract_metadata;
-}
+module MultiAssetGranular = struct
 
-type multi_asset_param =
-  | Assets of fa2_entry_points
-  | Admin of token_admin
-  | Tokens of token_manager
+  type storage = {
+    admin : Admin.storage;
+    assets : Token.storage;
+    metadata : contract_metadata;
+  }
 
-let multi_asset_main 
-    (param, s : multi_asset_param * multi_asset_storage)
-    : (operation list) * multi_asset_storage =
-  match param with
-  | Admin p ->  
-    let ops, admin = token_admin (p, s.admin) in
-    let new_s = { s with admin = admin; } in
+  type return = operation list * storage
+
+
+  [@entry] let assets (p : fa2_entry_points) (s : storage) : return =
+    let _ = Admin.fail_if_paused (s.admin, p) in
+    let ops, assets = Token.fa2_main (p, s.assets) in
+    let new_s = { s with assets = assets } in
     (ops, new_s)
 
-  | Tokens p ->
-    let u1 = fail_if_not_admin s.admin in
+  [@entry] let admin (p : Admin.entrypoints) (s : storage) : return =
+    let ops, admin = Admin.main (p, s.admin) in
+    let new_s = { s with admin = admin; } in
+    (ops, new_s)
+  
+  [@entry] let tokens (p : token_manager) (s : storage) : return =
+    let _ = Admin.fail_if_not_admin s.admin in
     let ops, assets = token_manager (p, s.assets) in 
     let new_s = { s with
       assets = assets
     } in 
     (ops, new_s)
 
-  | Assets p -> 
-    let _ = fail_if_paused (s.admin, p) in
-      
-    let ops, assets = fa2_main (p, s.assets) in
-    let new_s = { s with assets = assets } in
-    (ops, new_s)
-
+end
 
 (**
 This is a sample initial fa2_multi_asset storage.
  *)
 
-let store : multi_asset_storage = {
+let store : MultiAssetGranular.storage = {
   admin = {
     admin = ("tz1YPSCGWXwBdTncK2aCctSZAXWvGsGwVJqU" : address);
     pending_admin = (None : address option);
-    paused = (Big_map.empty : paused_tokens_set);
+    paused = (Big_map.empty : Admin.paused_tokens_set);
   };
   assets = {
-    ledger = (Big_map.empty : ledger);
+    ledger = (Big_map.empty : Token.ledger);
     operators = (Big_map.empty : operator_storage);
-    token_total_supply = (Big_map.empty : token_total_supply);
+    token_total_supply = (Big_map.empty : MultiToken.token_total_supply);
     token_metadata = (Big_map.empty : token_metadata_storage);
   };
   metadata = Big_map.literal [

@@ -4,6 +4,19 @@
 #include "../fa2/fa2_interface.mligo"
 #include "../fa2/fa2_errors.mligo"
 #include "../fa2/lib/fa2_operator_lib.mligo"
+#include "../fa2_modules/token_sig.mligo"
+
+
+module type MultiTokenSig = sig
+  type ledger
+  type storage
+  type token_total_supply
+
+  val inc_balance : address * token_id * nat * ledger -> ledger
+  val dec_balance : address * token_id * nat * ledger -> ledger
+end
+
+module TokenImpl = struct
 
 (* (owner,token_id) -> balance *)
 type ledger = ((address * token_id), nat) big_map
@@ -11,7 +24,7 @@ type ledger = ((address * token_id), nat) big_map
 (* token_id -> total_supply *)
 type token_total_supply = (token_id, nat) big_map
 
-type multi_token_storage = {
+type storage = {
   ledger : ledger;
   operators : operator_storage;
   token_total_supply : token_total_supply;
@@ -51,7 +64,7 @@ permissions or constraints are violated.
 @param validate_op function that validates of the tokens from the particular owner can be transferred. 
  *)
 let transfer (txs, validate_op, storage
-    : (transfer list) * operator_validator * multi_token_storage)
+    : (transfer list) * operator_validator * storage)
     : ledger =
   let make_transfer = fun (l, tx : ledger * transfer) ->
     List.fold 
@@ -82,8 +95,8 @@ let get_balance (p, ledger, tokens
   Tezos.transaction responses 0mutez p.callback
 
 
-let fa2_main (param, storage : fa2_entry_points * multi_token_storage)
-    : (operation  list) * multi_token_storage =
+let fa2_main (param, storage : fa2_entry_points * storage)
+    : (operation  list) * storage =
   match param with
   | Transfer txs -> 
     (* 
@@ -102,5 +115,10 @@ let fa2_main (param, storage : fa2_entry_points * multi_token_storage)
     let new_ops = fa2_update_operators (updates, storage.operators) in
     let new_storage = { storage with operators = new_ops; } in
     ([] : operation list), new_storage
+
+end
+
+module Token : TokenSig = TokenImpl
+module MultiToken : MultiTokenSig = TokenImpl
 
 #endif

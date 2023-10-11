@@ -73,7 +73,7 @@ There are two helper scripts in `tezos_fa2_single_tests` module:
 
 ### Install dependencies
 
-#### LIGO
+#### Install LIGO
 
 Follow the instructions at
 [ligolang.org](https://ligolang.org/docs/intro/installation) for your platform.
