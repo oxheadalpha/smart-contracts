@@ -86,7 +86,7 @@ module TokenSorter = struct
 
   [@entry] let tokens_received
       (p : transfer_descriptor_param) (storage : dispatch_table) : return =
-    let new_s = tokens_received (pm, storage) in
+    let new_s = tokens_received (p, storage) in
     ([] : operation list), new_s
 
   [@entry] let forward

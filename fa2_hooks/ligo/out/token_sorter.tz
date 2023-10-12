@@ -26,10 +26,9 @@
                     IF_NONE
                       { DROP 4 ; PUSH string "UNKNOWN TOKEN" ; FAILWITH }
                       { DIG 3 ;
+                        DUP 2 ;
                         PUSH nat 0 ;
-                        DUP 3 ;
-                        CAR ;
-                        PAIR ;
+                        UPDATE 2 ;
                         SOME ;
                         DIG 3 ;
                         UPDATE ;
@@ -87,14 +86,13 @@
                                     GET ;
                                     IF_NONE
                                       { DROP 3 ; PUSH string "UNKNOWN TOKEN" ; FAILWITH }
-                                      { DIG 3 ;
+                                      { DUP ;
+                                        DIG 4 ;
                                         GET 4 ;
-                                        DUP 2 ;
+                                        DIG 2 ;
                                         CDR ;
                                         ADD ;
-                                        SWAP ;
-                                        CAR ;
-                                        PAIR ;
+                                        UPDATE 2 ;
                                         DIG 2 ;
                                         SWAP ;
                                         SOME ;

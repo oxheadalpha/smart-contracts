@@ -82,12 +82,12 @@ module TokenOwnerWithHooks = struct
 
   [@entry] let tokens_received
       (p : transfer_descriptor_param) (s : balance_storage) : return =
-    let new_s = update_balance_on_receive (pm, storage) in
+    let new_s = update_balance_on_receive (p, s) in
     ([] : operation list), new_s
 
   [@entry] let tokens_sent
       (p : transfer_descriptor_param) (s : balance_storage) : return =
-    let new_s = update_balance_on_sent (pm, storage) in
+    let new_s = update_balance_on_sent (p, s) in
     ([] : operation list), new_s
 
 end
