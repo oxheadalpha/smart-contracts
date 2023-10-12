@@ -47,7 +47,7 @@ class TestMacSetUp(TestCase):
     def orig_contracts(self):
         print("loading ligo contracts...")
         ligo_fa2 = ligo_env.contract_from_file(
-            "fa2_multi_asset.mligo", "multi_asset_main"
+            "fa2_multi_asset.mligo", "MultiAsset"
         )
         ligo_receiver = ligo_client_env.contract_from_file(
             "token_owner.mligo", "TokenOwner"
@@ -81,9 +81,9 @@ class TestMacSetUp(TestCase):
                 paused = true;
             };
             assets = {
-                ledger = (Big_map.empty : ledger);
+                ledger = (Big_map.empty : MultiToken.ledger);
                 operators = (Big_map.empty : operator_storage);
-                token_total_supply = (Big_map.empty : token_total_supply);
+                token_total_supply = (Big_map.empty : MultiToken.token_total_supply);
                 token_metadata = (Big_map.empty : token_metadata_storage);
                 permissions = {
                     operator = Owner_or_operator_transfer;

@@ -34,11 +34,11 @@ type token_manager =
 
 
 let create_token (metadata, storage
-    : token_metadata * multi_token_storage) : multi_token_storage =
+    : token_metadata * MultiToken.storage) : MultiToken.storage =
   let new_token_id = metadata.token_id in
   let existing_meta = Big_map.find_opt new_token_id storage.token_metadata in
   match existing_meta with
-  | Some m -> (failwith "FA2_DUP_TOKEN_ID" : multi_token_storage)
+  | Some m -> (failwith "FA2_DUP_TOKEN_ID" : MultiToken.storage)
   | None ->
     let meta = Big_map.add new_token_id metadata storage.token_metadata in
     let supply = Big_map.add new_token_id 0n storage.token_total_supply in
@@ -81,26 +81,28 @@ let burn_txs_to_transfer_descriptor_param (txs, operator
     batch = List.map burn_tx_to_transfer_descriptor txs;
   }
 
-let  mint_update_balances (txs, ledger : (mint_burn_tx list) * ledger) : ledger =
-  let mint = fun (l, tx : ledger * mint_burn_tx) ->
-    inc_balance (tx.owner, tx.token_id, tx.amount, l) in
+let  mint_update_balances (txs, ledger : (mint_burn_tx list) * MultiToken.ledger)
+    : MultiToken.ledger =
+  let mint = fun (l, tx : MultiToken.ledger * mint_burn_tx) ->
+    MultiToken.inc_balance (tx.owner, tx.token_id, tx.amount, l) in
 
   List.fold mint txs ledger
 
 let mint_update_total_supply (txs, total_supplies
-    : (mint_burn_tx list) * token_total_supply) : token_total_supply =
-  let update = fun (supplies, tx : token_total_supply * mint_burn_tx) ->
+    : (mint_burn_tx list) * MultiToken.token_total_supply)
+    : MultiToken.token_total_supply =
+  let update = fun (supplies, tx : MultiToken.token_total_supply * mint_burn_tx) ->
     let supply_opt = Big_map.find_opt tx.token_id supplies in
     match supply_opt with
-    | None -> (failwith fa2_token_undefined : token_total_supply)
+    | None -> (failwith fa2_token_undefined : MultiToken.token_total_supply)
     | Some ts ->
       let new_s = ts + tx.amount in
       Big_map.update tx.token_id (Some new_s) supplies in
 
   List.fold update txs total_supplies
 
-let mint_tokens (param, storage : mint_burn_tokens_param * multi_token_storage) 
-    : multi_token_storage =
+let mint_tokens (param, storage : mint_burn_tokens_param * MultiToken.storage) 
+    : MultiToken.storage =
     let new_ledger = mint_update_balances (param, storage.ledger) in
     let new_supply = mint_update_total_supply (param, storage.token_total_supply) in
     let new_s = { storage with
@@ -109,18 +111,20 @@ let mint_tokens (param, storage : mint_burn_tokens_param * multi_token_storage)
     } in
     new_s
 
-let burn_update_balances(txs, ledger : (mint_burn_tx list) * ledger) : ledger =
-  let burn = fun (l, tx : ledger * mint_burn_tx) ->
-    dec_balance (tx.owner, tx.token_id, tx.amount, l) in
+let burn_update_balances(txs, ledger : (mint_burn_tx list) * MultiToken.ledger)
+    : MultiToken.ledger =
+  let burn = fun (l, tx : MultiToken.ledger * mint_burn_tx) ->
+    MultiToken.dec_balance (tx.owner, tx.token_id, tx.amount, l) in
 
   List.fold burn txs ledger
 
 let burn_update_total_supply (txs, total_supplies
-    : (mint_burn_tx list) * token_total_supply) : token_total_supply =
-  let update = fun (supplies, tx : token_total_supply * mint_burn_tx) ->
+    : (mint_burn_tx list) * MultiToken.token_total_supply)
+    : MultiToken.token_total_supply =
+  let update = fun (supplies, tx : MultiToken.token_total_supply * mint_burn_tx) ->
     let supply_opt = Big_map.find_opt tx.token_id supplies in
     match supply_opt with
-    | None -> (failwith fa2_token_undefined : token_total_supply)
+    | None -> (failwith fa2_token_undefined : MultiToken.token_total_supply)
     | Some ts ->
       let new_s = match is_nat (ts - tx.amount) with
       | None -> (failwith fa2_insufficient_balance : nat)
@@ -130,8 +134,8 @@ let burn_update_total_supply (txs, total_supplies
 
   List.fold update txs total_supplies
 
-let burn_tokens (param, storage : mint_burn_tokens_param * multi_token_storage) 
-    : multi_token_storage =
+let burn_tokens (param, storage : mint_burn_tokens_param * MultiToken.storage) 
+    : MultiToken.storage =
 
     let new_ledger = burn_update_balances (param, storage.ledger) in
     let new_supply = burn_update_total_supply (param, storage.token_total_supply) in
@@ -141,8 +145,8 @@ let burn_tokens (param, storage : mint_burn_tokens_param * multi_token_storage)
     } in
     new_s
 
-let token_manager (param, s : token_manager * multi_token_storage)
-    : (operation list) * multi_token_storage =
+let token_manager (param, s : token_manager * MultiToken.storage)
+    : (operation list) * MultiToken.storage =
   let self_address = Tezos.get_self_address () in
   match param with
 
