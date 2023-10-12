@@ -20,7 +20,7 @@ make run ARG="[morley-ledgers arguments]"
 For example,
 
 ```bash
-$ make run ARG="--help"
+make run ARG="--help"
 which stack || curl -sSL https://get.haskellstack.org/ | sh
 /Users/michaelklein/.local/bin/stack
 ls morley-ledgers || git clone https://gitlab.com/morley-framework/morley-ledgers.git

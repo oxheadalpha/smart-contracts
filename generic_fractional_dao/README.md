@@ -83,20 +83,20 @@ Switch to `shared/typescript` directory.
 Install dependencies and build the package:
 
 ```sh
-$ yarn install
-$ yarn build
+yarn install
+yarn build
 ```
 
 Symlink built package:
 
 ```sh
-$ yarn link
+yarn link
 ```
 
 ### Start Tezos Sandbox
 
 ```sh
-$ flextesa/start-sandbox.sh
+flextesa/start-sandbox.sh
 ```
 
 When running for the first time, it will download sandbox docker image. It may
@@ -107,10 +107,9 @@ take a few seconds until sandbox is bootstrapped.
 Switch to `generic_fractional_dao` directory and run the following commands:
 
 ```sh
-$ yarn install
-$ yarn test
+yarn install
+yarn test
 ```
-
 
 ## What's Next
 

@@ -50,7 +50,7 @@ FA2 fungible tokens, fractional owners can transfer them using regular FA2 trans
 
 Mints new linked ownership token and allocates fractional ownership
 
-```
+```ocaml
 %set_ownership {
   nft_contract : address;
   nft_token_id : nat;
@@ -90,20 +90,20 @@ Switch to `shared/typescript` directory.
 Install dependencies and build the package:
 
 ```sh
-$ yarn install
-$ yarn build
+yarn install
+yarn build
 ```
 
 Symlink built package:
 
 ```sh
-$ yarn link
+yarn link
 ```
 
 ### Start Tezos Sandbox
 
 ```sh
-$ flextesa/start-sandbox.sh
+flextesa/start-sandbox.sh
 ```
 
 When running for the first time, it will download sandbox docker image. It may
@@ -114,7 +114,6 @@ take a few seconds until sandbox is bootstrapped.
 Switch to `fractional/test` directory and run the following commands:
 
 ```sh
-$ yarn install
-$ yarn test
+yarn install
+yarn test
 ```
-
