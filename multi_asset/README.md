@@ -45,15 +45,15 @@ See [Pytezos requirements](https://github.com/baking-bad/pytezos#requirements).
 
 Use apt or your favorite package manager:
 
-`$ sudo apt install libsodium-dev libsecp256k1-dev libgmp-dev`
+`sudo apt install libsodium-dev libsecp256k1-dev libgmp-dev`
 
 #### MacOS
 
 Use homebrew:
 
-```
-$ brew tap cuber/homebrew-libsecp256k1
-$ brew install libsodium libsecp256k1 gmp
+```sh
+brew tap cuber/homebrew-libsecp256k1
+brew install libsodium libsecp256k1 gmp
 ```
 
 ### Flextesa Sandbox
@@ -70,16 +70,11 @@ There are two helper scripts in `tezos_mac_tests` module:
 
 ### Install dependencies
 
-#### Install LIGO
-
-Follow the instructions at
-[ligolang.org](https://ligolang.org/docs/intro/installation) for your platform.
-
 #### Cryptographic libraries
 
-```
-$ brew tap cuber/homebrew-libsecp256k1
-$ brew install libsodium libsecp256k1 gmp
+```sh
+brew tap cuber/homebrew-libsecp256k1
+brew install libsodium libsecp256k1 gmp
 ```
 
 ### Create Python virtual environment

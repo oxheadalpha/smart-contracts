@@ -48,15 +48,15 @@ See [Pytezos requirements](https://github.com/baking-bad/pytezos#requirements).
 
 Use apt or your favorite package manager:
 
-`$ sudo apt install libsodium-dev libsecp256k1-dev libgmp-dev`
+`sudo apt install libsodium-dev libsecp256k1-dev libgmp-dev`
 
 #### MacOS
 
 Use homebrew:
 
-```
-$ brew tap cuber/homebrew-libsecp256k1
-$ brew install libsodium libsecp256k1 gmp
+```sh
+brew tap cuber/homebrew-libsecp256k1
+brew install libsodium libsecp256k1 gmp
 ```
 
 ### Flextesa Sandbox
@@ -73,28 +73,23 @@ There are two helper scripts in `tezos_fa2_single_tests` module:
 
 ### Install dependencies
 
-#### Install LIGO
-
-Follow the instructions at
-[ligolang.org](https://ligolang.org/docs/intro/installation) for your platform.
-
 #### Cryptographic libraries
 
-```
-$ brew tap cuber/homebrew-libsecp256k1
-$ brew install libsodium libsecp256k1 gmp
+```sh
+brew tap cuber/homebrew-libsecp256k1
+brew install libsodium libsecp256k1 gmp
 ```
 
 ### Create Python virtual environment
 
-```
+```sh
 python3 -m venv tezos_fa2_single_tests
 source tezos_fa2_single_tests/bin/activate
 ```
 
 ### Install `tezos_fa2_single_tests` Python module
 
-```
+```sh
 git clone https://github.com/tqtezos/smart-contracts.git
 cd smart-contracts/single_asset
 pip install -e .
