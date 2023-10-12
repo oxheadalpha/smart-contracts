@@ -17,44 +17,38 @@
 #include "token_manager.mligo"
 #include "../fa2_modules/simple_admin.mligo"
 
-type nft_asset_storage = {
-  admin : simple_admin_storage;
-  assets : nft_token_storage;
-  metadata : contract_metadata;
-}
+module NftAsset = struct
 
-type nft_asset_param =
-  | Assets of nft_entry_points
-  | Admin of simple_admin
-  | Tokens of token_manager
+  type storage = {
+    admin : Admin.storage;
+    assets : Token.storage;
+    metadata : contract_metadata;
+  }
 
-let nft_asset_main 
-    (param, s : nft_asset_param * nft_asset_storage)
-  : (operation list) * nft_asset_storage =
-  match param with
-  | Admin p ->
-    let ops, admin = simple_admin (p, s.admin) in
-    let new_s = { s with admin = admin; } in
-    (ops, new_s)
+  type return = operation list * storage
 
-  | Tokens p ->
-    let _ = fail_if_not_admin s.admin in
-
-    let ops, assets = token_manager (p, s.assets) in 
-    let new_s = { s with assets = assets; } in 
-    (ops, new_s)
-
-  | Assets p -> 
-    let _ = fail_if_paused s.admin in
-
-    let ops, assets = nft_token_main (p, s.assets) in
+  [@entry] let assets (p : NftToken.entrypoints) (s : storage) : return =
+    let _ = Admin.fail_if_paused s.admin in
+    let ops, assets = NftToken.main (p, s.assets) in
     let new_s = { s with assets = assets; } in
     (ops, new_s)
 
+  [@entry] let admin (p : Admin.entrypoints) (s : storage) : return =
+    let ops, admin = Admin.main (p, s.admin) in
+    let new_s = { s with admin = admin; } in
+    (ops, new_s)
+
+  [@entry] let tokens (p : token_manager) (s : storage) : return =
+      let _ = Admin.fail_if_not_admin s.admin in
+      let ops, assets = token_manager (p, s.assets) in 
+      let new_s = { s with assets = assets; } in 
+      (ops, new_s)
+
+end
 
 (** Example of NFT asset initial storage *)
 
-let store : nft_asset_storage = {
+let store : NftAsset.storage = {
             admin = {
               admin = ("tz1YPSCGWXwBdTncK2aCctSZAXWvGsGwVJqU" : address);
               pending_admin = (None : address option);
