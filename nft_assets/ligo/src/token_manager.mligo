@@ -54,10 +54,10 @@ let zip_owners_with_token_ids (owners, from_token_id : (address list) * token_id
   in
   res.zip
 
-let mint_tokens (p, s : mint_param * nft_token_storage) : nft_token_storage =
+let mint_tokens (p, s : mint_param * Token.storage) : Token.storage =
   let u = validate_mint_param p in
   if s.metadata.next_token_id > p.token_def.from_
-  then (failwith "USED_TOKEN_IDS" : nft_token_storage)
+  then (failwith "USED_TOKEN_IDS" : Token.storage)
   else
     let new_metadata = {
       token_defs = Set.add p.token_def s.metadata.token_defs;
@@ -65,10 +65,11 @@ let mint_tokens (p, s : mint_param * nft_token_storage) : nft_token_storage =
       next_token_id = p.token_def.to_;
     } in
     let tid_owners = zip_owners_with_token_ids (p.owners, p.token_def.from_) in
-    let new_ledger = List.fold (fun (l, owner_id : ledger * (address * token_id)) ->
-      let owner, tid = owner_id in
-      Big_map.add tid owner l
-    ) tid_owners s.ledger in
+    let new_ledger =
+      List.fold (fun (l, owner_id : Token.ledger * (address * token_id)) ->
+        let owner, tid = owner_id in
+        Big_map.add tid owner l
+      ) tid_owners s.ledger in
     { s with 
       metadata = new_metadata;
       ledger = new_ledger;
@@ -78,7 +79,7 @@ let mint_tokens (p, s : mint_param * nft_token_storage) : nft_token_storage =
 type aux_remove_tokens = {
   from_ : token_id;
   to_ : token_id;
-  ledger : ledger;
+  ledger : Token.ledger;
 }
 
 let rec remove_tokens (p : aux_remove_tokens) : aux_remove_tokens =
@@ -92,9 +93,9 @@ let rec remove_tokens (p : aux_remove_tokens) : aux_remove_tokens =
     } in
     remove_tokens new_p
 
-let burn_tokens (p, s : token_def * nft_token_storage) : nft_token_storage =
+let burn_tokens (p, s : token_def * Token.storage) : Token.storage =
   if not Set.mem p s.metadata.token_defs
-  then (failwith "INVALID_PARAM" : nft_token_storage)
+  then (failwith "INVALID_PARAM" : Token.storage)
   else
     let new_metadata = { s.metadata with
       token_defs = Set.remove p s.metadata.token_defs;
@@ -110,8 +111,8 @@ let burn_tokens (p, s : token_def * nft_token_storage) : nft_token_storage =
       ledger = new_ledger.ledger;
     }
 
-let token_manager (param, s : token_manager * nft_token_storage)
-    : (operation list) * nft_token_storage =
+let token_manager (param, s : token_manager * Token.storage)
+    : (operation list) * Token.storage =
   let new_s = match param with
   | Mint_tokens p -> mint_tokens (p, s)
   | Burn_tokens p -> burn_tokens (p, s)
