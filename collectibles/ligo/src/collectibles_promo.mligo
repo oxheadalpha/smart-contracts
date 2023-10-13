@@ -371,7 +371,7 @@ module CollectiblesPromo = struct
 end
 
 let example_store : CollectiblesPromo.promotion_state = 
-  CollectiblesPromo.Initial {
+  Initial {
     promoter  = ("tz1YPSCGWXwBdTncK2aCctSZAXWvGsGwVJqU" : address);
     money_token = {
       fa2 = ("KT1Ps9gYCnoRbncAb3sw1X4R17MCeGx3Zz1h" : address);

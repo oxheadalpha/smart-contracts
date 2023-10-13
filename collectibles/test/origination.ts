@@ -125,10 +125,10 @@ export async function originatePromo(
     'collectibles_promo.tz'
   );
   const owner = await tz.signer.publicKeyHash();
-  const storage = `(Right
-    (Pair (Pair "${promotion.collectible_fa2}"
-                (Pair "${promotion.money_token.fa2}" ${promotion.money_token.id}))
-          (Pair ${promotion.price} "${owner}")))`;
-
+  const storage = `
+(Left (Pair "${owner}"
+(Pair "${promotion.money_token.fa2}" ${promotion.money_token.id})
+"${promotion.collectible_fa2}" ${promotion.price}))
+  `;
   return originateContract(tz, code, storage, 'promo');
 }
