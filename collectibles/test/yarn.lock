@@ -703,50 +703,59 @@
     "@stablelib/salsa20" "^1.0.2"
     "@stablelib/wipe" "^1.0.1"
 
-"@taquito/http-utils@^15.0.0":
-  version "15.0.0"
-  resolved "https://registry.yarnpkg.com/@taquito/http-utils/-/http-utils-15.0.0.tgz#b7fe912972394162705dd322605a52073670e2fb"
-  integrity sha512-caOofYWZzbxti1s1t3ObkRL4Ph8DpAWWY/staI1IiZJ/g/XX8FDtS71tE+IwBLXwH0kYqP0bNhTGPP04ebEHpQ==
-  dependencies:
-    "@vespaiach/axios-fetch-adapter" "^0.3.1"
-    axios "^0.26.0"
+"@taquito/core@^17.3.0", "@taquito/core@^17.3.1":
+  version "17.3.1"
+  resolved "https://registry.yarnpkg.com/@taquito/core/-/core-17.3.1.tgz#800aa74f8d79bb37bf0c8eba3015cdb78946088a"
+  integrity sha512-dk8ZXuZktfoIV5ESUx3mPkJxLBVL7o3CXLsaVoiPIu2nyd4I/VNkPh+aIOrhxHSVPBib3sVYN0Pc2a8ZO+0gsg==
 
-"@taquito/local-forging@^15.0.0":
-  version "15.0.0"
-  resolved "https://registry.yarnpkg.com/@taquito/local-forging/-/local-forging-15.0.0.tgz#d12084e4fb916e78124c181ef0b7e6181d53a678"
-  integrity sha512-8QLut19U03Tsm59RjrSZOlLZx5mglQjQFt5No1VzWfNsXv7mytmn8SlvqFxyt8hyTlm1RM1NdJJ1oO1h1A/BRQ==
+"@taquito/http-utils@^17.3.0", "@taquito/http-utils@^17.3.1":
+  version "17.3.1"
+  resolved "https://registry.yarnpkg.com/@taquito/http-utils/-/http-utils-17.3.1.tgz#b395b8187cc411c37e49d3eb687a1694cce638d0"
+  integrity sha512-lHwkNM1sx1HmzJHuxQy3lxaksZH/Jqxq5cYEPJAeCzEj68TD4T4X2rcVPpa0b6Qka5mQgLITCbyFE+RUg+orgA==
   dependencies:
-    "@taquito/utils" "^15.0.0"
+    "@taquito/core" "^17.3.1"
+    axios "0.26.0"
+
+"@taquito/local-forging@^17.3.0", "@taquito/local-forging@^17.3.1":
+  version "17.3.1"
+  resolved "https://registry.yarnpkg.com/@taquito/local-forging/-/local-forging-17.3.1.tgz#9d3f64eaa0f3e1099fe81634b9a365073c7867d2"
+  integrity sha512-1pBbN8g2Jhq7bxWW3diRC+llL5TA1/m9W2za75IAl2sv5oo8ttXVla4XY8yapLu/yeOWrb5ta7yvfEZ5x2ZeOw==
+  dependencies:
+    "@taquito/core" "^17.3.1"
+    "@taquito/utils" "^17.3.1"
     bignumber.js "^9.1.0"
 
-"@taquito/michel-codec@^15.0.0":
-  version "15.0.0"
-  resolved "https://registry.yarnpkg.com/@taquito/michel-codec/-/michel-codec-15.0.0.tgz#f05be1fa3811cbd2bfcb16ca2e84c602afae6824"
-  integrity sha512-pfnrXVSkGeeVNx7MYHTeu79iU4lGynym/7+8QbD/O28LWob8PUrwpt+jaAxsVDdNOYtKz+LO1E4FpC348tHO6Q==
-
-"@taquito/michelson-encoder@^15.0.0":
-  version "15.0.0"
-  resolved "https://registry.yarnpkg.com/@taquito/michelson-encoder/-/michelson-encoder-15.0.0.tgz#8fc3492a22404ae8a8b1907a43bf10745e1b973b"
-  integrity sha512-TxmWCgZBuA7SrNPSN+xfeeovDGU5H5sXyXcgL3KwYfeILaWiWr1MbI9n8xV7ewJZSC9svor6/osz7Y04+TIpgw==
+"@taquito/michel-codec@^17.3.0", "@taquito/michel-codec@^17.3.1":
+  version "17.3.1"
+  resolved "https://registry.yarnpkg.com/@taquito/michel-codec/-/michel-codec-17.3.1.tgz#a52cbc6f3ea54f3efa87f9b5e98cbb4ca335c5b6"
+  integrity sha512-dxhrqn+/VBzkhL+bhLO9bVb1r/NKdvSYEoXRWgszNT+enVlokkFBM4kXcvGlFUZklaSiw0dQYd1Zk0sDMkr1sw==
   dependencies:
-    "@taquito/rpc" "^15.0.0"
-    "@taquito/utils" "^15.0.0"
+    "@taquito/core" "^17.3.1"
+
+"@taquito/michelson-encoder@^17.3.0", "@taquito/michelson-encoder@^17.3.1":
+  version "17.3.1"
+  resolved "https://registry.yarnpkg.com/@taquito/michelson-encoder/-/michelson-encoder-17.3.1.tgz#e801d8600c3b8cd148db7bbd30817857aa7fba18"
+  integrity sha512-PaJYlZnjqDwjvK2qC4j9icqcGLoHHQygnGLs9lPV1quAV1v9yWPe6ABK+miuq2vv4WDMFH6amaXBtLimgPDcuQ==
+  dependencies:
+    "@taquito/rpc" "^17.3.1"
+    "@taquito/utils" "^17.3.1"
     bignumber.js "^9.1.0"
     fast-json-stable-stringify "^2.1.0"
 
-"@taquito/rpc@^15.0.0":
-  version "15.0.0"
-  resolved "https://registry.yarnpkg.com/@taquito/rpc/-/rpc-15.0.0.tgz#096ac942be0d5d3bc5f7ad4f3dbe4b15dd1d1e12"
-  integrity sha512-z5oPSD2QDhLqU9scA4Pof2+DUaK9P3oDWeCqr6/JAOlt1DwDwYsHj84d4UVmpjP/DrTj4Sp1IyY7I9KpNNLlGQ==
+"@taquito/rpc@^17.3.0", "@taquito/rpc@^17.3.1":
+  version "17.3.1"
+  resolved "https://registry.yarnpkg.com/@taquito/rpc/-/rpc-17.3.1.tgz#1ed32c4f2bd33cc74d390334a0a7835a5406aefb"
+  integrity sha512-VHY5qgUVT4RDXDv7H8DQrrMk1tfnJ6m+BFHmJxYCe7WQCCr8u2TlN0X2N95QhM+LG0LXL/LFlzhQLRBOxLnxsw==
   dependencies:
-    "@taquito/http-utils" "^15.0.0"
-    "@taquito/utils" "^15.0.0"
+    "@taquito/core" "^17.3.1"
+    "@taquito/http-utils" "^17.3.1"
+    "@taquito/utils" "^17.3.1"
     bignumber.js "^9.1.0"
 
-"@taquito/signer@15.0.0":
-  version "15.0.0"
-  resolved "https://registry.yarnpkg.com/@taquito/signer/-/signer-15.0.0.tgz#879aba853f13dacf1c12ec71b3f3cf2bb58545b1"
-  integrity sha512-23AmEuzvvz5sLHMkZlElyeZL3a8H25293v4v2G09bylUt79T7GyQPzIuGFwsYPgPlSteP3NarzTrnbit+/pyKg==
+"@taquito/signer@17.3.0":
+  version "17.3.0"
+  resolved "https://registry.yarnpkg.com/@taquito/signer/-/signer-17.3.0.tgz#3c773712a49da5d80245660665d0fa95e56cd837"
+  integrity sha512-b6CfxyAwUjL30M000yWcAl0nuD6TBkQxbsWirasDUdHa6LnS8XWxdWudem+1W5MhWcglmt7if8f1kZCisVg+kg==
   dependencies:
     "@stablelib/blake2b" "^1.0.1"
     "@stablelib/ed25519" "^1.0.3"
@@ -754,48 +763,65 @@
     "@stablelib/nacl" "^1.0.4"
     "@stablelib/pbkdf2" "^1.0.1"
     "@stablelib/sha512" "^1.0.1"
-    "@taquito/taquito" "^15.0.0"
-    "@taquito/utils" "^15.0.0"
+    "@taquito/taquito" "^17.3.0"
+    "@taquito/utils" "^17.3.0"
     "@types/bn.js" "^5.1.1"
-    bip39 "^3.0.4"
+    bip39 "3.0.4"
     elliptic "^6.5.4"
     pbkdf2 "^3.1.2"
     typedarray-to-buffer "^4.0.0"
 
-"@taquito/taquito@15.0.0", "@taquito/taquito@^15.0.0":
-  version "15.0.0"
-  resolved "https://registry.yarnpkg.com/@taquito/taquito/-/taquito-15.0.0.tgz#5bde81d8e81a25dcf7039e08b22eccad73e631c8"
-  integrity sha512-pYs/hBbjapR/wN+gLhQQYEbL3D7WZXsR/+cb5oCN67vhKwyXkDuBJIEpWIoFGNcwJn0eGFGkUjfngE1bUyMypA==
+"@taquito/taquito@17.3.0":
+  version "17.3.0"
+  resolved "https://registry.yarnpkg.com/@taquito/taquito/-/taquito-17.3.0.tgz#7b26e31a6055f7f489235c9bf92633cf912420d9"
+  integrity sha512-AODy23a398LWx2k7gIFxHrJHe8BzLsvxCBR9eTIOH1qhhCiKf9oEEJR6Ymj9rAXnp3RoZRt/orQ7ylqB0NrXnA==
   dependencies:
-    "@taquito/http-utils" "^15.0.0"
-    "@taquito/local-forging" "^15.0.0"
-    "@taquito/michel-codec" "^15.0.0"
-    "@taquito/michelson-encoder" "^15.0.0"
-    "@taquito/rpc" "^15.0.0"
-    "@taquito/utils" "^15.0.0"
+    "@taquito/core" "^17.3.0"
+    "@taquito/http-utils" "^17.3.0"
+    "@taquito/local-forging" "^17.3.0"
+    "@taquito/michel-codec" "^17.3.0"
+    "@taquito/michelson-encoder" "^17.3.0"
+    "@taquito/rpc" "^17.3.0"
+    "@taquito/utils" "^17.3.0"
     bignumber.js "^9.1.0"
-    rxjs "^6.6.3"
+    rxjs "^7.8.1"
 
-"@taquito/tzip16@15.0.0":
-  version "15.0.0"
-  resolved "https://registry.yarnpkg.com/@taquito/tzip16/-/tzip16-15.0.0.tgz#d36ad5999bae6f09469f3d1434e6c1af760a3923"
-  integrity sha512-3Wcg2hcFZfrmQY5OjLA/jWUrrbBrCGVsO5/7jX8LP7E3i850I2cVGyG+5tNM591v2RqhGXqVGqVIIp9AtUREVA==
+"@taquito/taquito@^17.3.0":
+  version "17.3.1"
+  resolved "https://registry.yarnpkg.com/@taquito/taquito/-/taquito-17.3.1.tgz#52bf080cd6ef55c1c2beabc76fd1b28dfac0275f"
+  integrity sha512-9CnIJv5z6KmYYhycOSTpSh51hH818yzXMjr5iR4Q2raWEtWQHYeXoDcVec1dkI+IITm9cQpLp5Gm++smSBElOA==
   dependencies:
-    "@taquito/http-utils" "^15.0.0"
-    "@taquito/michelson-encoder" "^15.0.0"
-    "@taquito/rpc" "^15.0.0"
-    "@taquito/taquito" "^15.0.0"
-    "@taquito/utils" "^15.0.0"
+    "@taquito/core" "^17.3.1"
+    "@taquito/http-utils" "^17.3.1"
+    "@taquito/local-forging" "^17.3.1"
+    "@taquito/michel-codec" "^17.3.1"
+    "@taquito/michelson-encoder" "^17.3.1"
+    "@taquito/rpc" "^17.3.1"
+    "@taquito/utils" "^17.3.1"
+    bignumber.js "^9.1.0"
+    rxjs "^7.8.1"
+
+"@taquito/tzip16@17.3.0":
+  version "17.3.0"
+  resolved "https://registry.yarnpkg.com/@taquito/tzip16/-/tzip16-17.3.0.tgz#9d843d5e91556b0acea6cd70ef291f79a1f54503"
+  integrity sha512-7rSIWQhUKg+c1JpB3dqHKSPwjne1gbwtMYKthYOycmZbCzT31zYgrpF6UVamLnVcTt+102v24OY/P+Y9JZ3lyg==
+  dependencies:
+    "@taquito/http-utils" "^17.3.0"
+    "@taquito/michelson-encoder" "^17.3.0"
+    "@taquito/rpc" "^17.3.0"
+    "@taquito/taquito" "^17.3.0"
+    "@taquito/utils" "^17.3.0"
     bignumber.js "^9.1.0"
     crypto-js "^4.1.1"
 
-"@taquito/utils@^15.0.0":
-  version "15.0.0"
-  resolved "https://registry.yarnpkg.com/@taquito/utils/-/utils-15.0.0.tgz#1d9cf577dd3b4709a5100976d790d0e5fc04d346"
-  integrity sha512-15Eq3YarC3HuZY8fmAEmtZaFglMIHjRVeR7l4fd8NJK6EdDZydJ00o40JMof9mhSy6A5atm15IHLD5sfdfx5lg==
+"@taquito/utils@^17.3.0", "@taquito/utils@^17.3.1":
+  version "17.3.1"
+  resolved "https://registry.yarnpkg.com/@taquito/utils/-/utils-17.3.1.tgz#e64aa9ca0c706b7afa6d092da51dbcd602c29512"
+  integrity sha512-NLSFOaZbbs5L7aSV+vgCxj6celHBYLkzwmGvPiCm/mDSj1a1i4bgt8fJ6DbtwDiAmiA9tXPmRileRC4iPEaewg==
   dependencies:
     "@stablelib/blake2b" "^1.0.1"
     "@stablelib/ed25519" "^1.0.3"
+    "@taquito/core" "^17.3.1"
     "@types/bs58check" "^2.1.0"
     bignumber.js "^9.1.0"
     blakejs "^1.2.1"
@@ -927,11 +953,6 @@
   dependencies:
     "@types/yargs-parser" "*"
 
-"@vespaiach/axios-fetch-adapter@^0.3.1":
-  version "0.3.1"
-  resolved "https://registry.yarnpkg.com/@vespaiach/axios-fetch-adapter/-/axios-fetch-adapter-0.3.1.tgz#b0c08167bec9cc558f578a1b9ccff52ead1cf1cb"
-  integrity sha512-+1F52VWXmQHSRFSv4/H0wtnxfvjRMPK5531e880MIjypPdUSX6QZuoDgEVeCE1vjhzDdxCVX7rOqkub7StEUwQ==
-
 ansi-escapes@^4.2.1:
   version "4.3.2"
   resolved "https://registry.yarnpkg.com/ansi-escapes/-/ansi-escapes-4.3.2.tgz#6b2291d1db7d98b6521d5f1efa42d0f3a9feb65e"
@@ -978,10 +999,10 @@ argparse@^1.0.7:
   dependencies:
     sprintf-js "~1.0.2"
 
-axios@^0.26.0:
-  version "0.26.1"
-  resolved "https://registry.yarnpkg.com/axios/-/axios-0.26.1.tgz#1ede41c51fcf51bbbd6fd43669caaa4f0495aaa9"
-  integrity sha512-fPwcX4EvnSHuInCMItEhAGnaSEXRBjtzh9fOtsE6E1G6p7vl7edEeZe11QHf18+6+9gR5PbKV/sGKNaD8YaMeA==
+axios@0.26.0:
+  version "0.26.0"
+  resolved "https://registry.yarnpkg.com/axios/-/axios-0.26.0.tgz#9a318f1c69ec108f8cd5f3c3d390366635e13928"
+  integrity sha512-lKoGLMYtHvFrPVt3r+RBMp9nh34N0M8zEfCWqdWZx6phynIEhQqAdydpyBAAG211zlhX9Rgu08cOamy6XjE5Og==
   dependencies:
     follow-redirects "^1.14.8"
 
@@ -1067,7 +1088,7 @@ bignumber.js@9.1.1, bignumber.js@^9.1.0:
   resolved "https://registry.yarnpkg.com/bignumber.js/-/bignumber.js-9.1.1.tgz#c4df7dc496bd849d4c9464344c1aa74228b4dac6"
   integrity sha512-pHm4LsMJ6lzgNGVfZHjMoO8sdoRhOzOH4MLmY65Jg70bpxCKu5iOHNJyfF6OyvYw7t8Fpf35RuzUyqnQsj8Vig==
 
-bip39@^3.0.4:
+bip39@3.0.4:
   version "3.0.4"
   resolved "https://registry.yarnpkg.com/bip39/-/bip39-3.0.4.tgz#5b11fed966840b5e1b8539f0f54ab6392969b2a0"
   integrity sha512-YZKQlb752TrUWqHWj7XAwCSjYEgGAk+/Aas3V7NyjQeZYsztO8JnQUaCWhcnL4T+jL8nvB8typ2jRPzTlgugNw==
@@ -1206,11 +1227,6 @@ char-regex@^1.0.2:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/char-regex/-/char-regex-1.0.2.tgz#d744358226217f981ed58f479b1d6bcc29545dcf"
   integrity sha512-kWWXztvZ5SBQV+eRgKFeh8q5sLuZY2+8WUIzlxWVTg+oGwY14qylx1KbKzHd8P6ZYkAg0xyIDU9JMHhyJMZ1jw==
-
-child_process@^1.0.2:
-  version "1.0.2"
-  resolved "https://registry.yarnpkg.com/child_process/-/child_process-1.0.2.tgz#b1f7e7fc73d25e7fd1d455adc94e143830182b5a"
-  integrity sha512-Wmza/JzL0SiWz7kl6MhIKT5ceIlnFPJX+lwUGj7Clhy5MMldsSoJR0+uvRzOS5Kv45Mq7t1PoE8TsOA9bzvb6g==
 
 ci-info@^3.2.0:
   version "3.7.0"
@@ -1494,11 +1510,6 @@ fs.realpath@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/fs.realpath/-/fs.realpath-1.0.0.tgz#1504ad2523158caa40db4a2787cb01411994ea4f"
   integrity sha512-OO0pH2lK6a0hZnAdau5ItzHPI6pUlvI7jMVnxUQRtw4owF2wk8lOSabtGDCTP4Ggrg2MbGnWO9X8K1t4+fGMDw==
-
-fs@0.0.1-security:
-  version "0.0.1-security"
-  resolved "https://registry.yarnpkg.com/fs/-/fs-0.0.1-security.tgz#8a7bd37186b6dddf3813f23858b57ecaaf5e41d4"
-  integrity sha512-3XY9e1pP0CVEUCdj5BmfIZxRBTSDycnbqhIOGec9QYtmVH2fbLpj86CFWkrNOkt/Fvty4KZG5lTglL9j/gJ87w==
 
 fsevents@^2.3.2:
   version "2.3.2"
@@ -2430,12 +2441,12 @@ ripemd160@^2.0.0, ripemd160@^2.0.1:
     hash-base "^3.0.0"
     inherits "^2.0.1"
 
-rxjs@^6.6.3:
-  version "6.6.7"
-  resolved "https://registry.yarnpkg.com/rxjs/-/rxjs-6.6.7.tgz#90ac018acabf491bf65044235d5863c4dab804c9"
-  integrity sha512-hTdwr+7yYNIT5n4AMYp85KA6yw2Va0FLa3Rguvbpa4W3I5xynaBZo41cM3XM+4Q6fRMj3sBYIR1VAmZMXYJvRQ==
+rxjs@^7.8.1:
+  version "7.8.1"
+  resolved "https://registry.yarnpkg.com/rxjs/-/rxjs-7.8.1.tgz#6f6f3d99ea8044291efd92e7c7fcf562c4057543"
+  integrity sha512-AA3TVj+0A2iuIoQkWEK/tqFjBq2j+6PO6Y0zJcvzLAFhEFIO3HL0vls9hWLncZbAAbK0mar7oZ4V079I/qPMxg==
   dependencies:
-    tslib "^1.9.0"
+    tslib "^2.1.0"
 
 safe-buffer@^5.0.1, safe-buffer@^5.1.0, safe-buffer@^5.1.2, safe-buffer@^5.2.0, safe-buffer@~5.2.0:
   version "5.2.1"
@@ -2497,12 +2508,11 @@ slash@^3.0.0:
 "smart-contracts-common@file:../../shared/typescript":
   version "1.5.0"
   dependencies:
-    "@taquito/signer" "15.0.0"
-    "@taquito/taquito" "15.0.0"
-    "@taquito/tzip16" "15.0.0"
+    "@taquito/signer" "17.3.0"
+    "@taquito/taquito" "17.3.0"
+    "@taquito/tzip16" "17.3.0"
     "@tsed/logger" "^6.3.3"
     bignumber.js "9.1.1"
-    child_process "^1.0.2"
     source-map-support "^0.5.19"
 
 source-map-support@0.5.13:
@@ -2655,10 +2665,15 @@ tslib@2.3.1:
   resolved "https://registry.yarnpkg.com/tslib/-/tslib-2.3.1.tgz#e8a335add5ceae51aa261d32a490158ef042ef01"
   integrity sha512-77EbyPPpMz+FRFRuAFlWMtmgUWGe9UOG2Z25NqCwiIjRhOf5iKGuzSe5P2w1laq+FkRy4p+PCuVkJSGkzTEKVw==
 
-tslib@^1.13.0, tslib@^1.8.1, tslib@^1.9.0:
+tslib@^1.13.0, tslib@^1.8.1:
   version "1.14.1"
   resolved "https://registry.yarnpkg.com/tslib/-/tslib-1.14.1.tgz#cf2d38bdc34a134bcaf1091c41f6619e2f672d00"
   integrity sha512-Xni35NKzjgMrwevysHTCArtLDpPvye8zV/0E4EyYn43P7/7qvQwPh9BGkHewbMulVntbigmcT7rdX3BNo9wRJg==
+
+tslib@^2.1.0:
+  version "2.6.2"
+  resolved "https://registry.yarnpkg.com/tslib/-/tslib-2.6.2.tgz#703ac29425e7b37cd6fd456e92404d46d1f3e4ae"
+  integrity sha512-AEYxH93jGFPn/a2iVAwW87VuUIkR1FVUKB77NwMF7nBTDkDrrT/Hpt/IrCJ0QXhW27jTBDcf5ZY7w6RiqTMw2Q==
 
 tslint@^6.1.2:
   version "6.1.3"
