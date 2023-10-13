@@ -122,4 +122,3 @@ yarn test
   - Change DAO voting period
 
 - Migrate DAO contract to minter-sdk
-

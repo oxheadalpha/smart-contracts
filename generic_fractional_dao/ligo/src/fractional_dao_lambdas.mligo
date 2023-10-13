@@ -5,9 +5,10 @@ Lambda constructor function to be used with ligo compile-expression command
 to generate actual lambda code enclosing the parameters
  *)
 
-let set_dao_voting_threshold (old_threshold, new_threshold : nat * nat): dao_lambda =
+let set_dao_voting_threshold (old_threshold, new_threshold : nat * nat)
+    : FractionalDao.dao_lambda =
   fun (_ : unit) -> (
-    let dao_entry : set_voting_threshold_param contract option =
+    let dao_entry : FractionalDao.set_voting_threshold_param contract option =
       Tezos.get_entrypoint_opt "%set_voting_threshold" (Tezos.get_self_address ()) in
     match dao_entry with
     | None -> (failwith "NO_DAO_SET_VOTING_THRESHOLD" : operation list)
@@ -19,9 +20,10 @@ let set_dao_voting_threshold (old_threshold, new_threshold : nat * nat): dao_lam
       [op]
   )
 
-let set_dao_voting_period (old_period, new_period : nat * nat): dao_lambda =
+let set_dao_voting_period (old_period, new_period : nat * nat)
+    : FractionalDao.dao_lambda =
   fun (_ : unit) -> (
-    let dao_entry : set_voting_period_param contract option =
+    let dao_entry : FractionalDao.set_voting_period_param contract option =
       Tezos.get_entrypoint_opt "%set_voting_period" (Tezos.get_self_address ()) in
     match dao_entry with
     | None -> (failwith "NO_DAO_SET_VOTING_PERIOD" : operation list)
@@ -33,7 +35,8 @@ let set_dao_voting_period (old_period, new_period : nat * nat): dao_lambda =
       [op]
   )
 
-let dao_transfer_fa2_tokens (fa2, txs: address * transfer list) : dao_lambda =
+let dao_transfer_fa2_tokens (fa2, txs: address * transfer list)
+    : FractionalDao.dao_lambda =
   fun (_ : unit) -> (
     let fa2_entry : transfer list contract option =
       Tezos.get_entrypoint_opt "%transfer" fa2 in
@@ -44,7 +47,8 @@ let dao_transfer_fa2_tokens (fa2, txs: address * transfer list) : dao_lambda =
       [op]
   )
 
-let dao_update_fa2_operators (fa2, ops: address * update_operator list) : dao_lambda =
+let dao_update_fa2_operators (fa2, ops: address * update_operator list)
+    : FractionalDao.dao_lambda =
   fun (_ : unit) -> (
     let fa2_entry : update_operator list contract option =
       Tezos.get_entrypoint_opt "%update_operators" fa2 in
