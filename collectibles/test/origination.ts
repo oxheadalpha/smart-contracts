@@ -84,13 +84,19 @@ export async function originateMoney(
   const meta_content = char2Bytes(JSON.stringify(meta, null, 2));
   const token_meta = token_meta_literal('TK1', 'Test Token');
 
-  const storage = `(Pair (Pair (Pair (Pair "${owner}" False) None)
-        (Pair (Pair (Pair {} {})
-                    (Pair (Pair (Right (Right Unit)) (Pair (Right (Left Unit)) (Pair (Right (Left Unit)) None)))
-                          { Elt 0 (Pair 0 ${token_meta}) }))
-              0))
-  { Elt "" 0x${meta_uri} ;
-    Elt "content" 0x${meta_content} })`;
+  const storage = `
+  (Pair (Pair "${owner}" None False)
+      (Pair {}
+            {}
+            {}
+            0
+            (Right (Right Unit))
+            (Right (Left Unit))
+            (Right (Left Unit))
+            None)
+      { Elt "" 0x${meta_uri} ;
+        Elt "content" 0x${meta_content} })
+  `;
 
   return originateContract(tz, code, storage, 'money');
 }
